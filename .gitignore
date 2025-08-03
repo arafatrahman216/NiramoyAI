@@ -4,6 +4,11 @@
 # Log file
 *.log
 
+*.sql
+*.env
+prompt.txt
+Therap.pdf
+
 # BlueJ files
 *.ctxt
 
