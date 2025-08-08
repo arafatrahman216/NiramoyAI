@@ -22,10 +22,14 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePreventCrossRoleAccess } from '../hooks/useRoleProtection';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Prevent doctors and admins from accessing patient dashboard
+  usePreventCrossRoleAccess();
 
   const handleLogout = () => {
     logout();
@@ -240,6 +244,7 @@ const Dashboard = () => {
                       variant="outlined"
                       size="large"
                       sx={{ py: 2, textTransform: 'none' }}
+                      onClick={() => navigate('/book-appointment')}
                     >
                       Schedule Appointment
                     </Button>
@@ -250,8 +255,9 @@ const Dashboard = () => {
                       variant="outlined"
                       size="large"
                       sx={{ py: 2, textTransform: 'none' }}
+                      onClick={() => navigate('/my-appointments')}
                     >
-                      View Reports
+                      My Appointments
                     </Button>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>

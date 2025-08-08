@@ -14,7 +14,7 @@ public class Appointment {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "patient_id")
+    @JoinColumn(name = "user_id")
     private User patient;
 
     @ManyToOne

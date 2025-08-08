@@ -16,6 +16,7 @@ import {
 import { Visibility, VisibilityOff, AdminPanelSettings } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { redirectBasedOnRole } from '../utils/roleRedirect';
 
 const AdminRegister = () => {
   const [formData, setFormData] = useState({
@@ -44,7 +45,9 @@ const AdminRegister = () => {
     
     const success = await adminRegister(formData);
     if (success) {
-      navigate('/admin/dashboard');
+      // Get user data and redirect based on role
+      const userData = JSON.parse(localStorage.getItem('user'));
+      redirectBasedOnRole(userData, navigate);
     }
   };
 

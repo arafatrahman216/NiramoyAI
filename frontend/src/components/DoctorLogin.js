@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { redirectBasedOnRole, hasRole } from '../utils/roleRedirect';
 
 const DoctorLogin = () => {
   const { login, loading, error } = useAuth();
@@ -54,9 +55,9 @@ const DoctorLogin = () => {
       const success = await login(formData.username, formData.password);
       if (success) {
         // Check if user has doctor role
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user && user.roles && user.roles.includes('ROLE_DOCTOR')) {
-          navigate('/doctor/dashboard');
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (hasRole(userData, 'ROLE_DOCTOR')) {
+          redirectBasedOnRole(userData, navigate);
         } else {
           setLocalError('Access denied: Doctor privileges required');
         }

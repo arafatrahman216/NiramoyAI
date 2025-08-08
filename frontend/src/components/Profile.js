@@ -26,11 +26,16 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePreventCrossRoleAccess } from '../hooks/useRoleProtection';
 import axios from 'axios';
 
 const Profile = () => {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
+  
+  // Prevent doctors and admins from accessing patient profile
+  usePreventCrossRoleAccess();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');

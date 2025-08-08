@@ -4,6 +4,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CircularProgress, Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import NavigationGuard from './components/NavigationGuard';
+import LandingPage from './components/LandingPage';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
@@ -15,6 +17,12 @@ import DoctorLogin from './components/DoctorLogin';
 import DoctorDashboard from './components/DoctorDashboard';
 import DoctorProfile from './components/DoctorProfile';
 import SearchDoctors from './components/SearchDoctors';
+import EnhancedSearchDoctors from './components/EnhancedSearchDoctors';
+import BookAppointment from './components/BookAppointment';
+import BookAppointmentPage from './components/BookAppointmentPage';
+import PatientAppointments from './components/PatientAppointments';
+import DoctorAppointments from './components/DoctorAppointments';
+import DoctorSchedule from './components/DoctorSchedule';
 
 const theme = createTheme({
   palette: {
@@ -95,6 +103,41 @@ const ProtectedRoute = ({ children }) => {
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
+const PatientRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh' 
+      }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  
+  // Check if user is authenticated
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  
+  // Check if user is a doctor - redirect to doctor dashboard
+  if (user.roles?.includes('ROLE_DOCTOR')) {
+    return <Navigate to="/doctor/dashboard" />;
+  }
+  
+  // Check if user is an admin - redirect to admin dashboard
+  if (user.roles?.includes('ROLE_ADMIN')) {
+    return <Navigate to="/admin/dashboard" />;
+  }
+  
+  // Allow only patients (users without special roles) to access patient routes
+  return <>{children}</>;
+};
+
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
@@ -111,7 +154,23 @@ const AdminRoute = ({ children }) => {
     );
   }
   
-  return user && user.roles?.includes('ROLE_ADMIN') ? 
+  // Check if user is authenticated
+  if (!user) {
+    return <Navigate to="/admin/login" />;
+  }
+  
+  // Check if user is a doctor - redirect to doctor dashboard
+  if (user.roles?.includes('ROLE_DOCTOR')) {
+    return <Navigate to="/doctor/dashboard" />;
+  }
+  
+  // Check if user is a patient - redirect to patient dashboard
+  if (!user.roles?.includes('ROLE_ADMIN') && !user.roles?.includes('ROLE_DOCTOR')) {
+    return <Navigate to="/dashboard" />;
+  }
+  
+  // Allow only admins to access admin routes
+  return user.roles?.includes('ROLE_ADMIN') ? 
     <>{children}</> : 
     <Navigate to="/admin/login" />;
 };
@@ -132,7 +191,23 @@ const DoctorRoute = ({ children }) => {
     );
   }
   
-  return user && user.roles?.includes('ROLE_DOCTOR') ? 
+  // Check if user is authenticated
+  if (!user) {
+    return <Navigate to="/doctor/login" />;
+  }
+  
+  // Check if user is an admin - redirect to admin dashboard
+  if (user.roles?.includes('ROLE_ADMIN')) {
+    return <Navigate to="/admin/dashboard" />;
+  }
+  
+  // Check if user is a patient - redirect to patient dashboard
+  if (!user.roles?.includes('ROLE_DOCTOR') && !user.roles?.includes('ROLE_ADMIN')) {
+    return <Navigate to="/dashboard" />;
+  }
+  
+  // Allow only doctors to access doctor routes
+  return user.roles?.includes('ROLE_DOCTOR') ? 
     <>{children}</> : 
     <Navigate to="/doctor/login" />;
 };
@@ -153,7 +228,19 @@ const PublicRoute = ({ children }) => {
     );
   }
   
-  return !user ? <>{children}</> : <Navigate to="/dashboard" />;
+  // If user is authenticated, redirect based on their role
+  if (user) {
+    if (user.roles?.includes('ROLE_ADMIN')) {
+      return <Navigate to="/admin/dashboard" />;
+    } else if (user.roles?.includes('ROLE_DOCTOR')) {
+      return <Navigate to="/doctor/dashboard" />;
+    } else {
+      // Regular patient user
+      return <Navigate to="/dashboard" />;
+    }
+  }
+  
+  return <>{children}</>;
 };
 
 function App() {
@@ -162,9 +249,10 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <Router>
+          <NavigationGuard />
           <div className="App">
             <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" />} />
+              <Route path="/" element={<LandingPage />} />
               <Route
                 path="/login"
                 element={
@@ -208,25 +296,41 @@ function App() {
               <Route
                 path="/dashboard"
                 element={
-                  <ProtectedRoute>
+                  <PatientRoute>
                     <Dashboard />
-                  </ProtectedRoute>
+                  </PatientRoute>
                 }
               />
               <Route
                 path="/profile"
                 element={
-                  <ProtectedRoute>
+                  <PatientRoute>
                     <Profile />
-                  </ProtectedRoute>
+                  </PatientRoute>
                 }
               />
               <Route
                 path="/search-doctors"
                 element={
-                  <ProtectedRoute>
-                    <SearchDoctors />
-                  </ProtectedRoute>
+                  <PatientRoute>
+                    <EnhancedSearchDoctors />
+                  </PatientRoute>
+                }
+              />
+              <Route
+                path="/book-appointment"
+                element={
+                  <PatientRoute>
+                    <BookAppointmentPage />
+                  </PatientRoute>
+                }
+              />
+              <Route
+                path="/my-appointments"
+                element={
+                  <PatientRoute>
+                    <PatientAppointments />
+                  </PatientRoute>
                 }
               />
               <Route
@@ -250,6 +354,22 @@ function App() {
                 element={
                   <DoctorRoute>
                     <DoctorProfile />
+                  </DoctorRoute>
+                }
+              />
+              <Route
+                path="/doctor/appointments"
+                element={
+                  <DoctorRoute>
+                    <DoctorAppointments />
+                  </DoctorRoute>
+                }
+              />
+              <Route
+                path="/doctor/schedule"
+                element={
+                  <DoctorRoute>
+                    <DoctorSchedule />
                   </DoctorRoute>
                 }
               />

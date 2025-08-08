@@ -35,6 +35,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/**").permitAll() // Allow auth endpoints without authentication
+                .requestMatchers("/api/public/**").permitAll() // Allow public endpoints without authentication
                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // Admin endpoints require ADMIN role
                 .anyRequest().authenticated() // All other endpoints require authentication
             )

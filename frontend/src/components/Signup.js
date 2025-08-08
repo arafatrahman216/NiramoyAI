@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { redirectBasedOnRole } from '../utils/roleRedirect';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -35,7 +36,7 @@ const Signup = () => {
     phoneNumber: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const { signup, loading, error } = useAuth();
+  const { signup, logout, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -53,7 +54,17 @@ const Signup = () => {
         formData.password.trim()) {
       const success = await signup(formData);
       if (success) {
-        navigate('/dashboard');
+        // Get user data and check if admin
+        const userData = JSON.parse(localStorage.getItem('user'));
+        
+        // Block admin users from normal signup (shouldn't happen but safety check)
+        if (userData.roles && userData.roles.includes('ROLE_ADMIN')) {
+          logout();
+          alert('Admin accounts must be created through the Admin Portal.');
+          return;
+        }
+        
+        redirectBasedOnRole(userData, navigate);
       }
     }
   };

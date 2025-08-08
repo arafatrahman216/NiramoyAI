@@ -16,12 +16,13 @@ import {
 import { Visibility, VisibilityOff, Person, Lock } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { redirectBasedOnRole } from '../utils/roleRedirect';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, loading, error } = useAuth();
+  const { login, logout, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -29,7 +30,18 @@ const Login = () => {
     if (username.trim() && password.trim()) {
       const success = await login(username, password);
       if (success) {
-        navigate('/dashboard');
+        // Get user data and check if admin
+        const userData = JSON.parse(localStorage.getItem('user'));
+        
+        // Block admin users from normal login
+        if (userData.roles && userData.roles.includes('ROLE_ADMIN')) {
+          // Log them out immediately
+          logout();
+          alert('Admin users must use the Admin Portal to login.');
+          return;
+        }
+        
+        redirectBasedOnRole(userData, navigate);
       }
     }
   };

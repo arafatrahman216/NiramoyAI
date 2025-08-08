@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# NiramoyAI Scraper Build and Run Script
+# This script compiles and runs the medical data scraper
+
+echo "=========================================="
+echo "   NiramoyAI Medical Data Scraper"
+echo "=========================================="
+
+# Check if required JAR files exist
+if [ ! -f "gson-2.10.1.jar" ] || [ ! -f "jsoup-1.17.2.jar" ]; then
+    echo "Error: Required JAR files not found!"
+    echo "Please ensure gson-2.10.1.jar and jsoup-1.17.2.jar are in the current directory."
+    exit 1
+fi
+
+# Compile Java files (only DoctorScraper)
+echo "Compiling DoctorScraper..."
+javac -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper.java
+
+if [ $? -ne 0 ]; then
+    echo "Error: Compilation failed!"
+    exit 1
+fi
+
+echo "✓ Compilation successful!"
+echo ""
+
+# Menu for different scraping options
+echo "Select scraping option:"
+echo "1. Quick doctor search (DoctorScraper)"
+echo "2. Use custom doctor name"
+echo "3. Exit"
+echo ""
+read -p "Enter your choice (1-3): " choice
+
+case $choice in
+    1)
+        echo ""
+        read -p "Enter doctor name to search: " doctor_name
+        if [ -z "$doctor_name" ]; then
+            echo "Doctor name cannot be empty!"
+            exit 1
+        fi
+        echo ""
+        echo "Running quick doctor search..."
+        java -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper "$doctor_name"
+        ;;
+    2)
+        echo ""
+        read -p "Enter doctor name to search: " doctor_name
+        if [ -z "$doctor_name" ]; then
+            echo "Doctor name cannot be empty!"
+            exit 1
+        fi
+        echo ""
+        echo "Running doctor search..."
+        java -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper "$doctor_name"
+        ;;
+    3)
+        echo "Exiting..."
+        exit 0
+        ;;
+    *)
+        echo "Invalid choice!"
+        exit 1
+        ;;
+esac
+
+echo ""
+echo "=========================================="
+echo "Scraping completed!"
+echo ""
+echo "Generated files:"
+ls -la *.json 2>/dev/null || echo "No JSON files found."
+echo "=========================================="
