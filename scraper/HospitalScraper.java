@@ -1,6 +1,5 @@
-package com.niramoyai.scraper;
-
 import org.jsoup.Jsoup;
+import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -8,363 +7,172 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class HospitalScraper {
     
-    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
-    private static final int TIMEOUT = 10000;
-    
-    public static class Hospital {
-        private String name;
-        private String type; // Government, Private, Specialized
-        private String address;
-        private String area;
-        private String city;
-        private String phoneNumber;
-        private String email;
-        private String website;
-        private String emergencyContact;
-        private String establishedYear;
-        private String bedCapacity;
-        private String departments;
-        private String facilities;
-        private String specialties;
-        private String rating;
-        private String reviewCount;
-        private String profileUrl;
-        private String latitude;
-        private String longitude;
+    public static void main(String[] args) {
+        // Environment URL base from .env
+        String baseUrl = "https://sasthyaseba.com/search?type=hospital&country_id=22&q=";
         
-        // Constructors
-        public Hospital() {}
+        // Get hospital name from command line or use default
+        String hospitalName = args.length > 0 ? args[0] : "modern";
+        String fullUrl = baseUrl + hospitalName.replace(" ", "%20");
         
-        public Hospital(String name, String type, String address, String area, String city,
-                       String phoneNumber, String email, String website, String emergencyContact,
-                       String establishedYear, String bedCapacity, String departments,
-                       String facilities, String specialties, String rating, String reviewCount,
-                       String profileUrl, String latitude, String longitude) {
-            this.name = name;
-            this.type = type;
-            this.address = address;
-            this.area = area;
-            this.city = city;
-            this.phoneNumber = phoneNumber;
-            this.email = email;
-            this.website = website;
-            this.emergencyContact = emergencyContact;
-            this.establishedYear = establishedYear;
-            this.bedCapacity = bedCapacity;
-            this.departments = departments;
-            this.facilities = facilities;
-            this.specialties = specialties;
-            this.rating = rating;
-            this.reviewCount = reviewCount;
-            this.profileUrl = profileUrl;
-            this.latitude = latitude;
-            this.longitude = longitude;
-        }
+        System.out.println("Scraping sasthyaseba.com for hospital: " + hospitalName);
+        System.out.println("URL: " + fullUrl);
+        System.out.println("=====================================");
         
-        // Getters and Setters
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
+        List<Map<String, String>> hospitals = scrapeHospitals(fullUrl);
         
-        public String getType() { return type; }
-        public void setType(String type) { this.type = type; }
-        
-        public String getAddress() { return address; }
-        public void setAddress(String address) { this.address = address; }
-        
-        public String getArea() { return area; }
-        public void setArea(String area) { this.area = area; }
-        
-        public String getCity() { return city; }
-        public void setCity(String city) { this.city = city; }
-        
-        public String getPhoneNumber() { return phoneNumber; }
-        public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
-        
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        
-        public String getWebsite() { return website; }
-        public void setWebsite(String website) { this.website = website; }
-        
-        public String getEmergencyContact() { return emergencyContact; }
-        public void setEmergencyContact(String emergencyContact) { this.emergencyContact = emergencyContact; }
-        
-        public String getEstablishedYear() { return establishedYear; }
-        public void setEstablishedYear(String establishedYear) { this.establishedYear = establishedYear; }
-        
-        public String getBedCapacity() { return bedCapacity; }
-        public void setBedCapacity(String bedCapacity) { this.bedCapacity = bedCapacity; }
-        
-        public String getDepartments() { return departments; }
-        public void setDepartments(String departments) { this.departments = departments; }
-        
-        public String getFacilities() { return facilities; }
-        public void setFacilities(String facilities) { this.facilities = facilities; }
-        
-        public String getSpecialties() { return specialties; }
-        public void setSpecialties(String specialties) { this.specialties = specialties; }
-        
-        public String getRating() { return rating; }
-        public void setRating(String rating) { this.rating = rating; }
-        
-        public String getReviewCount() { return reviewCount; }
-        public void setReviewCount(String reviewCount) { this.reviewCount = reviewCount; }
-        
-        public String getProfileUrl() { return profileUrl; }
-        public void setProfileUrl(String profileUrl) { this.profileUrl = profileUrl; }
-        
-        public String getLatitude() { return latitude; }
-        public void setLatitude(String latitude) { this.latitude = latitude; }
-        
-        public String getLongitude() { return longitude; }
-        public void setLongitude(String longitude) { this.longitude = longitude; }
-    }
-    
-    public static List<Hospital> scrapeHospitals(String url, Map<String, String> selectors) {
-        List<Hospital> hospitals = new ArrayList<>();
-        
-        try {
-            System.out.println("Scraping hospitals from: " + url);
-            Document doc = Jsoup.connect(url)
-                    .userAgent(USER_AGENT)
-                    .timeout(TIMEOUT)
-                    .get();
+        if (!hospitals.isEmpty()) {
+            System.out.println("Found " + hospitals.size() + " hospitals:");
+            System.out.println();
             
-            // Get the container element that holds all hospital cards
-            String containerSelector = selectors.getOrDefault("container", ".hospital-list, .hospitals-container, .search-results");
-            Elements hospitalElements = doc.select(containerSelector + " > div, " + containerSelector + " > article, " + containerSelector + " > .hospital-card");
-            
-            if (hospitalElements.isEmpty()) {
-                // Try alternative selectors
-                hospitalElements = doc.select(".hospital-item, .hospital-profile, .hospital-listing, .card");
+            for (int i = 0; i < hospitals.size(); i++) {
+                Map<String, String> hospital = hospitals.get(i);
+                System.out.println((i + 1) + ". " + hospital.get("name"));
+                System.out.println("   Address: " + hospital.get("address"));
+                System.out.println("   Doctors: " + hospital.get("doctorCount"));
+                System.out.println("   Fee Range: " + hospital.get("feeRange"));
+                System.out.println("   Services: " + hospital.get("services"));
+                System.out.println("   Profile: " + hospital.get("profileUrl"));
+                System.out.println();
             }
             
-            System.out.println("Found " + hospitalElements.size() + " hospital elements");
+            // Save to JSON file
+            String filename = "hospitals_" + hospitalName.replaceAll("[^a-zA-Z0-9]", "_") + ".json";
+            saveToJson(hospitals, filename);
+            System.out.println("Results saved to: " + filename);
+            
+        } else {
+            System.out.println("No hospitals found for: " + hospitalName);
+        }
+    }
+    
+    public static List<Map<String, String>> scrapeHospitals(String url) {
+        List<Map<String, String>> hospitals = new ArrayList<>();
+        
+        try {
+            // Connect to the website
+            Connection connection = Jsoup.connect(url)
+                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+                .header("Accept-Language", "en-US,en;q=0.5")
+                .timeout(10000);
+            
+            Document doc = connection.get();
+            
+            // Find hospital containers using the specific selector for hospital profiles
+            Elements hospitalElements = doc.select("div.hospitalProfile");
             
             for (Element hospitalElement : hospitalElements) {
-                try {
-                    Hospital hospital = new Hospital();
-                    
-                    // Extract hospital name
-                    String nameSelector = selectors.getOrDefault("name", ".hospital-name, .name, h3, h4, .title");
-                    Element nameElement = hospitalElement.selectFirst(nameSelector);
-                    if (nameElement != null) {
-                        hospital.setName(cleanText(nameElement.text()));
+                Map<String, String> hospital = new HashMap<>();
+                
+                // Extract hospital name
+                Element nameElement = hospitalElement.selectFirst("h6[itemprop='name']");
+                if (nameElement != null) {
+                    hospital.put("name", nameElement.text().trim());
+                }
+                
+                // Extract address
+                Element addressElement = hospitalElement.selectFirst("h6[itemprop='address']");
+                if (addressElement != null) {
+                    hospital.put("address", addressElement.text().trim());
+                }
+                
+                // Extract doctor count and specialties
+                Elements doctorInfoElements = hospitalElement.select("h6.text-primaryColor-tint-100");
+                for (Element doctorInfo : doctorInfoElements) {
+                    String text = doctorInfo.text().trim();
+                    if (text.contains("Doctors") && text.contains("specialities")) {
+                        hospital.put("doctorCount", text);
+                        break;
                     }
-                    
-                    // Extract hospital type
-                    String typeSelector = selectors.getOrDefault("type", ".hospital-type, .type, .category");
-                    Element typeElement = hospitalElement.selectFirst(typeSelector);
-                    if (typeElement != null) {
-                        hospital.setType(cleanText(typeElement.text()));
+                }
+                
+                // Extract fee range
+                Elements feeElements = hospitalElement.select("h6.text-black-tint-100");
+                for (Element feeElement : feeElements) {
+                    String text = feeElement.text().trim();
+                    if (text.contains("Taka")) {
+                        hospital.put("feeRange", text);
+                        break;
                     }
-                    
-                    // Extract address
-                    String addressSelector = selectors.getOrDefault("address", ".address, .location, .full-address");
-                    Element addressElement = hospitalElement.selectFirst(addressSelector);
-                    if (addressElement != null) {
-                        hospital.setAddress(cleanText(addressElement.text()));
-                    }
-                    
-                    // Extract area
-                    String areaSelector = selectors.getOrDefault("area", ".area, .locality, .district");
-                    Element areaElement = hospitalElement.selectFirst(areaSelector);
-                    if (areaElement != null) {
-                        hospital.setArea(cleanText(areaElement.text()));
-                    }
-                    
-                    // Extract city
-                    String citySelector = selectors.getOrDefault("city", ".city, .town");
-                    Element cityElement = hospitalElement.selectFirst(citySelector);
-                    if (cityElement != null) {
-                        hospital.setCity(cleanText(cityElement.text()));
-                    }
-                    
-                    // Extract phone number
-                    String phoneSelector = selectors.getOrDefault("phone", ".phone, .contact, .mobile, .telephone");
-                    Element phoneElement = hospitalElement.selectFirst(phoneSelector);
-                    if (phoneElement != null) {
-                        hospital.setPhoneNumber(cleanText(phoneElement.text()));
-                    }
-                    
-                    // Extract email
-                    String emailSelector = selectors.getOrDefault("email", ".email, .contact-email");
-                    Element emailElement = hospitalElement.selectFirst(emailSelector);
-                    if (emailElement != null) {
-                        hospital.setEmail(cleanText(emailElement.text()));
-                    }
-                    
-                    // Extract website
-                    String websiteSelector = selectors.getOrDefault("website", ".website, .web, a[href*='www']");
-                    Element websiteElement = hospitalElement.selectFirst(websiteSelector);
-                    if (websiteElement != null) {
-                        String href = websiteElement.attr("href");
-                        if (!href.isEmpty()) {
-                            hospital.setWebsite(href);
-                        } else {
-                            hospital.setWebsite(cleanText(websiteElement.text()));
+                }
+                
+                // Extract services
+                Element servicesContainer = hospitalElement.selectFirst("p.text-left");
+                if (servicesContainer != null) {
+                    Elements serviceLinks = servicesContainer.select("a");
+                    if (!serviceLinks.isEmpty()) {
+                        StringBuilder services = new StringBuilder();
+                        for (Element serviceLink : serviceLinks) {
+                            if (services.length() > 0) services.append(", ");
+                            services.append(serviceLink.text().trim());
                         }
+                        hospital.put("services", services.toString());
                     }
-                    
-                    // Extract emergency contact
-                    String emergencySelector = selectors.getOrDefault("emergency", ".emergency, .emergency-contact, .emergency-phone");
-                    Element emergencyElement = hospitalElement.selectFirst(emergencySelector);
-                    if (emergencyElement != null) {
-                        hospital.setEmergencyContact(cleanText(emergencyElement.text()));
+                }
+                
+                // Extract profile URL
+                Element linkElement = hospitalElement.selectFirst("a[itemprop='url']");
+                if (linkElement != null) {
+                    String href = linkElement.attr("href");
+                    if (!href.isEmpty()) {
+                        hospital.put("profileUrl", href.startsWith("http") ? href : "https://sasthyaseba.com" + href);
                     }
-                    
-                    // Extract established year
-                    String yearSelector = selectors.getOrDefault("established", ".established, .founded, .since");
-                    Element yearElement = hospitalElement.selectFirst(yearSelector);
-                    if (yearElement != null) {
-                        hospital.setEstablishedYear(cleanText(yearElement.text()));
+                }
+                
+                // Extract image URL
+                Element imageElement = hospitalElement.selectFirst("img[itemprop='logo']");
+                if (imageElement != null) {
+                    String imageSrc = imageElement.attr("src");
+                    if (!imageSrc.isEmpty()) {
+                        hospital.put("imageUrl", imageSrc.startsWith("http") ? imageSrc : "https://sasthyaseba.com" + imageSrc);
                     }
-                    
-                    // Extract bed capacity
-                    String bedSelector = selectors.getOrDefault("beds", ".beds, .bed-capacity, .capacity");
-                    Element bedElement = hospitalElement.selectFirst(bedSelector);
-                    if (bedElement != null) {
-                        hospital.setBedCapacity(cleanText(bedElement.text()));
+                }
+                
+                // Extract patient opinions count
+                Elements opinionElements = hospitalElement.select("h6.text-black-tint-400");
+                for (Element opinionElement : opinionElements) {
+                    String text = opinionElement.text().trim();
+                    if (text.contains("patients opinion")) {
+                        hospital.put("patientOpinions", text);
+                        break;
                     }
-                    
-                    // Extract departments
-                    String deptSelector = selectors.getOrDefault("departments", ".departments, .depts, .services");
-                    Element deptElement = hospitalElement.selectFirst(deptSelector);
-                    if (deptElement != null) {
-                        hospital.setDepartments(cleanText(deptElement.text()));
-                    }
-                    
-                    // Extract facilities
-                    String facilitiesSelector = selectors.getOrDefault("facilities", ".facilities, .amenities, .features");
-                    Element facilitiesElement = hospitalElement.selectFirst(facilitiesSelector);
-                    if (facilitiesElement != null) {
-                        hospital.setFacilities(cleanText(facilitiesElement.text()));
-                    }
-                    
-                    // Extract specialties
-                    String specialtiesSelector = selectors.getOrDefault("specialties", ".specialties, .specializations, .expertise");
-                    Element specialtiesElement = hospitalElement.selectFirst(specialtiesSelector);
-                    if (specialtiesElement != null) {
-                        hospital.setSpecialties(cleanText(specialtiesElement.text()));
-                    }
-                    
-                    // Extract rating
-                    String ratingSelector = selectors.getOrDefault("rating", ".rating, .stars, .score");
-                    Element ratingElement = hospitalElement.selectFirst(ratingSelector);
-                    if (ratingElement != null) {
-                        hospital.setRating(cleanText(ratingElement.text()));
-                    }
-                    
-                    // Extract review count
-                    String reviewSelector = selectors.getOrDefault("reviews", ".reviews, .review-count, .total-reviews");
-                    Element reviewElement = hospitalElement.selectFirst(reviewSelector);
-                    if (reviewElement != null) {
-                        hospital.setReviewCount(cleanText(reviewElement.text()));
-                    }
-                    
-                    // Extract profile URL
-                    String profileSelector = selectors.getOrDefault("profileLink", "a, .profile-link, .details-link");
-                    Element profileElement = hospitalElement.selectFirst(profileSelector);
-                    if (profileElement != null) {
-                        String href = profileElement.attr("href");
-                        if (!href.isEmpty()) {
-                            hospital.setProfileUrl(href.startsWith("http") ? href : url + href);
-                        }
-                    }
-                    
-                    // Extract coordinates if available
-                    String latSelector = selectors.getOrDefault("latitude", "[data-lat], .latitude");
-                    Element latElement = hospitalElement.selectFirst(latSelector);
-                    if (latElement != null) {
-                        String lat = latElement.attr("data-lat");
-                        if (lat.isEmpty()) lat = cleanText(latElement.text());
-                        hospital.setLatitude(lat);
-                    }
-                    
-                    String lngSelector = selectors.getOrDefault("longitude", "[data-lng], .longitude");
-                    Element lngElement = hospitalElement.selectFirst(lngSelector);
-                    if (lngElement != null) {
-                        String lng = lngElement.attr("data-lng");
-                        if (lng.isEmpty()) lng = cleanText(lngElement.text());
-                        hospital.setLongitude(lng);
-                    }
-                    
-                    // Only add hospital if we have at least name and address
-                    if (hospital.getName() != null && !hospital.getName().isEmpty() &&
-                        hospital.getAddress() != null && !hospital.getAddress().isEmpty()) {
-                        hospitals.add(hospital);
-                        System.out.println("Scraped hospital: " + hospital.getName() + " - " + hospital.getAddress());
-                    }
-                    
-                } catch (Exception e) {
-                    System.err.println("Error scraping individual hospital: " + e.getMessage());
+                }
+                
+                // Extract hospital type from schema
+                String hospitalType = hospitalElement.attr("itemtype");
+                if (hospitalType.contains("Hospital")) {
+                    hospital.put("type", "Hospital");
+                }
+                
+                // Only add if we have at least a name
+                if (hospital.containsKey("name") && !hospital.get("name").isEmpty()) {
+                    hospitals.add(hospital);
                 }
             }
             
         } catch (IOException e) {
-            System.err.println("Error connecting to URL: " + e.getMessage());
+            System.err.println("Error connecting to website: " + e.getMessage());
         } catch (Exception e) {
             System.err.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return hospitals;
     }
     
-    private static String cleanText(String text) {
-        if (text == null) return "";
-        return text.trim().replaceAll("\\s+", " ");
-    }
-    
-    public static void saveToJson(List<Hospital> hospitals, String fileName) {
+    public static void saveToJson(List<Map<String, String>> hospitals, String filename) {
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(fileName);
-            gson.toJson(hospitals, writer);
-            writer.close();
-            System.out.println("Saved " + hospitals.size() + " hospitals to " + fileName);
+            try (FileWriter writer = new FileWriter(filename)) {
+                gson.toJson(hospitals, writer);
+            }
         } catch (IOException e) {
             System.err.println("Error saving to JSON: " + e.getMessage());
         }
-    }
-    
-    public static void main(String[] args) {
-        // Example usage
-        String url = "https://example-medical-site.com/hospitals"; // Replace with actual URL
-        
-        // Define CSS selectors for different elements
-        Map<String, String> selectors = new HashMap<>();
-        selectors.put("container", ".hospital-list");
-        selectors.put("name", ".hospital-name");
-        selectors.put("type", ".hospital-type");
-        selectors.put("address", ".address");
-        selectors.put("area", ".area");
-        selectors.put("city", ".city");
-        selectors.put("phone", ".phone");
-        selectors.put("email", ".email");
-        selectors.put("website", ".website");
-        selectors.put("emergency", ".emergency");
-        selectors.put("established", ".established");
-        selectors.put("beds", ".bed-capacity");
-        selectors.put("departments", ".departments");
-        selectors.put("facilities", ".facilities");
-        selectors.put("specialties", ".specialties");
-        selectors.put("rating", ".rating");
-        selectors.put("reviews", ".review-count");
-        selectors.put("profileLink", "a.profile-link");
-        selectors.put("latitude", "[data-lat]");
-        selectors.put("longitude", "[data-lng]");
-        
-        // Scrape hospitals
-        List<Hospital> hospitals = scrapeHospitals(url, selectors);
-        
-        // Save to JSON
-        saveToJson(hospitals, "hospitals.json");
     }
 }

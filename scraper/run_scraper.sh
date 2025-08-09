@@ -14,9 +14,9 @@ if [ ! -f "gson-2.10.1.jar" ] || [ ! -f "jsoup-1.17.2.jar" ]; then
     exit 1
 fi
 
-# Compile Java files (only DoctorScraper)
-echo "Compiling DoctorScraper..."
-javac -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper.java
+# Compile Java files (DoctorScraper and HospitalScraper)
+echo "Compiling scrapers..."
+javac -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper.java HospitalScraper.java
 
 if [ $? -ne 0 ]; then
     echo "Error: Compilation failed!"
@@ -28,8 +28,8 @@ echo ""
 
 # Menu for different scraping options
 echo "Select scraping option:"
-echo "1. Quick doctor search (DoctorScraper)"
-echo "2. Use custom doctor name"
+echo "1. Doctor search (DoctorScraper)"
+echo "2. Hospital search (HospitalScraper)"
 echo "3. Exit"
 echo ""
 read -p "Enter your choice (1-3): " choice
@@ -43,19 +43,19 @@ case $choice in
             exit 1
         fi
         echo ""
-        echo "Running quick doctor search..."
+        echo "Running doctor search..."
         java -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper "$doctor_name"
         ;;
     2)
         echo ""
-        read -p "Enter doctor name to search: " doctor_name
-        if [ -z "$doctor_name" ]; then
-            echo "Doctor name cannot be empty!"
+        read -p "Enter hospital name to search: " hospital_name
+        if [ -z "$hospital_name" ]; then
+            echo "Hospital name cannot be empty!"
             exit 1
         fi
         echo ""
-        echo "Running doctor search..."
-        java -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper "$doctor_name"
+        echo "Running hospital search..."
+        java -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar HospitalScraper "$hospital_name"
         ;;
     3)
         echo "Exiting..."
