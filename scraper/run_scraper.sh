@@ -16,7 +16,7 @@ fi
 
 # Compile Java files (DoctorScraper, HospitalScraper, and AllDoctor)
 echo "Compiling scrapers..."
-javac -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper.java HospitalScraper.java AllDoctor.java
+javac -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar DoctorScraper.java HospitalScraper.java AllDoctor.java AllHospital.java
 
 if [ $? -ne 0 ]; then
     echo "Error: Compilation failed!"
@@ -31,9 +31,10 @@ echo "Select scraping option:"
 echo "1. Doctor search (DoctorScraper)"
 echo "2. Hospital search (HospitalScraper)"
 echo "3. All doctors scraping (AllDoctor - scrapes ALL doctors with pagination)"
-echo "4. Exit"
+echo "4. All hospitals scraping (AllHospital - scrapes ALL hospitals with pagination)"
+echo "5. Exit"
 echo ""
-read -p "Enter your choice (1-4): " choice
+read -p "Enter your choice (1-5): " choice
 
 case $choice in
     1)
@@ -73,6 +74,20 @@ case $choice in
         fi
         ;;
     4)
+        echo ""
+        echo "Starting comprehensive ALL hospitals scraping..."
+        echo "WARNING: This may take several minutes depending on the number of pages!"
+        echo "Press Ctrl+C to stop if needed."
+        echo ""
+        read -p "Do you want to continue? (y/n): " confirm
+        if [[ $confirm =~ ^[Yy]$ ]]; then
+            echo "Running AllHospital scraper..."
+            java -cp .:gson-2.10.1.jar:jsoup-1.17.2.jar AllHospital
+        else
+            echo "AllHospital scraping cancelled."
+        fi
+        ;;
+    5)
         echo "Exiting..."
         exit 0
         ;;
