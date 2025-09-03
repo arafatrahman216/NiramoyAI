@@ -1,16 +1,32 @@
 import React from 'react';
-import { Plus, Home, Globe, Compass, User } from 'lucide-react';
+import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
 
 // ==============================================
 // SIDEBAR COMPONENT
 // ==============================================
 // Contains: Logo, New Chat, Navigation, Sign In
 // Edit handleNavigation() to add routing/page changes
-const Sidebar = () => {
+const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSidebarOpen }) => {
   // TODO: Add navigation logic here
   const handleNavigation = (section) => {
     console.log(`Navigate to: ${section}`);
     // Add your routing logic here (React Router, Next.js router, etc.)
+  };
+
+  // Handle visits/appointments sidebar
+  const handleVisitsClick = () => {
+    console.log('Toggling visits sidebar');
+    if (onVisitsClick) {
+      onVisitsClick();
+    }
+  };
+
+  // Handle chats sidebar
+  const handleChatsClick = () => {
+    console.log('Toggling chats sidebar');
+    if (onChatsClick) {
+      onChatsClick();
+    }
   };
 
   // TODO: Add new chat functionality
@@ -60,28 +76,48 @@ const Sidebar = () => {
           <span className="text-xs text-zinc-600">Home</span>
         </div>
         
-        {/* Discover Section */}
+        {/* Chats Section */}
         <div className="flex flex-col items-center space-y-2">
           <button 
-            onClick={() => handleNavigation('discover')}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-            title="Discover"
+            onClick={handleChatsClick}
+            className={`p-2 rounded-lg transition-colors group ${
+              isChatsSidebarOpen 
+                ? 'bg-emerald-500/20 text-emerald-400' 
+                : 'hover:bg-zinc-800 text-zinc-500'
+            }`}
+            title="Chats"
           >
-            <Compass size={20} className="text-zinc-500 group-hover:text-zinc-300" />
+            <MessageCircle size={20} className={`${
+              isChatsSidebarOpen 
+                ? 'text-emerald-400' 
+                : 'text-zinc-500 group-hover:text-zinc-300'
+            }`} />
           </button>
-          <span className="text-xs text-zinc-600">Discover</span>
+          <span className={`text-xs ${
+            isChatsSidebarOpen ? 'text-emerald-400' : 'text-zinc-600'
+          }`}>Chats</span>
         </div>
         
-        {/* Spaces Section */}
+        {/* Visits Section */}
         <div className="flex flex-col items-center space-y-2">
           <button 
-            onClick={() => handleNavigation('spaces')}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+            onClick={handleVisitsClick}
+            className={`p-2 rounded-lg transition-colors group ${
+              isVisitsSidebarOpen 
+                ? 'bg-emerald-500/20 text-emerald-400' 
+                : 'hover:bg-zinc-800 text-zinc-500'
+            }`}
             title="Visits"
           >
-            <Globe size={20} className="text-zinc-500 group-hover:text-zinc-300" />
+            <Calendar size={20} className={`${
+              isVisitsSidebarOpen 
+                ? 'text-emerald-400' 
+                : 'text-zinc-500 group-hover:text-zinc-300'
+            }`} />
           </button>
-          <span className="text-xs text-zinc-600">Visits</span>
+          <span className={`text-xs ${
+            isVisitsSidebarOpen ? 'text-emerald-400' : 'text-zinc-600'
+          }`}>Visits</span>
         </div>
       </div>
       

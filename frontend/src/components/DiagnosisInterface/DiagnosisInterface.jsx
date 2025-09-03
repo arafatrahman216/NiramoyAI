@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import SearchInput from './SearchInput';
 import MainLogo from './MainLogo';
+import VisitsSidebar from './VisitsSidebar';
+import ChatsSidebar from './ChatsSidebar';
 
 import agentAPI from '../../services/api'
 
@@ -13,6 +15,12 @@ import agentAPI from '../../services/api'
 const DiagnosisInterface = () => {
   // SEARCH STATE
   const [query, setQuery] = useState('');
+  
+  // VISITS SIDEBAR STATE
+  const [isVisitsSidebarOpen, setIsVisitsSidebarOpen] = useState(false);
+  
+  // CHATS SIDEBAR STATE
+  const [isChatsSidebarOpen, setIsChatsSidebarOpen] = useState(false);
 
   // MAIN SEARCH HANDLER
   // TODO: Replace this with your actual search implementation
@@ -42,7 +50,24 @@ const DiagnosisInterface = () => {
     <div className="min-h-screen bg-black text-white flex">
       {/* SIDEBAR SECTION */}
       {/* Navigation and user controls */}
-      <Sidebar />
+      <Sidebar 
+        onVisitsClick={() => setIsVisitsSidebarOpen(!isVisitsSidebarOpen)}
+        isVisitsSidebarOpen={isVisitsSidebarOpen}
+        onChatsClick={() => setIsChatsSidebarOpen(!isChatsSidebarOpen)}
+        isChatsSidebarOpen={isChatsSidebarOpen}
+      />
+
+      {/* CHATS SIDEBAR */}
+      <ChatsSidebar 
+        isOpen={isChatsSidebarOpen}
+        onClose={() => setIsChatsSidebarOpen(false)}
+      />
+
+      {/* VISITS SIDEBAR */}
+      <VisitsSidebar 
+        isOpen={isVisitsSidebarOpen}
+        onClose={() => setIsVisitsSidebarOpen(false)}
+      />
 
       {/* MAIN CONTENT AREA */}
       {/* Center logo and search input */}
