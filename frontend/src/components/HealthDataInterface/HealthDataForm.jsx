@@ -19,6 +19,59 @@ const HealthDataForm = () => {
     major_events: [],
     chronic_diseases: []
   });
+  const [selectedExercise, setSelectedExercise] = useState([]);
+
+  // Exercise tags and custom input states
+  const exerciseTags = [
+    "No Exercise",
+    "Light Exercise", 
+    "Moderate Exercise",
+    "Intense Exercise",
+    "Yoga",
+    "Sports",
+    "Walking",
+    "Cycling",
+    "Swimming",
+  ];
+
+  const [showCustomInput, setShowCustomInput] = useState({
+    exercise: false,
+    lifestyle: false,
+    allergies: false,
+    chronic: false,
+  });
+  const [customInputValue, setCustomInputValue] = useState({
+    exercise: "",
+    lifestyle: "",
+    allergies: "",
+    chronic: "",
+  });
+
+  const handleCustomInputOpen = (type) => {
+    setShowCustomInput({ ...showCustomInput, [type]: true });
+  };
+  const handleCustomInputChange = (type, value) => {
+    setCustomInputValue({ ...customInputValue, [type]: value });
+  };
+  const handleCustomInputAdd = (type, selectedTags, setSelectedTags) => {
+    if (customInputValue[type].trim() !== "") {
+      setSelectedTags([...selectedTags, customInputValue[type].trim()]);
+      setCustomInputValue({ ...customInputValue, [type]: "" });
+      setShowCustomInput({ ...showCustomInput, [type]: false });
+    }
+  };
+  const handleCustomInputCancel = (type) => {
+    setCustomInputValue({ ...customInputValue, [type]: "" });
+    setShowCustomInput({ ...showCustomInput, [type]: false });
+  };
+
+  const handleTagClick = (tag, selectedTags, setSelectedTags) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter((t) => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
 
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return null;
@@ -83,14 +136,14 @@ const HealthDataForm = () => {
           onClick={nextStep}
           className="bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-3 rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105"
         >
-          Begin Journey
+          Get Started
         </button>
       </div>
     </div>
   );
 
   const BasicInfoStep = () => (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-light text-white mb-2">Basic Information</h2>
         <p className="text-gray-400">Tell us a little about yourself</p>
@@ -222,9 +275,43 @@ const HealthDataForm = () => {
                 {condition}
               </button>
             ))}
+            <button
+              type="button"
+              className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-600 text-gray-400 bg-gray-800 hover:border-gray-500"
+              onClick={() => handleCustomInputOpen("chronic")}
+            >
+              Others
+            </button>
           </div>
-          <div className="text-xs text-gray-500">
-            Don't see your condition? You can add it in the next step.
+          {showCustomInput.chronic && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="text"
+                className="bg-gray-800 border border-gray-700 rounded-full px-3 py-1.5 text-white w-48 focus:border-teal-500 focus:outline-none text-sm"
+                value={customInputValue.chronic}
+                onChange={(e) => handleCustomInputChange("chronic", e.target.value)}
+                placeholder="Enter custom condition"
+              />
+              <button
+                type="button"
+                className="px-3 py-1.5 text-sm rounded-full border bg-teal-600 border-teal-500 text-white hover:bg-teal-700"
+                onClick={() => {
+                  if (customInputValue.chronic.trim() !== "") {
+                    handleArrayChange('chronic_diseases', customInputValue.chronic.toLowerCase().replace(/['().<>\s]/g, '_'));
+                    setCustomInputValue({ ...customInputValue, chronic: "" });
+                    setShowCustomInput({ ...showCustomInput, chronic: false });
+                  }
+                }}
+              >Add</button>
+              <button
+                type="button"
+                className="px-3 py-1.5 text-sm rounded-full border bg-gray-600 border-gray-500 text-white hover:bg-gray-700"
+                onClick={() => handleCustomInputCancel("chronic")}
+              >Cancel</button>
+            </div>
+          )}
+          <div className="text-xs text-gray-500 mt-2">
+            Don't see your condition? Use the "Others" button to add it.
           </div>
         </div>
 
@@ -257,13 +344,19 @@ const HealthDataForm = () => {
         <div>
           <h3 className="text-lg text-white mb-4">Lifestyle Habits</h3>
           <p className="text-gray-400 text-sm mb-4">Select all that apply to you:</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {['Smoking', 'Alcohol', 'Regular Exercise', 'Vegetarian Diet', 'High Protein Diet', 'Low Carb Diet'].map((habit) => (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {/* Expanded lifestyle tags, styled like chronic conditions */}
+            {[
+              'Smoking', 'Alcohol', 'Exercise (Regular)', 'Exercise (Occasional)', 'No Exercise',
+              'Vegetarian Diet', 'Vegan Diet', 'High Protein Diet', 'Low Carb Diet', 'High Sugar Diet',
+              'Low Fat Diet', 'Keto Diet', 'Intermittent Fasting', 'Meditation', 'Yoga', 'Caffeine',
+              'Sleep <6h', 'Sleep 6-8h', 'Sleep >8h', 'Work Stress', 'Sedentary Job', 'Active Job', 'None'
+            ].map((habit) => (
               <button
                 key={habit}
-                onClick={() => handleArrayChange('lifestyle', habit.toLowerCase().replace(' ', '_'))}
-                className={`p-3 rounded-lg border transition-all ${
-                  formData.lifestyle.includes(habit.toLowerCase().replace(' ', '_'))
+                onClick={() => handleArrayChange('lifestyle', habit.toLowerCase().replace(/['().<>\s]/g, '_'))}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                  formData.lifestyle.includes(habit.toLowerCase().replace(/['().<>\s]/g, '_'))
                     ? 'bg-teal-600 border-teal-500 text-white'
                     : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
                 }`}
@@ -271,20 +364,106 @@ const HealthDataForm = () => {
                 {habit}
               </button>
             ))}
+            <button
+              type="button"
+              className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-600 text-gray-400 bg-gray-800 hover:border-gray-500"
+              onClick={() => handleCustomInputOpen("lifestyle")}
+            >
+              Others
+            </button>
           </div>
+          {showCustomInput.lifestyle && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="text"
+                className="bg-gray-800 border border-gray-700 rounded-full px-3 py-1.5 text-white w-48 focus:border-teal-500 focus:outline-none text-sm"
+                value={customInputValue.lifestyle}
+                onChange={(e) => handleCustomInputChange("lifestyle", e.target.value)}
+                placeholder="Enter custom lifestyle habit"
+              />
+              <button
+                type="button"
+                className="px-3 py-1.5 text-sm rounded-full border bg-teal-600 border-teal-500 text-white hover:bg-teal-700"
+                onClick={() => {
+                  if (customInputValue.lifestyle.trim() !== "") {
+                    handleArrayChange('lifestyle', customInputValue.lifestyle.toLowerCase().replace(/['().<>\s]/g, '_'));
+                    setCustomInputValue({ ...customInputValue, lifestyle: "" });
+                    setShowCustomInput({ ...showCustomInput, lifestyle: false });
+                  }
+                }}
+              >Add</button>
+              <button
+                type="button"
+                className="px-3 py-1.5 text-sm rounded-full border bg-gray-600 border-gray-500 text-white hover:bg-gray-700"
+                onClick={() => handleCustomInputCancel("lifestyle")}
+              >Cancel</button>
+            </div>
+          )}
         </div>
 
-        {/* Allergies */}
+        {/* Exercise */}
+        <div>
+          <h3 className="text-lg text-white mb-4">Exercise</h3>
+          <p className="text-gray-400 text-sm mb-4">Select your exercise habits:</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {exerciseTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${selectedExercise.includes(tag)
+                  ? "bg-green-600 border-green-500 text-white"
+                  : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600"}
+                `}
+                onClick={() => handleTagClick(tag, selectedExercise, setSelectedExercise)}
+              >
+                {tag}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-600 text-gray-400 bg-gray-800 hover:border-gray-500"
+              onClick={() => handleCustomInputOpen("exercise")}
+            >
+              Others
+            </button>
+          </div>
+          {showCustomInput.exercise && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="text"
+                className="bg-gray-800 border border-gray-700 rounded-full px-3 py-1.5 text-white w-48 focus:border-teal-500 focus:outline-none text-sm"
+                value={customInputValue.exercise}
+                onChange={(e) => handleCustomInputChange("exercise", e.target.value)}
+                placeholder="Enter custom exercise"
+              />
+              <button
+                type="button"
+                className="px-3 py-1.5 text-sm rounded-full border bg-green-600 border-green-500 text-white hover:bg-green-700"
+                onClick={() => handleCustomInputAdd("exercise", selectedExercise, setSelectedExercise)}
+              >Add</button>
+              <button
+                type="button"
+                className="px-3 py-1.5 text-sm rounded-full border bg-gray-600 border-gray-500 text-white hover:bg-gray-700"
+                onClick={() => handleCustomInputCancel("exercise")}
+              >Cancel</button>
+            </div>
+          )}
+        </div>
+
+        {/* Common Allergies */}
         <div>
           <h3 className="text-lg text-white mb-4">Common Allergies</h3>
           <p className="text-gray-400 text-sm mb-4">Select any allergies you have:</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {['Peanuts', 'Shellfish', 'Dairy', 'Gluten', 'Pollen', 'Dust', 'Medications', 'Pet Dander', 'Soy', 'Eggs', 'Tree Nuts', 'None'].map((allergy) => (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {[
+              'Peanuts', 'Shellfish', 'Dairy', 'Gluten', 'Pollen', 'Dust', 'Medications', 'Pet Dander',
+              'Soy', 'Eggs', 'Tree Nuts', 'Latex', 'Insect Stings', 'Mold', 'Fragrances', 'None'
+            ].map((allergy) => (
               <button
                 key={allergy}
-                onClick={() => handleArrayChange('allergies', allergy.toLowerCase().replace(' ', '_'))}
-                className={`p-3 rounded-lg border transition-all ${
-                  formData.allergies.includes(allergy.toLowerCase().replace(' ', '_'))
+                onClick={() => handleArrayChange('allergies', allergy.toLowerCase().replace(/['().<>\s]/g, '_'))}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                  formData.allergies.includes(allergy.toLowerCase().replace(/['().<>\s]/g, '_'))
                     ? 'bg-teal-600 border-teal-500 text-white'
                     : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
                 }`}
@@ -292,32 +471,41 @@ const HealthDataForm = () => {
                 {allergy}
               </button>
             ))}
+            <button
+              type="button"
+              className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-600 text-gray-400 bg-gray-800 hover:border-gray-500"
+              onClick={() => handleCustomInputOpen("allergies")}
+            >
+              Others
+            </button>
           </div>
-        </div>
-
-        {/* Past Health Events */}
-        <div>
-          <h3 className="text-lg text-white mb-4">Past Health Events (Optional)</h3>
-          <p className="text-gray-400 text-sm mb-4">Select significant health events you've experienced:</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {[
-              'Surgery', 'Heart Attack', 'Stroke', 'Cancer', 'Fractures', 
-              'Hospitalization', 'Blood Transfusion', 'Organ Transplant', 
-              'Major Accident', 'Pregnancy Complications', 'Mental Health Crisis', 'None'
-            ].map((event) => (
+          {showCustomInput.allergies && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="text"
+                className="bg-gray-800 border border-gray-700 rounded-full px-3 py-1.5 text-white w-48 focus:border-teal-500 focus:outline-none text-sm"
+                value={customInputValue.allergies}
+                onChange={(e) => handleCustomInputChange("allergies", e.target.value)}
+                placeholder="Enter custom allergy"
+              />
               <button
-                key={event}
-                onClick={() => handleArrayChange('major_events', event.toLowerCase().replace(' ', '_'))}
-                className={`p-3 rounded-lg border transition-all text-left ${
-                  formData.major_events && formData.major_events.includes(event.toLowerCase().replace(' ', '_'))
-                    ? 'bg-teal-600 border-teal-500 text-white'
-                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                }`}
-              >
-                {event}
-              </button>
-            ))}
-          </div>
+                type="button"
+                className="px-3 py-1.5 text-sm rounded-full border bg-teal-600 border-teal-500 text-white hover:bg-teal-700"
+                onClick={() => {
+                  if (customInputValue.allergies.trim() !== "") {
+                    handleArrayChange('allergies', customInputValue.allergies.toLowerCase().replace(/['().<>\s]/g, '_'));
+                    setCustomInputValue({ ...customInputValue, allergies: "" });
+                    setShowCustomInput({ ...showCustomInput, allergies: false });
+                  }
+                }}
+              >Add</button>
+              <button
+                type="button"
+                className="px-3 py-1.5 text-sm rounded-full border bg-gray-600 border-gray-500 text-white hover:bg-gray-700"
+                onClick={() => handleCustomInputCancel("allergies")}
+              >Cancel</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
