@@ -1,3 +1,8 @@
+// ==============================================
+// HEALTH VITALS STEP COMPONENT
+// ==============================================
+// TODO: Add range validation for vitals
+// TODO: Add chronic condition suggestions from backend
 import React from 'react';
 import CustomTagInput from './CustomTagInput';
 

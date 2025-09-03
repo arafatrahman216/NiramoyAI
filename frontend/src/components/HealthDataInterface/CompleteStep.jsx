@@ -1,3 +1,7 @@
+// ==============================================
+// COMPLETE STEP COMPONENT
+// ==============================================
+// TODO: Add share/download profile feature
 import React from 'react';
 import { Heart } from 'lucide-react';
 

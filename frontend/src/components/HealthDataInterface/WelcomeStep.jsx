@@ -1,3 +1,7 @@
+// ==============================================
+// WELCOME STEP COMPONENT
+// ==============================================
+// TODO: Add onboarding animation or tips
 import React from 'react';
 import { Heart } from 'lucide-react';
 

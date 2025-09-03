@@ -1,3 +1,7 @@
+// ==============================================
+// NAVIGATION BUTTONS COMPONENT
+// ==============================================
+// TODO: Add keyboard navigation support
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 

@@ -1,3 +1,8 @@
+// ==============================================
+// HEALTH DATA FORM MAIN CONTAINER
+// ==============================================
+// TODO: Refactor state management if form grows larger
+// TODO: Add validation and error handling for all steps
 import React, { useState } from 'react';
 import { Heart, Activity, User, FileText } from 'lucide-react';
 import WelcomeStep from './WelcomeStep';
@@ -9,6 +14,10 @@ import ProgressBar from './ProgressBar';
 import NavigationButtons from './NavigationButtons';
 
 const HealthDataForm = () => {
+  // ==============================================
+  // STATE MANAGEMENT
+  // ==============================================
+  // TODO: Move to context if used globally
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     // Part 1
@@ -115,6 +124,10 @@ const HealthDataForm = () => {
     }));
   };
 
+  // ==============================================
+  // NAVIGATION LOGIC
+  // ==============================================
+  // TODO: Add step validation before navigation
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -149,6 +162,10 @@ const HealthDataForm = () => {
     });
   };
 
+  // ==============================================
+  // STEP RENDERER
+  // ==============================================
+  // TODO: Optimize with useMemo if performance issues
   const renderStep = () => {
     switch (currentStep) {
       case 0: 
@@ -204,6 +221,10 @@ const HealthDataForm = () => {
     }
   };
 
+  // ==============================================
+  // MAIN RENDER
+  // ==============================================
+  // TODO: Add loading and error states for async actions
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">

@@ -1,3 +1,7 @@
+// ==============================================
+// BASIC INFO STEP COMPONENT
+// ==============================================
+// TODO: Add input validation and error messages
 import React from 'react';
 
 const BasicInfoStep = ({ formData, handleInputChange, calculateAge }) => (

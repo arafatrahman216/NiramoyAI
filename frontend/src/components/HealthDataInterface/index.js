@@ -1,3 +1,7 @@
+// ==============================================
+// HEALTH DATA INTERFACE EXPORTS
+// ==============================================
+// TODO: Add barrel export for future components
 export { default as HealthDataForm } from './HealthDataForm';
 export { default as WelcomeStep } from './WelcomeStep';
 export { default as BasicInfoStep } from './BasicInfoStep';

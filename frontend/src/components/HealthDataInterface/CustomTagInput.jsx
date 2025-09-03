@@ -1,3 +1,7 @@
+// ==============================================
+// CUSTOM TAG INPUT COMPONENT
+// ==============================================
+// TODO: Add duplicate tag prevention
 import React from 'react';
 
 const CustomTagInput = ({ 

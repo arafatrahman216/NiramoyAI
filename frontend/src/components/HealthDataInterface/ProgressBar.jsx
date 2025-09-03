@@ -1,3 +1,7 @@
+// ==============================================
+// PROGRESS BAR COMPONENT
+// ==============================================
+// TODO: Add animated transitions for progress
 import React from 'react';
 
 const ProgressBar = ({ currentStep, steps }) => {

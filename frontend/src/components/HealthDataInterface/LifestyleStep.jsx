@@ -1,3 +1,8 @@
+// ==============================================
+// LIFESTYLE STEP COMPONENT
+// ==============================================
+// TODO: Add tag suggestions from backend
+// TODO: Add allergy info popover
 import React from 'react';
 import CustomTagInput from './CustomTagInput';
 
