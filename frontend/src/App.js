@@ -23,6 +23,7 @@ import BookAppointmentPage from './components/BookAppointmentPage';
 import PatientAppointments from './components/PatientAppointments';
 import DoctorAppointments from './components/DoctorAppointments';
 import DoctorSchedule from './components/DoctorSchedule';
+import PerplexityChatInterface from './components/DiagnosisInterface';
 
 const theme = createTheme({
   palette: {
@@ -373,6 +374,14 @@ function App() {
                   </DoctorRoute>
                 }
               />
+              <Route
+                  path="/diagnosis"
+                    element={
+                        <PatientRoute>
+                          <PerplexityChatInterface />
+                        </PatientRoute>
+                    }
+                />
             </Routes>
           </div>
         </Router>
