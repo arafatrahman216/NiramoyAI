@@ -18,6 +18,13 @@ public class Tests {
 	@Column(name = "test_type", length = 50)
 	private String testType;
 
+	// Getters and setters
+	public Long getTestID() { return testID; }
+	public void setTestID(Long testID) { this.testID = testID; }
 
+	public String getTestName() { return testName; }
+	public void setTestName(String testName) { this.testName = testName; }
 
+	public String getTestType() { return testType; }
+	public void setTestType(String testType) { this.testType = testType; }
 }

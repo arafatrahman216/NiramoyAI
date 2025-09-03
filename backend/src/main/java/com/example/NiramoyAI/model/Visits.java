@@ -30,9 +30,16 @@ public class Visits {
 	@Column(name = "status", length = 20)
 	private String status; // completed, in-progress, cancelled
 
-	// Foreign key to prescription
-	@Column(name = "prescription_id")
-	private Long prescriptionID;
+	// ==============================================
+	// Relationships
+	// ==============================================
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	private User user;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "prescription_id")
+	private Prescription prescription;
 
 	// ==============================================
 	// TODO: Add relationships to User and Prescription entities if needed
@@ -60,6 +67,9 @@ public class Visits {
 	public String getStatus() { return status; }
 	public void setStatus(String status) { this.status = status; }
 
-	public Long getPrescriptionID() { return prescriptionID; }
-	public void setPrescriptionID(Long prescriptionID) { this.prescriptionID = prescriptionID; }
+	public User getUser() { return user; }
+	public void setUser(User user) { this.user = user; }
+
+	public Prescription getPrescription() { return prescription; }
+	public void setPrescription(Prescription prescription) { this.prescription = prescription; }
 }

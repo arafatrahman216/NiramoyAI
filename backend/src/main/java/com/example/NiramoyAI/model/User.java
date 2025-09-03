@@ -2,6 +2,7 @@ package com.example.NiramoyAI.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -81,6 +82,12 @@ public class User {
     
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
+    
+    // ==============================================
+    // Relationships
+    // ==============================================
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Visits> visits;
     
     // Default constructor
     public User() {
@@ -169,6 +176,9 @@ public class User {
     
     public LocalDateTime getLastLogin() { return lastLogin; }
     public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+    
+    public List<Visits> getVisits() { return visits; }
+    public void setVisits(List<Visits> visits) { this.visits = visits; }
     
     @PreUpdate
     public void preUpdate() {

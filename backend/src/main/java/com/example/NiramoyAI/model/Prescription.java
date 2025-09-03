@@ -1,6 +1,7 @@
 package com.example.NiramoyAI.model;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "prescriptions")
@@ -34,6 +35,15 @@ public class Prescription {
 	private String image; // URL
 
 	// ==============================================
+	// Relationships
+	// ==============================================
+	@OneToOne(mappedBy = "prescription")
+	private Visits visit;
+
+	@OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<GivenTests> givenTests;
+
+	// ==============================================
 	// TODO: Add relationships to Visits or User if needed
 	// ==============================================
 
@@ -61,4 +71,10 @@ public class Prescription {
 
 	public String getImage() { return image; }
 	public void setImage(String image) { this.image = image; }
+
+	public Visits getVisit() { return visit; }
+	public void setVisit(Visits visit) { this.visit = visit; }
+
+	public List<GivenTests> getGivenTests() { return givenTests; }
+	public void setGivenTests(List<GivenTests> givenTests) { this.givenTests = givenTests; }
 }
