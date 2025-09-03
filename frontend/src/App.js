@@ -24,6 +24,7 @@ import PatientAppointments from './components/PatientAppointments';
 import DoctorAppointments from './components/DoctorAppointments';
 import DoctorSchedule from './components/DoctorSchedule';
 import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterface';
+import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
 
 const theme = createTheme({
   palette: {
@@ -381,6 +382,14 @@ function App() {
                           <DiagnosisInterface />
                         </PatientRoute>
                     }
+                />
+                <Route 
+                  path='/healthdataform'
+                  element={
+                    <PatientRoute>
+                      <HealthDataForm />
+                    </PatientRoute>
+                  }
                 />
             </Routes>
           </div>
