@@ -25,6 +25,8 @@ import DoctorAppointments from './components/DoctorAppointments';
 import DoctorSchedule from './components/DoctorSchedule';
 import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterface';
 import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
+import Timeline from './components/Timeline/Timeline';
+
 
 const theme = createTheme({
   palette: {
@@ -388,6 +390,14 @@ function App() {
                   element={
                     <PatientRoute>
                       <HealthDataForm />
+                    </PatientRoute>
+                  }
+                />
+                <Route 
+                  path='/timeline'
+                  element={
+                    <PatientRoute>
+                      <Timeline />
                     </PatientRoute>
                   }
                 />
