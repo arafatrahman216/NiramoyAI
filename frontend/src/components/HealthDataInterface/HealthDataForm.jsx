@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft, Heart, Activity, User, FileText } from 'lucide-react';
+import { Heart, Activity, User, FileText } from 'lucide-react';
+import WelcomeStep from './WelcomeStep';
+import BasicInfoStep from './BasicInfoStep';
+import HealthVitalsStep from './HealthVitalsStep';
+import LifestyleStep from './LifestyleStep';
+import CompleteStep from './CompleteStep';
+import ProgressBar from './ProgressBar';
+import NavigationButtons from './NavigationButtons';
 
 const HealthDataForm = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -120,500 +127,100 @@ const HealthDataForm = () => {
     }
   };
 
-  const WelcomeStep = () => (
-    <div className="text-center space-y-8 animate-fade-in">
-      <div className="w-24 h-24 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full mx-auto flex items-center justify-center">
-        <Heart className="w-12 h-12 text-white" />
-      </div>
-      <div>
-        <h2 className="text-3xl font-light text-white mb-4">Welcome to NiramoyAI</h2>
-        <p className="text-gray-300 text-lg leading-relaxed max-w-md mx-auto">
-          Let's create your personalized health profile. This journey will take just a few minutes and help us provide you with the best care recommendations.
-        </p>
-      </div>
-      <div className="pt-8">
-        <button
-          onClick={nextStep}
-          className="bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-3 rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-        >
-          Get Started
-        </button>
-      </div>
-    </div>
-  );
-
-  const BasicInfoStep = () => (
-    <div className="space-y-8 animate-fade-in">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-light text-white mb-2">Basic Information</h2>
-        <p className="text-gray-400">Tell us a little about yourself</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-gray-300 mb-2">Gender</label>
-          <select
-            value={formData.gender}
-            onChange={(e) => handleInputChange('gender', e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none transition-colors"
-          >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-            <option value="prefer_not_to_say">Prefer not to say</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-gray-300 mb-2">Date of Birth</label>
-          <input
-            type="date"
-            value={formData.date_of_birth}
-            onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none transition-colors"
-          />
-          {formData.date_of_birth && (
-            <p className="text-teal-400 text-sm mt-1">
-              Age: {calculateAge(formData.date_of_birth)} years old
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-gray-300 mb-2">Weight (kg)</label>
-          <input
-            type="number"
-            value={formData.weight}
-            onChange={(e) => handleInputChange('weight', e.target.value)}
-            placeholder="Enter weight"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-300 mb-2">Height (cm)</label>
-          <input
-            type="number"
-            value={formData.height}
-            onChange={(e) => handleInputChange('height', e.target.value)}
-            placeholder="Enter height"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none transition-colors"
-          />
-        </div>
-      </div>
-    </div>
-  );
-
-  const HealthVitalsStep = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-light text-white mb-2">Health Vitals & Conditions</h2>
-        <p className="text-gray-400">Your current health measurements and conditions</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-gray-300 mb-2">Heart Rate (bpm)</label>
-          <input
-            type="number"
-            value={formData.heart_rate}
-            onChange={(e) => handleInputChange('heart_rate', e.target.value)}
-            placeholder="e.g., 72"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-300 mb-2">Blood Pressure</label>
-          <input
-            type="text"
-            value={formData.blood_pressure}
-            onChange={(e) => handleInputChange('blood_pressure', e.target.value)}
-            placeholder="e.g., 120/80"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none transition-colors"
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-gray-300 mb-2">Blood Type</label>
-          <select
-            value={formData.blood_type}
-            onChange={(e) => handleInputChange('blood_type', e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none transition-colors"
-          >
-            <option value="">Select blood type</option>
-            <option value="A+">A+</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B-">B-</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB-</option>
-            <option value="O+">O+</option>
-            <option value="O-">O-</option>
-          </select>
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-gray-300 mb-2">Chronic Conditions</label>
-          <p className="text-gray-400 text-sm mb-3">Select any ongoing medical conditions you have:</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {[
-              'Diabetes', 'Hypertension', 'Heart Disease', 'Asthma', 'Arthritis', 
-              'Depression', 'Anxiety', 'Thyroid Disease', 'High Cholesterol', 'Migraine',
-              'Sleep Apnea', 'COPD', 'Osteoporosis', 'GERD', 'IBS', 'None'
-            ].map((condition) => (
-              <button
-                key={condition}
-                onClick={() => handleArrayChange('chronic_diseases', condition.toLowerCase().replace(/['.\s]/g, '_'))}
-                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
-                  formData.chronic_diseases.includes(condition.toLowerCase().replace(/['.\s]/g, '_'))
-                    ? 'bg-teal-600 border-teal-500 text-white'
-                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                }`}
-              >
-                {condition}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-600 text-gray-400 bg-gray-800 hover:border-gray-500"
-              onClick={() => handleCustomInputOpen("chronic")}
-            >
-              Others
-            </button>
-          </div>
-          {showCustomInput.chronic && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="text"
-                className="bg-gray-800 border border-gray-700 rounded-full px-3 py-1.5 text-white w-48 focus:border-teal-500 focus:outline-none text-sm"
-                value={customInputValue.chronic}
-                onChange={(e) => handleCustomInputChange("chronic", e.target.value)}
-                placeholder="Enter custom condition"
-              />
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm rounded-full border bg-teal-600 border-teal-500 text-white hover:bg-teal-700"
-                onClick={() => {
-                  if (customInputValue.chronic.trim() !== "") {
-                    handleArrayChange('chronic_diseases', customInputValue.chronic.toLowerCase().replace(/['().<>\s]/g, '_'));
-                    setCustomInputValue({ ...customInputValue, chronic: "" });
-                    setShowCustomInput({ ...showCustomInput, chronic: false });
-                  }
-                }}
-              >Add</button>
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm rounded-full border bg-gray-600 border-gray-500 text-white hover:bg-gray-700"
-                onClick={() => handleCustomInputCancel("chronic")}
-              >Cancel</button>
-            </div>
-          )}
-          <div className="text-xs text-gray-500 mt-2">
-            Don't see your condition? Use the "Others" button to add it.
-          </div>
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-gray-300 mb-2">Major Health Events</label>
-          <textarea
-            value={formData.major_health_events}
-            onChange={(e) => handleInputChange('major_health_events', e.target.value)}
-            placeholder="Please describe any significant health events, surgeries, hospitalizations, accidents, or major diagnoses you've had. For example: 'Had appendectomy in 2019, broke left arm in 2020, diagnosed with hypertension in 2021'"
-            rows="4"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none transition-colors resize-none"
-          />
-          <p className="text-gray-500 text-xs mt-1">
-            Include any surgeries, major injuries, hospitalizations, or significant diagnoses
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const LifestyleStep = () => (
-    <div className="space-y-8 animate-fade-in">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-light text-white mb-2">Lifestyle & Health History</h2>
-        <p className="text-gray-400">Help us understand your lifestyle and health background</p>
-      </div>
-
-      <div className="space-y-8">
-        {/* Lifestyle Habits */}
-        <div>
-          <h3 className="text-lg text-white mb-4">Lifestyle Habits</h3>
-          <p className="text-gray-400 text-sm mb-4">Select all that apply to you:</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {/* Expanded lifestyle tags, styled like chronic conditions */}
-            {[
-              'Smoking', 'Alcohol', 'Exercise (Regular)', 'Exercise (Occasional)', 'No Exercise',
-              'Vegetarian Diet', 'Vegan Diet', 'High Protein Diet', 'Low Carb Diet', 'High Sugar Diet',
-              'Low Fat Diet', 'Keto Diet', 'Intermittent Fasting', 'Meditation', 'Yoga', 'Caffeine',
-              'Sleep <6h', 'Sleep 6-8h', 'Sleep >8h', 'Work Stress', 'Sedentary Job', 'Active Job', 'None'
-            ].map((habit) => (
-              <button
-                key={habit}
-                onClick={() => handleArrayChange('lifestyle', habit.toLowerCase().replace(/['().<>\s]/g, '_'))}
-                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
-                  formData.lifestyle.includes(habit.toLowerCase().replace(/['().<>\s]/g, '_'))
-                    ? 'bg-teal-600 border-teal-500 text-white'
-                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                }`}
-              >
-                {habit}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-600 text-gray-400 bg-gray-800 hover:border-gray-500"
-              onClick={() => handleCustomInputOpen("lifestyle")}
-            >
-              Others
-            </button>
-          </div>
-          {showCustomInput.lifestyle && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="text"
-                className="bg-gray-800 border border-gray-700 rounded-full px-3 py-1.5 text-white w-48 focus:border-teal-500 focus:outline-none text-sm"
-                value={customInputValue.lifestyle}
-                onChange={(e) => handleCustomInputChange("lifestyle", e.target.value)}
-                placeholder="Enter custom lifestyle habit"
-              />
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm rounded-full border bg-teal-600 border-teal-500 text-white hover:bg-teal-700"
-                onClick={() => {
-                  if (customInputValue.lifestyle.trim() !== "") {
-                    handleArrayChange('lifestyle', customInputValue.lifestyle.toLowerCase().replace(/['().<>\s]/g, '_'));
-                    setCustomInputValue({ ...customInputValue, lifestyle: "" });
-                    setShowCustomInput({ ...showCustomInput, lifestyle: false });
-                  }
-                }}
-              >Add</button>
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm rounded-full border bg-gray-600 border-gray-500 text-white hover:bg-gray-700"
-                onClick={() => handleCustomInputCancel("lifestyle")}
-              >Cancel</button>
-            </div>
-          )}
-        </div>
-
-        {/* Exercise */}
-        <div>
-          <h3 className="text-lg text-white mb-4">Exercise</h3>
-          <p className="text-gray-400 text-sm mb-4">Select your exercise habits:</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {exerciseTags.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${selectedExercise.includes(tag)
-                  ? "bg-green-600 border-green-500 text-white"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600"}
-                `}
-                onClick={() => handleTagClick(tag, selectedExercise, setSelectedExercise)}
-              >
-                {tag}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-600 text-gray-400 bg-gray-800 hover:border-gray-500"
-              onClick={() => handleCustomInputOpen("exercise")}
-            >
-              Others
-            </button>
-          </div>
-          {showCustomInput.exercise && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="text"
-                className="bg-gray-800 border border-gray-700 rounded-full px-3 py-1.5 text-white w-48 focus:border-teal-500 focus:outline-none text-sm"
-                value={customInputValue.exercise}
-                onChange={(e) => handleCustomInputChange("exercise", e.target.value)}
-                placeholder="Enter custom exercise"
-              />
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm rounded-full border bg-green-600 border-green-500 text-white hover:bg-green-700"
-                onClick={() => handleCustomInputAdd("exercise", selectedExercise, setSelectedExercise)}
-              >Add</button>
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm rounded-full border bg-gray-600 border-gray-500 text-white hover:bg-gray-700"
-                onClick={() => handleCustomInputCancel("exercise")}
-              >Cancel</button>
-            </div>
-          )}
-        </div>
-
-        {/* Common Allergies */}
-        <div>
-          <h3 className="text-lg text-white mb-4">Common Allergies</h3>
-          <p className="text-gray-400 text-sm mb-4">Select any allergies you have:</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {[
-              'Peanuts', 'Shellfish', 'Dairy', 'Gluten', 'Pollen', 'Dust', 'Medications', 'Pet Dander',
-              'Soy', 'Eggs', 'Tree Nuts', 'Latex', 'Insect Stings', 'Mold', 'Fragrances', 'None'
-            ].map((allergy) => (
-              <button
-                key={allergy}
-                onClick={() => handleArrayChange('allergies', allergy.toLowerCase().replace(/['().<>\s]/g, '_'))}
-                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
-                  formData.allergies.includes(allergy.toLowerCase().replace(/['().<>\s]/g, '_'))
-                    ? 'bg-teal-600 border-teal-500 text-white'
-                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                }`}
-              >
-                {allergy}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-600 text-gray-400 bg-gray-800 hover:border-gray-500"
-              onClick={() => handleCustomInputOpen("allergies")}
-            >
-              Others
-            </button>
-          </div>
-          {showCustomInput.allergies && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="text"
-                className="bg-gray-800 border border-gray-700 rounded-full px-3 py-1.5 text-white w-48 focus:border-teal-500 focus:outline-none text-sm"
-                value={customInputValue.allergies}
-                onChange={(e) => handleCustomInputChange("allergies", e.target.value)}
-                placeholder="Enter custom allergy"
-              />
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm rounded-full border bg-teal-600 border-teal-500 text-white hover:bg-teal-700"
-                onClick={() => {
-                  if (customInputValue.allergies.trim() !== "") {
-                    handleArrayChange('allergies', customInputValue.allergies.toLowerCase().replace(/['().<>\s]/g, '_'));
-                    setCustomInputValue({ ...customInputValue, allergies: "" });
-                    setShowCustomInput({ ...showCustomInput, allergies: false });
-                  }
-                }}
-              >Add</button>
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm rounded-full border bg-gray-600 border-gray-500 text-white hover:bg-gray-700"
-                onClick={() => handleCustomInputCancel("allergies")}
-              >Cancel</button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const CompleteStep = () => (
-    <div className="text-center space-y-8 animate-fade-in">
-      <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-teal-500 rounded-full mx-auto flex items-center justify-center">
-        <Heart className="w-12 h-12 text-white" />
-      </div>
-      <div>
-        <h2 className="text-3xl font-light text-white mb-4">Profile Complete!</h2>
-        <p className="text-gray-300 text-lg leading-relaxed max-w-md mx-auto">
-          Thank you for providing your health information. NiramoyAI is now ready to provide you with personalized health insights and recommendations.
-        </p>
-      </div>
-      <div className="bg-gray-800 rounded-lg p-6 max-w-lg mx-auto">
-        <pre className="text-left text-sm text-gray-300 overflow-x-auto">
-          {JSON.stringify({
-            ...formData,
-            calculated_age: formData.date_of_birth ? calculateAge(formData.date_of_birth) : null
-          }, null, 2)}
-        </pre>
-      </div>
-      <button
-        onClick={() => {
-          setCurrentStep(0);
-          setFormData({
-            gender: '', date_of_birth: '', weight: '', height: '', heart_rate: '', 
-            blood_pressure: '', blood_type: '', major_health_events: '',
-            lifestyle: [], allergies: [], major_events: [], chronic_diseases: []
-          });
-        }}
-        className="bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-3 rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-      >
-        Start Over
-      </button>
-    </div>
-  );
+  const resetForm = () => {
+    setCurrentStep(0);
+    setFormData({
+      gender: '', date_of_birth: '', weight: '', height: '', heart_rate: '', 
+      blood_pressure: '', blood_type: '', major_health_events: '',
+      lifestyle: [], allergies: [], major_events: [], chronic_diseases: []
+    });
+    setSelectedExercise([]);
+    setShowCustomInput({
+      exercise: false,
+      lifestyle: false,
+      allergies: false,
+      chronic: false,
+    });
+    setCustomInputValue({
+      exercise: "",
+      lifestyle: "",
+      allergies: "",
+      chronic: "",
+    });
+  };
 
   const renderStep = () => {
     switch (currentStep) {
-      case 0: return <WelcomeStep />;
-      case 1: return <BasicInfoStep />;
-      case 2: return <HealthVitalsStep />;
-      case 3: return <LifestyleStep />;
-      case 4: return <CompleteStep />;
-      default: return <WelcomeStep />;
+      case 0: 
+        return <WelcomeStep nextStep={nextStep} />;
+      case 1: 
+        return (
+          <BasicInfoStep 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            calculateAge={calculateAge}
+          />
+        );
+      case 2: 
+        return (
+          <HealthVitalsStep 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleArrayChange={handleArrayChange}
+            showCustomInput={showCustomInput}
+            customInputValue={customInputValue}
+            handleCustomInputOpen={handleCustomInputOpen}
+            handleCustomInputChange={handleCustomInputChange}
+            handleCustomInputCancel={handleCustomInputCancel}
+          />
+        );
+      case 3: 
+        return (
+          <LifestyleStep 
+            formData={formData}
+            selectedExercise={selectedExercise}
+            exerciseTags={exerciseTags}
+            handleArrayChange={handleArrayChange}
+            handleTagClick={handleTagClick}
+            setSelectedExercise={setSelectedExercise}
+            showCustomInput={showCustomInput}
+            customInputValue={customInputValue}
+            handleCustomInputOpen={handleCustomInputOpen}
+            handleCustomInputChange={handleCustomInputChange}
+            handleCustomInputCancel={handleCustomInputCancel}
+            handleCustomInputAdd={handleCustomInputAdd}
+          />
+        );
+      case 4: 
+        return (
+          <CompleteStep 
+            formData={formData}
+            calculateAge={calculateAge}
+            resetForm={resetForm}
+          />
+        );
+      default: 
+        return <WelcomeStep nextStep={nextStep} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
         {/* Progress Bar */}
-        {currentStep > 0 && currentStep < steps.length - 1 && (
-          <div className="mb-8">
-            <div className="flex justify-center mb-4">
-              {steps.slice(1, -1).map((step, index) => {
-                const StepIcon = step.icon;
-                const stepIndex = index + 1;
-                return (
-                  <div key={stepIndex} className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      stepIndex === currentStep ? 'bg-teal-500 text-white' :
-                      stepIndex < currentStep ? 'bg-green-500 text-white' :
-                      'bg-gray-700 text-gray-400'
-                    }`}>
-                      <StepIcon className="w-5 h-5" />
-                    </div>
-                    {index < steps.length - 3 && (
-                      <div className={`w-16 h-0.5 mx-2 ${
-                        stepIndex < currentStep ? 'bg-green-500' : 'bg-gray-700'
-                      }`} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="text-center">
-              <span className="text-gray-400">Step {currentStep} of {steps.length - 2}</span>
-            </div>
-          </div>
-        )}
+        <ProgressBar currentStep={currentStep} steps={steps} />
 
         {/* Form Content */}
-        <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-gray-700">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
           {renderStep()}
 
           {/* Navigation Buttons */}
-          {currentStep > 0 && currentStep < steps.length - 1 && (
-            <div className="flex justify-between mt-8 pt-6 border-t border-gray-700">
-              <button
-                onClick={prevStep}
-                className="flex items-center text-gray-400 hover:text-white transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Back
-              </button>
-              <button
-                onClick={nextStep}
-                className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-6 py-2 rounded-full hover:shadow-lg transition-all duration-300"
-              >
-                {currentStep === steps.length - 2 ? 'Complete' : 'Continue'}
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </button>
-            </div>
-          )}
+          <NavigationButtons 
+            currentStep={currentStep} 
+            steps={steps} 
+            prevStep={prevStep} 
+            nextStep={nextStep} 
+          />
         </div>
       </div>
       
@@ -629,15 +236,15 @@ const HealthDataForm = () => {
           width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #374151;
+          background: #3f3f46;
           border-radius: 3px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #6B7280;
+          background: #71717a;
           border-radius: 3px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9CA3AF;
+          background: #a1a1aa;
         }
       `}</style>
     </div>
