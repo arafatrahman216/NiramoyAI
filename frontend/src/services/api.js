@@ -113,4 +113,16 @@ export const appointmentAPI = {
 
 
 
+
+
+
+
+// Diagnosis Interface Job
+export const agentAPI = {
+
+  searchAPI: (query) => 
+    api.post('/agent/search', { query })
+
+};
+
 export default api;
