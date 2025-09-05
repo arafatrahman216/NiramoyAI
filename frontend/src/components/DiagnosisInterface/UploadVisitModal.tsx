@@ -65,18 +65,19 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
       // - Show success/error messages
       // - Update visits list
       
-      /* Example implementation:
       const formData = new FormData();
-      formData.append('appointmentDate', visitData.appointmentDate);
+      if (visitData.prescriptionFile) {
+        console.log(visitData.prescriptionFile);
+        formData.append('image', visitData.prescriptionFile);
+      }
       formData.append('doctorName', visitData.doctorName);
       formData.append('symptoms', visitData.symptoms);
       formData.append('prescription', visitData.prescription);
-      
+      formData.append('appointmentDate', visitData.appointmentDate);
+      /* Example implementation:
+
       // Prescription file is mandatory
-      if (visitData.prescriptionFile) {
-        formData.append('prescriptionFile', visitData.prescriptionFile);
-      }
-      
+
       // Test reports are optional
       visitData.testReports.forEach((file, index) => {
         formData.append(`testReport_${index}`, file);
@@ -96,11 +97,24 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
         // Error handling
       }
       */
-      
+
       // For now, just close the modal
-      alert('Visit uploaded successfully!'); // TODO: Replace with proper notification
-      onClose();
-      resetForm();
+        const response = await fetch('http://localhost:8080/api/upload/prescription', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Upload successful:', result);
+            alert('Visit uploaded successfully!');
+            onClose();
+            resetForm();
+        } else {
+            const errorData = await response.text(); // Use text() for non-JSON responses
+            console.error('Upload failed:', response.status, errorData);
+            alert('Upload failed. Please try again.');
+        }
     } catch (error) {
       console.error('Upload error:', error);
       alert('Upload failed. Please try again.'); // TODO: Replace with proper error handling
