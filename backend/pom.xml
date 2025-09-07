@@ -81,7 +81,7 @@
         <scope>test</scope>
     </dependency>
 
-    <!-- JWT Dependencies -->
+    <!-- JWT Dependencies
     <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-api</artifactId>
@@ -98,13 +98,13 @@
         <artifactId>jjwt-jackson</artifactId>
         <version>0.11.5</version>
         <scope>runtime</scope>
-    </dependency>
+    </dependency> -->
 
-    <!-- Spring Security -->
+    <!-- Spring Security
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
+    </dependency> -->
 
 
 </dependencies>

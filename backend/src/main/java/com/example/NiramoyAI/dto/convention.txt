@@ -1,0 +1,10 @@
+1. For request object 
+MUST include reqDTO
+like imageUploadReqDTO
+
+2. For response object
+Must include resDTO
+like imageUploadResDTO
+
+
+.body(new ApiResponse<>("success", "Health data saved", resDto));
