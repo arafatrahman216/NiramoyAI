@@ -1,50 +1,58 @@
 import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Html } from '@mui/icons-material';
 
 // Component to prevent unauthorized navigation
 const NavigationGuard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+useEffect(() => {
+  if (!loading && user) {
+    const currentPath = location.pathname;
+    console.log(`User role: ${user.role}, Current path: ${currentPath}`);
+    
 
-  useEffect(() => {
-    if (!loading && user) {
-      const currentPath = location.pathname;
+    // Define route permissions
+    const patientRoutes = ['/dashboard', '/profile', '/search-doctors'];
+    const doctorRoutes = ['/doctor/dashboard', '/doctor/profile'];
+    const adminRoutes = ['/admin/dashboard', '/admin/register'];
 
-      // Define route permissions
-      const patientRoutes = ['/dashboard', '/profile', '/search-doctors'];
-      const doctorRoutes = ['/doctor/dashboard', '/doctor/profile'];
-      const adminRoutes = ['/admin/dashboard', '/admin/register'];
-
-      // Check for unauthorized access attempts
-      if (user.roles?.includes('ROLE_DOCTOR')) {
-        // Doctor trying to access patient or admin routes
-        if (patientRoutes.some(route => currentPath.startsWith(route)) ||
-            adminRoutes.some(route => currentPath.startsWith(route))) {
+    if (user.role === 'DOCTOR') {
+      if (
+        patientRoutes.some(route => currentPath === route) ||
+        adminRoutes.some(route => currentPath === route)
+      ) {
+        if (currentPath !== '/doctor/dashboard') {
           console.warn('Doctor attempted to access unauthorized route:', currentPath);
-          navigate('/doctor/dashboard', { replace: true });
-          return;
+          navigate('/login', { replace: true });
+          
         }
-      } else if (user.roles?.includes('ROLE_ADMIN')) {
-        // Admin trying to access patient or doctor routes
-        if (patientRoutes.some(route => currentPath.startsWith(route)) ||
-            doctorRoutes.some(route => currentPath.startsWith(route))) {
+      }
+    } else if (user.role === 'ADMIN') {
+      if (
+        patientRoutes.some(route => currentPath === route) ||
+        doctorRoutes.some(route => currentPath === route)
+      ) {
+        if (currentPath !== '/admin/dashboard') {
           console.warn('Admin attempted to access unauthorized route:', currentPath);
-          navigate('/admin/dashboard', { replace: true });
-          return;
+          navigate('/login', { replace: true });
         }
-      } else {
-        // Patient trying to access doctor or admin routes
-        if (doctorRoutes.some(route => currentPath.startsWith(route)) ||
-            adminRoutes.some(route => currentPath.startsWith(route))) {
+      }
+    } else {
+      if (
+        doctorRoutes.some(route => currentPath === route) ||
+        adminRoutes.some(route => currentPath === route)
+      ) {
+        if (currentPath !== '/dashboard') {
           console.warn('Patient attempted to access unauthorized route:', currentPath);
-          navigate('/dashboard', { replace: true });
-          return;
+          navigate('/login', { replace: true });
         }
       }
     }
-  }, [user, loading, location.pathname, navigate]);
+  }
+}, [user, loading, location.pathname, navigate]);
 
   return null; // This component doesn't render anything
 };

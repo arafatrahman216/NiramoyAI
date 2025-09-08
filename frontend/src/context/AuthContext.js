@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/auth';
+const API_BASE_URL = 'http://localhost:8000/api/auth';
 
 const AuthContext = createContext();
 
@@ -49,12 +49,12 @@ export const AuthProvider = ({ children }) => {
     
     try {
       const response = await axios.post(`${API_BASE_URL}/login`, {
-        username,
+        usernameOrEmail: username,
         password,
       });
 
       if (response.data.success) {
-        const { token, user: userData } = response.data;
+        const { jwt: token, user: userData } = response.data;
         
         // Store token and user data
         localStorage.setItem('token', token);
@@ -140,7 +140,7 @@ export const AuthProvider = ({ children }) => {
         const { token, user: userData } = response.data;
         
         // Check if user has admin role
-        if (userData.roles && userData.roles.includes('ROLE_ADMIN')) {
+        if (userData.role && userData.role === 'ADMIN') {
           // Store token and user data
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(userData));

@@ -6,23 +6,24 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import NavigationGuard from './components/NavigationGuard';
 import LandingPage from './components/LandingPage';
-import Login from './components/Login';
-import Signup from './components/Signup';
-import Dashboard from './components/Dashboard';
-import Profile from './components/Profile';
-import AdminLogin from './components/AdminLogin';
-import AdminRegister from './components/AdminRegister';
-import AdminDashboard from './components/AdminDashboard';
-import DoctorLogin from './components/DoctorLogin';
-import DoctorDashboard from './components/DoctorDashboard';
-import DoctorProfile from './components/DoctorProfile';
+import Login from './components/User/Login';
+import Signup from './components/User/Signup';
+import Dashboard from './components/User/Dashboard';
+import Profile from './components/User/Profile';
+import AdminLogin from './components/Admin/AdminLogin';
+import AdminRegister from './components/Admin/AdminRegister';
+import AdminDashboard from './components/Admin/AdminDashboard';
+import DoctorLogin from './components/Doctor/DoctorLogin';
+import DoctorDashboard from './components/Doctor/DoctorDashboard';
+import DoctorProfile from './components/Doctor/DoctorProfile';
+import DoctorSignup from './components/Doctor/DoctorSignup';
 import SearchDoctors from './components/SearchDoctors';
 import EnhancedSearchDoctors from './components/EnhancedSearchDoctors';
 import BookAppointment from './components/BookAppointment';
 import BookAppointmentPage from './components/BookAppointmentPage';
 import PatientAppointments from './components/PatientAppointments';
-import DoctorAppointments from './components/DoctorAppointments';
-import DoctorSchedule from './components/DoctorSchedule';
+import DoctorAppointments from './components/Doctor/DoctorAppointments';
+import DoctorSchedule from './components/Doctor/DoctorSchedule';
 import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterface';
 import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
 import Timeline from './components/Timeline/Timeline';
@@ -129,12 +130,12 @@ const PatientRoute = ({ children }) => {
   }
   
   // Check if user is a doctor - redirect to doctor dashboard
-  if (user.roles?.includes('ROLE_DOCTOR')) {
+  if (user.role==='DOCTOR') {
     return <Navigate to="/doctor/dashboard" />;
   }
   
   // Check if user is an admin - redirect to admin dashboard
-  if (user.roles?.includes('ROLE_ADMIN')) {
+  if (user.role==='ADMIN') {
     return <Navigate to="/admin/dashboard" />;
   }
   
@@ -164,17 +165,17 @@ const AdminRoute = ({ children }) => {
   }
   
   // Check if user is a doctor - redirect to doctor dashboard
-  if (user.roles?.includes('ROLE_DOCTOR')) {
+  if (user.role==='DOCTOR') {
     return <Navigate to="/doctor/dashboard" />;
   }
   
   // Check if user is a patient - redirect to patient dashboard
-  if (!user.roles?.includes('ROLE_ADMIN') && !user.roles?.includes('ROLE_DOCTOR')) {
+  if (!user.role==='PATIENT') {
     return <Navigate to="/dashboard" />;
   }
   
   // Allow only admins to access admin routes
-  return user.roles?.includes('ROLE_ADMIN') ? 
+  return user.role==='ADMIN' ? 
     <>{children}</> : 
     <Navigate to="/admin/login" />;
 };
@@ -201,17 +202,17 @@ const DoctorRoute = ({ children }) => {
   }
   
   // Check if user is an admin - redirect to admin dashboard
-  if (user.roles?.includes('ROLE_ADMIN')) {
+  if (user.role==='ADMIN') {
     return <Navigate to="/admin/dashboard" />;
   }
   
   // Check if user is a patient - redirect to patient dashboard
-  if (!user.roles?.includes('ROLE_DOCTOR') && !user.roles?.includes('ROLE_ADMIN')) {
+  if (!user.role==='DOCTOR') {
     return <Navigate to="/dashboard" />;
   }
   
   // Allow only doctors to access doctor routes
-  return user.roles?.includes('ROLE_DOCTOR') ? 
+  return user.role==='DOCTOR' ? 
     <>{children}</> : 
     <Navigate to="/doctor/login" />;
 };
@@ -234,9 +235,9 @@ const PublicRoute = ({ children }) => {
   
   // If user is authenticated, redirect based on their role
   if (user) {
-    if (user.roles?.includes('ROLE_ADMIN')) {
+    if (user.role==='ADMIN') {
       return <Navigate to="/admin/dashboard" />;
-    } else if (user.roles?.includes('ROLE_DOCTOR')) {
+    } else if (user.role==='DOCTOR') {
       return <Navigate to="/doctor/dashboard" />;
     } else {
       // Regular patient user
@@ -273,6 +274,14 @@ function App() {
                   </PublicRoute>
                 }
               />
+              <Route
+                  path='/doctor/signup'
+                  element={
+                    <PublicRoute>
+                      <DoctorSignup />
+                    </PublicRoute>
+                  }
+                />
               <Route
                 path="/admin/login"
                 element={

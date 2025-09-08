@@ -11,13 +11,13 @@ export const useRoleProtection = (allowedRoles = [], redirectOnFail = true) => {
     if (!loading && user && redirectOnFail) {
       // Check if user has any of the allowed roles
       const hasPermission = allowedRoles.length === 0 || 
-        allowedRoles.some(role => user.roles?.includes(role));
+        allowedRoles.some(role => user.role === role);
 
       if (!hasPermission) {
         // Redirect based on user role
-        if (user.roles?.includes('ROLE_ADMIN')) {
+        if (user.role === 'ADMIN') {
           navigate('/admin/dashboard', { replace: true });
-        } else if (user.roles?.includes('ROLE_DOCTOR')) {
+        } else if (user.role === 'DOCTOR') {
           navigate('/doctor/dashboard', { replace: true });
         } else {
           navigate('/dashboard', { replace: true });
@@ -31,7 +31,7 @@ export const useRoleProtection = (allowedRoles = [], redirectOnFail = true) => {
     loading,
     hasPermission: !loading && user && (
       allowedRoles.length === 0 || 
-      allowedRoles.some(role => user.roles?.includes(role))
+      allowedRoles.some(role => user.role === role)
     ),
   };
 };
@@ -39,16 +39,16 @@ export const useRoleProtection = (allowedRoles = [], redirectOnFail = true) => {
 // Hook to check if user has specific role
 export const useHasRole = (role) => {
   const { user } = useAuth();
-  return user?.roles?.includes(role) || false;
+  return user?.role === role;
 };
 
 // Hook to get user role type
 export const useUserRole = () => {
   const { user } = useAuth();
-  
-  if (user?.roles?.includes('ROLE_ADMIN')) {
+
+  if (user?.role === 'ADMIN') {
     return 'admin';
-  } else if (user?.roles?.includes('ROLE_DOCTOR')) {
+  } else if (user?.role === 'DOCTOR') {
     return 'doctor';
   } else if (user) {
     return 'patient';
@@ -67,7 +67,7 @@ export const usePreventCrossRoleAccess = () => {
       const currentPath = window.location.pathname;
       
       // Doctor trying to access patient routes
-      if (user.roles?.includes('ROLE_DOCTOR')) {
+      if (user.role === 'DOCTOR') {
         if (currentPath.startsWith('/dashboard') || 
             currentPath.startsWith('/profile') || 
             currentPath.startsWith('/search-doctors')) {
@@ -77,7 +77,7 @@ export const usePreventCrossRoleAccess = () => {
       }
       
       // Admin trying to access patient or doctor routes
-      if (user.roles?.includes('ROLE_ADMIN')) {
+      if (user.role === 'ADMIN') {
         if (currentPath.startsWith('/dashboard') || 
             currentPath.startsWith('/profile') || 
             currentPath.startsWith('/search-doctors') ||
@@ -89,7 +89,7 @@ export const usePreventCrossRoleAccess = () => {
       }
       
       // Patient trying to access admin or doctor routes
-      if (!user.roles?.includes('ROLE_ADMIN') && !user.roles?.includes('ROLE_DOCTOR')) {
+      if (user.role !== 'ADMIN' && user.role !== 'DOCTOR') {
         if (currentPath.startsWith('/admin/') || 
             currentPath.startsWith('/doctor/')) {
           navigate('/dashboard', { replace: true });

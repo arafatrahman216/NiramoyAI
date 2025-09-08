@@ -14,22 +14,34 @@ import {
   IconButton,
 } from '@mui/material';
 import { Visibility, VisibilityOff, Person, Lock } from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { redirectBasedOnRole } from '../../utils/roleRedirect';
 
-const Login: React.FC = () => {
+const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, loading, error } = useAuth();
+  const { login, logout, loading, error } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (username.trim() && password.trim()) {
       const success = await login(username, password);
       if (success) {
-        navigate('/dashboard');
+        // Get user data and check if admin
+        const userData = JSON.parse(localStorage.getItem('user'));
+        
+        // Block admin users from normal login
+        if (userData.role && userData.role === 'ADMIN') {
+          // Log them out immediately
+          logout();
+          alert('Admin users must use the Admin Portal to login.');
+          return;
+        }
+        
+        redirectBasedOnRole(userData, navigate);
       }
     }
   };
@@ -138,6 +150,17 @@ const Login: React.FC = () => {
                     sx={{ fontWeight: 600 }}
                   >
                     Sign up
+                  </Link>
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Administrator?{' '}
+                  <Link
+                    component={RouterLink}
+                    to="/admin/login"
+                    underline="none"
+                    sx={{ fontWeight: 600, color: 'secondary.main' }}
+                  >
+                    Admin Portal
                   </Link>
                 </Typography>
               </Box>

@@ -11,9 +11,9 @@ const AccessDenied = ({ message, redirectTo, redirectLabel }) => {
   const handleRedirect = () => {
     if (redirectTo) {
       navigate(redirectTo);
-    } else if (user?.roles?.includes('ROLE_ADMIN')) {
+    } else if (user?.role==='ADMIN') {
       navigate('/admin/dashboard');
-    } else if (user?.roles?.includes('ROLE_DOCTOR')) {
+    } else if (user?.role==='DOCTOR') {
       navigate('/doctor/dashboard');
     } else {
       navigate('/dashboard');

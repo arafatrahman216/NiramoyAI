@@ -5,13 +5,13 @@ const API_BASE_URL = 'http://localhost:8080/api/auth';
 
 interface User {
   id: number;
-  firstName: string;
   lastName: string;
   email: string;
   username: string;
   phoneNumber?: string;
   status: string;
-  roles: string[];
+  role: string;
+  createdAt: string;
 }
 
 interface AuthContextType {
@@ -65,8 +65,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     try {
       const response = await axios.post(`${API_BASE_URL}/login`, {
-        username,
-        password,
+        usernameOrEmail: username,
+        password: password,
       });
 
       if (response.data.success) {

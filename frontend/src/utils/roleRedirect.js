@@ -14,17 +14,17 @@ export const redirectBasedOnRole = (user, navigate) => {
   // Priority order: Admin > Doctor > User
   // If user has multiple roles, redirect to highest priority role
 
-  if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_SUPER_ADMIN')) {
+  if (user.role===  'ADMIN' ) {
     navigate('/admin/dashboard');
     return '/admin/dashboard';
   }
   
-  if (user.roles.includes('ROLE_DOCTOR')) {
+  if (user.role=='DOCTOR') {
     navigate('/doctor/dashboard');
     return '/doctor/dashboard';
   }
   
-  if (user.roles.includes('ROLE_USER')) {
+  if (user.role==='ROLE_USER') {
     navigate('/dashboard');
     return '/dashboard';
   }
@@ -40,19 +40,19 @@ export const redirectBasedOnRole = (user, navigate) => {
  * @returns {string} - The dashboard path
  */
 export const getDashboardPath = (user) => {
-  if (!user || !user.roles || !Array.isArray(user.roles)) {
+  if (!user || !user.role ) {
     return '/dashboard';
   }
 
-  if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_SUPER_ADMIN')) {
+  if (user.role==='ADMIN' ) {
     return '/admin/dashboard';
   }
   
-  if (user.roles.includes('ROLE_DOCTOR')) {
+  if (user.role==='DOCTOR') {
     return '/doctor/dashboard';
   }
   
-  if (user.roles.includes('ROLE_USER')) {
+  if (user.role==='ROLE_USER') {
     return '/dashboard';
   }
 
@@ -66,5 +66,5 @@ export const getDashboardPath = (user) => {
  * @returns {boolean} - Whether user has the role
  */
 export const hasRole = (user, role) => {
-  return user && user.roles && Array.isArray(user.roles) && user.roles.includes(role);
+  return user && user.role && user.role===role;
 };

@@ -3,10 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './components/Login';
-import Signup from './components/Signup';
-import Dashboard from './components/Dashboard';
-import Profile from './components/Profile';
+import Login from './components/User/Login';
+import Signup from './components/User/Signup';
+import Dashboard from './components/User/Dashboard';
+import Profile from './components/User/Profile';
+import DoctorSignup from './components/Doctor/DoctorSignup';
 
 const theme = createTheme({
   palette: {
@@ -104,6 +105,14 @@ function App() {
                 element={
                   <PublicRoute>
                     <Signup />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path='/doctor/signup'
+                element={
+                  <PublicRoute>
+                    <DoctorSignup />
                   </PublicRoute>
                 }
               />

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../../services/api';
+import axios from 'axios';
 
 // ==============================================
 // UPLOAD VISIT MODAL COMPONENT
@@ -99,19 +101,16 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
       */
 
       // For now, just close the modal
-        const response = await fetch('http://localhost:8080/api/upload/prescription', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
+        const response = await axios.post(`${API_BASE_URL}/upload/prescription`, formData);
+
+        if (response.status === 200) {
+            const result = response.data;
             console.log('Upload successful:', result);
             alert('Visit uploaded successfully!');
             onClose();
             resetForm();
         } else {
-            const errorData = await response.text(); // Use text() for non-JSON responses
+            const errorData = await response.data; // Use text() for non-JSON responses
             console.error('Upload failed:', response.status, errorData);
             alert('Upload failed. Please try again.');
         }
