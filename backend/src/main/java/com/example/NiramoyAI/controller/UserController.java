@@ -29,7 +29,7 @@ public class UserController {
             response.put("success", true);
             response.put("message", "Profile retrieved successfully");
             response.put("username", authentication.getName());
-            response.put("authorities", authentication.getAuthorities());
+            // response.put("authorities", authentication.getAuthorities());
         } else {
             response.put("success", false);
             response.put("message", "User not authenticated");
