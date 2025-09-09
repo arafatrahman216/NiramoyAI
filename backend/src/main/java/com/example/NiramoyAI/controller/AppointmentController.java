@@ -48,7 +48,6 @@ public class AppointmentController {
             if (!patientOpt.isPresent()) {
                 return createErrorResponse("Patient not found");
             }
-
             User patient = patientOpt.get();
             Long doctorId = Long.valueOf(request.get("doctorId").toString());
             String dateStr = request.get("appointmentDate").toString();

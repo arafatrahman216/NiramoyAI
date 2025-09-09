@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../../services/api';
 
 // ==============================================
 // CHATS SIDEBAR COMPONENT
@@ -9,11 +10,31 @@ import React from 'react';
 interface ChatsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  setChatid: (chatId: string) => void;
 }
 
-const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
+const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, onClose }) => {
+  const [chatSessions, setChatSessions] = useState([]);
+  
+  
+  useEffect(() => {
+    // Fetch chat sessions from backend API
+    const fetchChatSessions = async () => {
+      try {
+        const response = await api.get('http://localhost:8000/api/user/chat-sessions');
+        const data = await response.data;
+        setChatSessions(data.chatSessions || []);
 
+        console.log(data);
+        console.log(chatSessions.length );
+      } catch (error) {
+        console.error('Error fetching chat sessions:', error);
+      }
+    };
+    fetchChatSessions();
+  }, []);
+  if (!isOpen) return null;
+  
   return (
     <div className="w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col">
       {/* SIDEBAR HEADER */}
@@ -52,37 +73,36 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* TODO: Add actual chat history here */}
-        {/* Example structure for future implementation:
+        {/* Example structure for future implementation:*/}
+
+        
         <div className="space-y-2 mt-4">
-          <div className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-colors">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <h3 className="text-sm font-medium text-white truncate">
-                  Symptoms consultation about headaches
-                </h3>
-                <p className="text-xs text-zinc-400 mt-1">
-                  I've been experiencing persistent headaches...
-                </p>
+          {chatSessions.length === 0 ? (
+            <p className="text-sm text-zinc-500">No previous chats found.</p>
+          ) : (
+            chatSessions.map((session: any) => (
+              <div key={session.chatId} className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-colors"
+                onClick={() => {
+                  setChatid(session.chatId);
+                  onClose();
+                }
+                }
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium text-white truncate">
+                      {session.title || 'Untitled Chat'}
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      {session.messages.length+" messages" || 'No messages yet...'}
+                    </p>
+                  </div>
+                  <span className="text-xs text-zinc-500 ml-2">{new Date(session.createdAt).toLocaleDateString()}</span>
+                </div>
               </div>
-              <span className="text-xs text-zinc-500 ml-2">2h ago</span>
-            </div>
+            ))
+          )}
           </div>
-          
-          <div className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-colors">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <h3 className="text-sm font-medium text-white truncate">
-                  General health checkup questions
-                </h3>
-                <p className="text-xs text-zinc-400 mt-1">
-                  What should I expect during my annual...
-                </p>
-              </div>
-              <span className="text-xs text-zinc-500 ml-2">1d ago</span>
-            </div>
-          </div>
-        </div>
-        */}
       </div>
     </div>
   );
