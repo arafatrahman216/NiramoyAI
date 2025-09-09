@@ -2,8 +2,10 @@ package com.example.niramoy.controller;
 
 
 import com.example.niramoy.dto.PrescriptionDTO;
+import com.example.niramoy.entity.User;
 import com.example.niramoy.service.ImageService;
 import com.example.niramoy.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,12 +16,10 @@ import java.util.Map;
 import java.util.HashMap;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/upload")
 public class ImageController {
     private final ImageService imageService;
-    public ImageController(ImageService imageService) {
-        this.imageService = imageService;
-    }
 
     @PostMapping("/prescription")
     public ResponseEntity<Map<String, Object>> uploadPrescription(@ModelAttribute PrescriptionDTO prescriptionDTO) {
@@ -52,5 +52,26 @@ public class ImageController {
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
+
+
+    @PostMapping("/image")
+    public ResponseEntity<Map<String, Object>> uploadProfile(@ModelAttribute MultipartFile image){
+        Map<String, Object> request = new HashMap<>();
+        request.put("success", false);
+        try {
+            String imageUrl = imageService.uploadImage(image);
+            request.put("success", true);
+            request.put("message", "Profile image uploaded successfully");
+            request.put("imageUrl", imageUrl);
+            return ResponseEntity.ok(request);
+        }
+        catch (Exception e) {
+            request.put("success", false);
+            request.put("message", "Failed to upload profile image: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(request);
+        }
+
+    }
+
 
 }

@@ -18,7 +18,7 @@ public class DoctorProfile {
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // Back reference to User
 
@@ -27,12 +27,7 @@ public class DoctorProfile {
 
     private String about;
 
-    @Column(nullable = false)
-    private String gender;
-
     private String medicalCollege;
-
-    private String profilePictureUrl;
 
     private String supportingDocumentsUrl;
 

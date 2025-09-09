@@ -69,7 +69,7 @@ public class ImageService {
             );
 
             if (response.getStatusCode() == HttpStatus.OK) {
-                return STORAGE_URL + BUCKET_NAME + "/" + filename;
+                return url;
             } else {
                 throw new RuntimeException("Upload failed with status: " + response.getStatusCode());
             }
