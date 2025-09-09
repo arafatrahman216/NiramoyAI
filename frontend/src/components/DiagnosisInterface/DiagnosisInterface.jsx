@@ -44,7 +44,7 @@ const DiagnosisInterface = () => {
     //   navigate('/results');
     // });
 
-    agentAPI.searchAPI(query).then(response => {
+    agentAPI.post('/agent/search', { query }).then(response => {
         console.log('Diagnosis results:', response.data);
     });
 

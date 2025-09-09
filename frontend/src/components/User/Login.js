@@ -25,6 +25,43 @@ const Login = () => {
   const { login, logout, loading, error } = useAuth();
   const navigate = useNavigate();
 
+  // Dark theme styles for form inputs
+  const darkTextFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: '#27272a',
+      color: '#ffffff',
+      borderRadius: '8px',
+      transition: 'all 0.2s ease-in-out',
+      '& fieldset': { 
+        borderColor: '#3f3f46',
+        borderWidth: '1.5px'
+      },
+      '&:hover fieldset': { 
+        borderColor: '#10b981',
+        borderWidth: '1.5px'
+      },
+      '&.Mui-focused fieldset': { 
+        borderColor: '#10b981',
+        borderWidth: '2px',
+        boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.1)'
+      },
+    },
+    '& .MuiInputLabel-root': { 
+      color: '#a1a1aa',
+      fontWeight: 500
+    },
+    '& .MuiInputLabel-root.Mui-focused': { 
+      color: '#10b981',
+      fontWeight: 600
+    },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      color: '#a1a1aa'
+    },
+    '& .MuiInputBase-input': {
+      padding: '14px 16px'
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (username.trim() && password.trim()) {
@@ -51,23 +88,31 @@ const Login = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          py: 3,
-        }}
-      >
-        <Card sx={{ width: '100%', maxWidth: 440 }}>
-          <CardContent sx={{ p: 4 }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: "#0a0a0a", // Dark background
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 3,
+      }}
+    >
+      <Container maxWidth="sm">
+        <Card sx={{ 
+          width: '100%', 
+          maxWidth: 440,
+          backgroundColor: "#171717", // Dark card background
+          border: "1px solid #404040", // Gray border
+          boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+          borderRadius: 3
+        }}>
+          <CardContent sx={{ p: 4, backgroundColor: "#18181b" }}>
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Typography variant="h4" component="h1" gutterBottom>
+              <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#ffffff', fontWeight: 600 }}>
                 Welcome Back
               </Typography>
-              <Typography variant="body1" color="text.secondary">
+              <Typography variant="body1" sx={{ color: '#e5e5e5' }}>
                 Sign in to your NiramoyAI account
               </Typography>
             </Box>
@@ -87,10 +132,11 @@ const Login = () => {
                 margin="normal"
                 required
                 disabled={loading}
+                sx={darkTextFieldStyle}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Person color="action" />
+                      <Person sx={{ color: '#a1a1aa' }} />
                     </InputAdornment>
                   ),
                 }}
@@ -105,10 +151,11 @@ const Login = () => {
                 margin="normal"
                 required
                 disabled={loading}
+                sx={darkTextFieldStyle}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Lock color="action" />
+                      <Lock sx={{ color: '#a1a1aa' }} />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -117,6 +164,7 @@ const Login = () => {
                         onClick={togglePasswordVisibility}
                         edge="end"
                         disabled={loading}
+                        sx={{ color: '#a1a1aa' }}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
@@ -131,7 +179,25 @@ const Login = () => {
                 variant="contained"
                 size="large"
                 disabled={loading || !username.trim() || !password.trim()}
-                sx={{ mt: 3, mb: 2, py: 1.5 }}
+                sx={{ 
+                  mt: 3, 
+                  mb: 2, 
+                  py: 1.5,
+                  backgroundColor: "#10b981",
+                  color: "#ffffff",
+                  borderRadius: 2,
+                  fontWeight: 600,
+                  "&:hover": {
+                    backgroundColor: "#059669",
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.4)"
+                  },
+                  "&:disabled": {
+                    backgroundColor: "#3f3f46",
+                    color: "#71717a",
+                  },
+                  transition: "all 0.2s ease-in-out"
+                }}
               >
                 {loading ? (
                   <CircularProgress size={24} color="inherit" />
@@ -141,24 +207,24 @@ const Login = () => {
               </Button>
 
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: '#e5e5e5' }}>
                   Don't have an account?{' '}
                   <Link
                     component={RouterLink}
                     to="/signup"
                     underline="none"
-                    sx={{ fontWeight: 600 }}
+                    sx={{ fontWeight: 600, color: '#10b981', '&:hover': { color: '#059669' } }}
                   >
                     Sign up
                   </Link>
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <Typography variant="body2" sx={{ color: '#e5e5e5', mt: 1 }}>
                   Administrator?{' '}
                   <Link
                     component={RouterLink}
                     to="/admin/login"
                     underline="none"
-                    sx={{ fontWeight: 600, color: 'secondary.main' }}
+                    sx={{ fontWeight: 600, color: '#10b981', '&:hover': { color: '#059669' } }}
                   >
                     Admin Portal
                   </Link>
@@ -167,8 +233,8 @@ const Login = () => {
             </Box>
           </CardContent>
         </Card>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

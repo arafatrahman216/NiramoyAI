@@ -124,6 +124,7 @@ export const agentAPI = {
 
   searchAPI: (query) => 
     api.post('/agent/search', { query })
+  
 
 };
 

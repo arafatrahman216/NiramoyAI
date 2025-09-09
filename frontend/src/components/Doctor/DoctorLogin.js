@@ -33,6 +33,20 @@ const DoctorLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
 
+  // Dark theme styles for form inputs
+  const darkTextFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: '#27272a',
+      color: '#ffffff',
+      '& fieldset': { borderColor: '#3f3f46' },
+      '&:hover fieldset': { borderColor: '#10b981' },
+      '&.Mui-focused fieldset': { borderColor: '#10b981' },
+    },
+    '& .MuiInputLabel-root': { color: '#a1a1aa' },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#10b981' },
+    '& .MuiSelect-icon': { color: '#a1a1aa' },
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -75,7 +89,7 @@ const DoctorLogin = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        backgroundColor: "#0a0a0a", // Dark background like SearchInput
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -86,30 +100,32 @@ const DoctorLogin = () => {
         <Card
           sx={{
             borderRadius: 3,
-            boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+            backgroundColor: "#171717", // Dark card background
+            border: "1px solid #404040", // Gray border
+            boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
             overflow: 'hidden'
           }}
         >
           <Box
             sx={{
-              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+              background: "#27272a", // Dark header background
               p: 4,
               textAlign: 'center'
             }}
           >
-            <LocalHospital sx={{ fontSize: 48, color: 'white', mb: 2 }} />
-            <Typography variant="h4" component="h1" sx={{ color: 'white', fontWeight: 600 }}>
+            <LocalHospital sx={{ fontSize: 48, color: "#10b981", mb: 2 }} />
+            <Typography variant="h4" component="h1" sx={{ color: "#ffffff", fontWeight: 600 }}>
               Doctor Portal
             </Typography>
-            <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.9)', mt: 1 }}>
+            <Typography variant="subtitle1" sx={{ color: "#e5e5e5", mt: 1 }}>
               Access your medical practice dashboard
             </Typography>
           </Box>
 
-          <CardContent sx={{ p: 4 }}>
+          <CardContent sx={{ p: 4, backgroundColor: "#18181b" }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <HealthAndSafety sx={{ mr: 2, color: 'primary.main' }} />
-              <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+              <HealthAndSafety sx={{ mr: 2, color: "#10b981" }} />
+              <Typography variant="h6" sx={{ fontWeight: 600, color: "#10b981" }}>
                 NiramoyAI
               </Typography>
             </Box>
@@ -131,6 +147,7 @@ const DoctorLogin = () => {
                 variant="outlined"
                 required
                 autoFocus
+                sx={darkTextFieldStyle}
               />
 
               <TextField
@@ -143,6 +160,7 @@ const DoctorLogin = () => {
                 margin="normal"
                 variant="outlined"
                 required
+                sx={darkTextFieldStyle}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -170,9 +188,9 @@ const DoctorLogin = () => {
                   py: 1.5,
                   textTransform: 'none',
                   fontSize: '1.1rem',
-                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                  backgroundColor: '#10b981',
                   '&:hover': {
-                    background: 'linear-gradient(45deg, #1976D2 30%, #0288D1 90%)',
+                    backgroundColor: '#059669',
                   }
                 }}
               >
@@ -180,27 +198,27 @@ const DoctorLogin = () => {
               </Button>
 
               <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: "#e5e5e5" }}>
                   Need access to doctor portal?{' '}
                   <Link
                     component="button"
                     variant="body2"
-                    onClick={() => navigate('/contact')}
-                    sx={{ textDecoration: 'none' }}
+                    onClick={() => navigate('/doctor/signup')}
+                    sx={{ textDecoration: 'none', color: "#10b981", "&:hover": { color: "#059669" } }}
                   >
-                    Contact Administrator
+                    Doctor Sign Up
                   </Link>
                 </Typography>
               </Box>
 
               <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: "#e5e5e5" }}>
                   Patient?{' '}
                   <Link
                     component="button"
                     variant="body2"
                     onClick={() => navigate('/login')}
-                    sx={{ textDecoration: 'none' }}
+                    sx={{ textDecoration: 'none', color: "#10b981", "&:hover": { color: "#059669" } }}
                   >
                     Patient Login
                   </Link>
