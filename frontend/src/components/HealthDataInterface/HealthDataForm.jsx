@@ -5,13 +5,12 @@
 // TODO: Add validation and error handling for all steps
 import React, { useState } from 'react';
 import { Heart, Activity, User, FileText } from 'lucide-react';
-import WelcomeStep from './WelcomeStep';
 import BasicInfoStep from './BasicInfoStep';
 import HealthVitalsStep from './HealthVitalsStep';
 import LifestyleStep from './LifestyleStep';
-import CompleteStep from './CompleteStep';
 import ProgressBar from './ProgressBar';
 import NavigationButtons from './NavigationButtons';
+import api from '../../services/api';
 
 const HealthDataForm = () => {
   // ==============================================
@@ -70,8 +69,9 @@ const HealthDataForm = () => {
     setCustomInputValue({ ...customInputValue, [type]: value });
   };
   const handleCustomInputAdd = (type, selectedTags, setSelectedTags) => {
-    if (customInputValue[type].trim() !== "") {
-      setSelectedTags([...selectedTags, customInputValue[type].trim()]);
+    const value = (customInputValue[type] || '').trim();
+    if (value !== "" && !(selectedTags || []).includes(value)) {
+      setSelectedTags([...(selectedTags || []), value]);
       setCustomInputValue({ ...customInputValue, [type]: "" });
       setShowCustomInput({ ...showCustomInput, [type]: false });
     }
@@ -82,45 +82,62 @@ const HealthDataForm = () => {
   };
 
   const handleTagClick = (tag, selectedTags, setSelectedTags) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
+    if (!tag || tag.trim() === '') return;
+    
+    const safeTags = selectedTags || [];
+    if (safeTags.includes(tag)) {
+      setSelectedTags(safeTags.filter((t) => t !== tag));
     } else {
-      setSelectedTags([...selectedTags, tag]);
+      setSelectedTags([...safeTags, tag]);
     }
   };
 
   const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return null;
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (!dateOfBirth || dateOfBirth.trim() === '') return null;
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    try {
+      const today = new Date();
+      const birthDate = new Date(dateOfBirth);
+      
+      // Check if the date is valid
+      if (isNaN(birthDate.getTime())) return null;
+      
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      // Return null for negative ages or unrealistic ages
+      return (age >= 0 && age <= 150) ? age : null;
+    } catch (error) {
+      console.error('Error calculating age:', error);
+      return null;
     }
-    
-    return age;
   };
 
   const steps = [
-    { title: 'Welcome', icon: Heart },
     { title: 'Basic Info', icon: User },
     { title: 'Health Vitals', icon: Activity },
-    { title: 'Lifestyle', icon: FileText },
-    { title: 'Complete', icon: Heart }
+    { title: 'Lifestyle', icon: FileText }
   ];
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Handle null/undefined values gracefully
+    const safeValue = value == null ? '' : value;
+    setFormData(prev => ({ ...prev, [field]: safeValue }));
   };
 
   const handleArrayChange = (field, value) => {
+    // Handle null/undefined values gracefully
+    if (!value || value.trim() === '') return;
+    
     setFormData(prev => ({
       ...prev,
-      [field]: prev[field].includes(value)
-        ? prev[field].filter(item => item !== value)
-        : [...prev[field], value]
+      [field]: (prev[field] || []).includes(value)
+        ? (prev[field] || []).filter(item => item !== value)
+        : [...(prev[field] || []), value]
     }));
   };
 
@@ -131,12 +148,67 @@ const HealthDataForm = () => {
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+    } else {
+      // Handle form submission on the last step
+      handleSubmit();
     }
   };
 
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = () => {
+    // Clean and prepare submission data, handling empty fields gracefully
+    const cleanSubmissionData = {
+      gender: formData.gender || null,
+      date_of_birth: formData.date_of_birth || null,
+      weight: formData.weight || null,
+      height: formData.height || null,
+      heart_rate: formData.heart_rate || null,
+      blood_pressure: formData.blood_pressure || null,
+      blood_type: formData.blood_type || null,
+      major_health_events: formData.major_health_events || null,
+      lifestyle: [...(formData.lifestyle || []), ...(selectedExercise || [])].filter(Boolean),
+      allergies: (formData.allergies || []).filter(Boolean),
+      major_events: (formData.major_events || []).filter(Boolean),
+      chronic_diseases: (formData.chronic_diseases || []).filter(Boolean),
+      calculatedAge: formData.date_of_birth ? calculateAge(formData.date_of_birth) : null
+    };
+    
+    // Remove empty arrays and null values for cleaner submission
+    Object.keys(cleanSubmissionData).forEach(key => {
+      if (Array.isArray(cleanSubmissionData[key]) && cleanSubmissionData[key].length === 0) {
+        cleanSubmissionData[key] = [];
+      }
+      if (cleanSubmissionData[key] === null || cleanSubmissionData[key] === '') {
+        cleanSubmissionData[key] = null;
+      }
+    });
+    
+    console.log('Form submitted:', cleanSubmissionData);
+    
+    // Simulate API call for now (replace with actual API when ready)
+    try {
+      // api.patientAPI.submitHealthData(cleanSubmissionData)
+      //   .then(response => {
+      //     console.log('Health data submitted successfully:', response.data);
+      //     alert('Health data submitted successfully!');
+      //     resetForm();
+      //   })
+      //   .catch(error => {
+      //     console.error('Error submitting health data:', error);
+      //     alert('Failed to submit health data. Please try again.');
+      //   });
+      
+      // For now, just show success message
+      alert('Health data submitted successfully!');
+      resetForm();
+    } catch (error) {
+      console.error('Error submitting health data:', error);
+      alert('Failed to submit health data. Please try again.');
     }
   };
 
@@ -169,8 +241,6 @@ const HealthDataForm = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 0: 
-        return <WelcomeStep nextStep={nextStep} />;
-      case 1: 
         return (
           <BasicInfoStep 
             formData={formData}
@@ -178,7 +248,7 @@ const HealthDataForm = () => {
             calculateAge={calculateAge}
           />
         );
-      case 2: 
+      case 1: 
         return (
           <HealthVitalsStep 
             formData={formData}
@@ -191,7 +261,7 @@ const HealthDataForm = () => {
             handleCustomInputCancel={handleCustomInputCancel}
           />
         );
-      case 3: 
+      case 2: 
         return (
           <LifestyleStep 
             formData={formData}
@@ -208,16 +278,14 @@ const HealthDataForm = () => {
             handleCustomInputAdd={handleCustomInputAdd}
           />
         );
-      case 4: 
+      default: 
         return (
-          <CompleteStep 
+          <BasicInfoStep 
             formData={formData}
+            handleInputChange={handleInputChange}
             calculateAge={calculateAge}
-            resetForm={resetForm}
           />
         );
-      default: 
-        return <WelcomeStep nextStep={nextStep} />;
     }
   };
 
