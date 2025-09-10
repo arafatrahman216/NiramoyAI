@@ -7,6 +7,7 @@ import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.service.ImageService;
 import com.example.niramoy.service.UserService;
+import com.example.niramoy.service.VisitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,7 @@ public class UserController {
 
     private final UserService userService;
     private final ImageService imageService;
+    private final VisitService visitService;
 
 
     @GetMapping("/profile")
@@ -215,9 +217,9 @@ public class UserController {
                                                             testReportFileUrl
                                                         );
 
+            log.info("Visit data saved successfully for user: {}", userDTO.getId());
 
-
-            return ResponseEntity.ok("Visit data received and files uploaded successfully. Prescription URL: " + prescriptionFileUrl);
+            return ResponseEntity.ok("Visit data received, files uploaded, and saved successfully. Prescription URL: " + prescriptionFileUrl);
             
         } catch (Exception e) {
             log.error("Error in upload-visit endpoint: {}", e.getMessage(), e);
