@@ -3,6 +3,7 @@ package com.example.niramoy.controller;
 import com.example.niramoy.dto.UserDTO;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.UserRepository;
+import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.service.ImageService;
 import com.example.niramoy.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -118,6 +122,33 @@ public class UserController {
     public ResponseEntity<UserDTO> findByUsername(@RequestParam("q") String email){
         return ResponseEntity.ok(userService.findByEmail(email));
 
+    }
+
+
+
+    @PostMapping("/health-profile")
+    public ResponseEntity<HealthProfileDTO> updateHealthProfile(@RequestBody HealthProfileDTO healthProfileDTO){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User user = (User) authentication.getPrincipal();
+        UserDTO userDTO = userService.convertToUserDTO(user);
+
+        System.out.println("Received health profile data: " + healthProfileDTO);
+        try {
+            HealthProfileDTO savedHealthProfileDTO = userService.updateHealthProfile(userDTO.getId(), healthProfileDTO);
+            return ResponseEntity.ok(savedHealthProfileDTO);
+        } catch (Exception e) {
+            System.err.println("Error updating health profile: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }    
+
+    @GetMapping("/test")
+    public ResponseEntity<String> testEndpoint() {
+        return ResponseEntity.ok("Test endpoint is working!");
     }
 
 

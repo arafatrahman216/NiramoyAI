@@ -132,7 +132,7 @@ export const agentAPI = {
 //Patient submission end API
 export const patientAPI = {
   submitHealthData: (healthData) =>
-    api.post('/patients/health-record', healthData),
+    api.post('/user/health-profile', healthData),
 }
 
 

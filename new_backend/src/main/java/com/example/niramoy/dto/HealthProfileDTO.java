@@ -1,57 +1,36 @@
-package com.example.NiramoyAI.dto;
+package com.example.niramoy.dto;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-
-
-@AllArgsConstructor     
+@Data
+@AllArgsConstructor
 @NoArgsConstructor
-@Data   
-public class HealthRecordDTO {
-
-    @JsonProperty("gender")
+@Builder
+public class HealthProfileDTO {
     private String gender;
-
     @JsonProperty("date_of_birth")
     private String dateOfBirth;
-    
-    @JsonProperty("weight")
-    private String weight;
-
-    @JsonProperty("height")
-    private String height;
-
+    private Double weight;
+    private Double height;
     @JsonProperty("heart_rate")
-    private String heartRate;
-
+    private Integer heartRate;
     @JsonProperty("blood_pressure")
     private String bloodPressure;
-
     @JsonProperty("blood_type")
     private String bloodType;
-
     @JsonProperty("major_health_events")
     private String majorHealthEvents;
-
-    @JsonProperty("lifestyle")
     private List<String> lifestyle;
-    
-    @JsonProperty("allergies")
     private List<String> allergies;
-
-    @JsonProperty("major_health_events")
+    @JsonProperty("major_events")
     private List<String> majorEvents;
-
     @JsonProperty("chronic_diseases")
     private List<String> chronicDiseases;
-
-    @JsonProperty("calculatedAge")
-    private int calculatedAge;
+    @JsonProperty("calculated_age")
+    private Integer calculatedAge;
 }
-
