@@ -14,6 +14,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ImageService {
+    //BUG: shift to .env file
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String STORAGE_URL = "https://gbnroyjolasnhydnpxwp.supabase.co/storage/v1/object/public/";
     private static final String BUCKET_NAME = "images";
@@ -50,6 +51,7 @@ public class ImageService {
 
     private String uploadToSupabase(MultipartFile file, String filename, String contentType) throws IOException {
         try {
+            //BUG: Fix this hardcoded URL
             String url = "https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/" + BUCKET_NAME + "/" + filename;
 
             HttpHeaders headers = new HttpHeaders();

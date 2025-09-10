@@ -1,6 +1,7 @@
 package com.example.niramoy.controller;
 
 import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.dto.Request.UploadVisitReqDTO;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.dto.HealthProfileDTO;
@@ -149,6 +150,13 @@ public class UserController {
     @GetMapping("/test")
     public ResponseEntity<String> testEndpoint() {
         return ResponseEntity.ok("Test endpoint is working!");
+    }
+
+    @PostMapping("/upload-visit")
+    public ResponseEntity<String> uploadVisit(@ModelAttribute UploadVisitReqDTO visitDTO){
+        System.out.println("Upload visit endpoint hit");
+        System.out.println("Received visit data: " + visitDTO);
+        return ResponseEntity.ok("Visit data received successfully");   
     }
 
 
