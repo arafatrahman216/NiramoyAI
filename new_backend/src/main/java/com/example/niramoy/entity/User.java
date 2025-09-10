@@ -82,7 +82,7 @@ public class User implements UserDetails {
     @JsonManagedReference
     private HealthProfile healthProfile;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<HealthLog> healthLogs= new ArrayList<>();
 
 

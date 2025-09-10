@@ -12,7 +12,7 @@ import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.service.AuthService;
 import com.example.niramoy.service.DoctorProfileService;
 import com.example.niramoy.service.UserService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
