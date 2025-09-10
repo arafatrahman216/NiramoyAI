@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import lombok.extern.slf4j.Slf4j;
@@ -156,11 +157,14 @@ public class UserController {
     @PostMapping("/upload-visit")
     public ResponseEntity<String> uploadVisit(@ModelAttribute UploadVisitReqDTO visitDTO){
         try {
-            log.info("Upload visit endpoint hit");
-            log.info(visitDTO.toString());
-            // log.info("Received visit data: appointmentDate={}, doctorName={}, symptoms={}, prescription={}", 
-            //         visitDTO.getAppointmentDate(), visitDTO.getDoctorName(), 
-            //         visitDTO.getSymptoms(), visitDTO.getPrescription());
+
+            User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();   
+            UserDTO userDTO = userService.convertToUserDTO(user);
+        
+            String appointmentDate = visitDTO.getAppointmentDate();
+            String doctorName = visitDTO.getDoctorName();
+            String symptoms = visitDTO.getSymptoms();
+            String prescription = visitDTO.getPrescription();
             
             String prescriptionFileUrl = null;
             // Check if prescription file is present and upload it
@@ -178,18 +182,41 @@ public class UserController {
                 log.warn("No prescription file provided");
             }
             
-            // TODO: Handle test reports when implemented
-            // if (visitDTO.getTestReports() != null && !visitDTO.getTestReports().isEmpty()) {
-            //     for (MultipartFile testReport : visitDTO.getTestReports()) {
-            //         String testReportUrl = imageService.uploadImage(testReport);
-            //         log.info("Test report uploaded. URL: {}", testReportUrl);
-            //     }
-            // }
-            
+            List<String> testReportFileUrl = new ArrayList<>();
+            if (visitDTO.getTestReports() != null && !visitDTO.getTestReports().isEmpty()) {
+                for (MultipartFile testReport : visitDTO.getTestReports()) {
+                    log.info("Test report file found: {}", testReport.getOriginalFilename());
+                    try {
+                        String testReportUrl = imageService.uploadImage(testReport);
+                        testReportFileUrl.add(testReportUrl);
+                    } catch (Exception e) {
+                        log.error("Error uploading test report file: {}", e.getMessage());
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body("Error uploading test report file: " + e.getMessage());
+                    }
+                }
+            } else {
+                log.warn("No test report file provided");
+            }
+
             log.info("=== UPLOAD SUMMARY ===");
             log.info("Prescription File URL: {}", prescriptionFileUrl != null ? prescriptionFileUrl : "Not uploaded");
+            log.info("Test Report File URL: {}", testReportFileUrl != null ? testReportFileUrl : "Not uploaded");
             log.info("Visit data processed successfully");
-            
+    
+
+            UploadVisitReqDTO uploadedData = visitService.saveVisitData(
+                                                            userDTO.getId(),
+                                                            appointmentDate,
+                                                            doctorName,
+                                                            symptoms,
+                                                            prescription,
+                                                            prescriptionFileUrl,
+                                                            testReportFileUrl
+                                                        );
+
+
+
             return ResponseEntity.ok("Visit data received and files uploaded successfully. Prescription URL: " + prescriptionFileUrl);
             
         } catch (Exception e) {

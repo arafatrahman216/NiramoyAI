@@ -18,5 +18,5 @@ public class UploadVisitReqDTO {
     private String symptoms;
     private String prescription;
     private MultipartFile prescriptionFile;
-    // private List<MultipartFile> testReports;
+    private List<MultipartFile> testReports;
 }
