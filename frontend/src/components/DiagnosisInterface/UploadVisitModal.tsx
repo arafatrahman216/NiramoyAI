@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { API_BASE_URL } from '../../services/api';
-import axios from 'axios';
+import { diagnosisAPI } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // ==============================================
 // UPLOAD VISIT MODAL COMPONENT
@@ -23,6 +24,8 @@ interface VisitData {
 }
 
 const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
+  
   // MODAL STATE MANAGEMENT
   const [visitData, setVisitData] = useState<VisitData>({
     appointmentDate: '',
@@ -32,6 +35,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     prescriptionFile: null,
     testReports: []
   });
+
+  // UPLOAD STATE - Prevent multiple clicks
+  const [isUploading, setIsUploading] = useState(false);
 
   // FORM HANDLERS
   const handleInputChange = (field: keyof VisitData, value: string | boolean) => {
@@ -55,68 +61,75 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     }));
   };
 
-  // UPLOAD HANDLER
+  // UPLOAD HANDLER WITH OPTIMISTIC UI
   const handleFinalUpload = async () => {
+    // Prevent multiple uploads
+    if (isUploading) return;
+    
+    setIsUploading(true);
+
+    // OPTIMISTIC UI: Immediately show upload state
+    const optimisticToastId = toast.loading("Uploading visit data...", {
+      position: "top-right",
+      autoClose: false,
+      closeOnClick: false,
+      draggable: false,
+    });
+
+    // Immediately close modal and navigate (optimistic)
+    onClose();
+    navigate("/diagnosis");
+
     try {
-      console.log('Uploading visit data:', visitData);
-      
-      // TODO: Implement actual upload logic
-      // - Create FormData with files
-      // - Send to backend API
-      // - Handle upload progress
-      // - Show success/error messages
-      // - Update visits list
-      
       const formData = new FormData();
       if (visitData.prescriptionFile) {
-        console.log(visitData.prescriptionFile);
-        formData.append('image', visitData.prescriptionFile);
+        formData.append('prescriptionFile', visitData.prescriptionFile);
       }
       formData.append('doctorName', visitData.doctorName);
       formData.append('symptoms', visitData.symptoms);
       formData.append('prescription', visitData.prescription);
       formData.append('appointmentDate', visitData.appointmentDate);
-      /* Example implementation:
-
-      // Prescription file is mandatory
-
-      // Test reports are optional
-      visitData.testReports.forEach((file, index) => {
-        formData.append(`testReport_${index}`, file);
-      });
       
-      const response = await fetch('/api/visits/upload', {
-        method: 'POST',
-        body: formData
+      // Append each test report file to FormData
+      visitData.testReports.forEach((file) => {
+        formData.append('testReports', file);
       });
+
+      // Send to backend API
+      const response = await diagnosisAPI.uploadVisitData(formData);
       
-      if (response.ok) {
-        // Success handling
-        onClose();
-        // Show success message
-        // Refresh visits list
-      } else {
-        // Error handling
-      }
-      */
+      // SUCCESS: Update toast to success
+      toast.update(optimisticToastId, {
+        render: "Visit uploaded successfully! 🎉",
+        type: "success",
+        isLoading: false,
+        autoClose: 1500,
+        closeOnClick: true,
+        draggable: true,
+        hideProgressBar: true,
+      });
 
-      // For now, just close the modal
-        const response = await axios.post(`${API_BASE_URL}/upload/prescription`, formData);
+      console.log('Upload successful:', response.data);
 
-        if (response.status === 200) {
-            const result = response.data;
-            console.log('Upload successful:', result);
-            alert('Visit uploaded successfully!');
-            onClose();
-            resetForm();
-        } else {
-            const errorData = await response.data; // Use text() for non-JSON responses
-            console.error('Upload failed:', response.status, errorData);
-            alert('Upload failed. Please try again.');
-        }
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('Upload failed. Please try again.'); // TODO: Replace with proper error handling
+      console.error('Upload failed:', error);
+      
+      // ROLLBACK: Update toast to error and navigate back
+      toast.update(optimisticToastId, {
+        render: "Upload failed. Please try again.",
+        type: "error",
+        isLoading: false,
+        autoClose: 4000,
+        closeOnClick: true,
+        draggable: true,
+        hideProgressBar: true,
+      });
+
+      // ROLLBACK: Navigate back to modal (could also reopen modal)
+      // For now, we stay on diagnosis page with error message
+      // TODO: Consider reopening modal with preserved data
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -349,10 +362,16 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
             {/* UPLOAD BUTTON */}
             <button
               onClick={handleFinalUpload}
-              disabled={!isFormValid()}
-              className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors font-medium"
+              disabled={!isFormValid() || isUploading}
+              className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
             >
-              Upload Visit
+              {isUploading && (
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              {isUploading ? 'Uploading...' : 'Upload Visit'}
             </button>
           </div>
 

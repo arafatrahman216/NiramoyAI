@@ -9,16 +9,44 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Add request interceptor to include auth token
+// Add request interceptor to include auth token and debug logging
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Debug logging for all API requests
+  console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  console.log(`📤 Request data:`, config.data);
+  console.log(`📋 Request headers:`, config.headers);
+  
   return config;
 });
 
+// Add response interceptor for debug logging
+api.interceptors.response.use(
+  (response) => {
+    // Success response logging
+    console.log(`✅ API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
+    console.log(`📥 Response data:`, response.data);
+    return response;
+  },
+  (error) => {
+    // Error response logging
+    console.error(`❌ API Error: ${error.response?.status || 'Network Error'} ${error.config?.method?.toUpperCase()} ${error.config?.url}`);
+    console.error(`📥 Error response:`, error.response?.data);
+    console.error(`🔥 Full error:`, error);
+    return Promise.reject(error);
+  }
+);
+
 export { API_BASE_URL };
+
+
+
+
+
 // Doctor API endpoints
 export const doctorAPI = {
   // Get all doctors (public endpoint for landing page)
@@ -35,6 +63,7 @@ export const doctorAPI = {
   
 };
 
+
 // Test Centers API endpoints
 export const testCenterAPI = {
   // Get all test centers
@@ -46,6 +75,7 @@ export const testCenterAPI = {
   // Get test center by id
   getTestCenterById: (id) => api.get(`/public/test-centers/${id}`),
 };
+
 
 // AI Chatbot API endpoints
 export const chatbotAPI = {
@@ -61,6 +91,7 @@ export const chatbotAPI = {
   startConversation: () => 
     api.post('/chatbot/conversation/start'),
 };
+
 
 // Appointment API endpoints
 export const appointmentAPI = {
@@ -135,5 +166,12 @@ export const patientAPI = {
     api.post('/user/health-profile', healthData),
 }
 
+
+//Diagnosis interface API
+export const diagnosisAPI = { 
+  uploadVisitData: (visitData) =>
+    api.post('/user/upload-visit', visitData),
+
+}
 
 export default api;
