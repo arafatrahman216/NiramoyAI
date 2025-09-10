@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { MiniSpeedometer} from "./MiniSpeedoMeter"
 import MedicationTimeline from "./MedicationTimeline";
+import { Home, User, Activity, LogOut } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -18,7 +19,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../../services/api";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   
   
@@ -148,8 +149,52 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-6">
+    <div className="min-h-screen bg-gray-900 text-gray-100">
+      {/* Navbar */}
+      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <Activity className="w-8 h-8 text-emerald-400 mr-2" />
+              <span className="text-xl font-bold text-white">NiramoyAI</span>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center px-3 py-2 text-emerald-400 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Home
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="p-6">
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
@@ -495,6 +540,7 @@ const Dashboard = () => {
             ))}
           </ul>
         </div>
+      </div>
       </div>
     </div>
   );

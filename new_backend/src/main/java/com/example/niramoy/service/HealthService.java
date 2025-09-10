@@ -85,10 +85,17 @@ public class HealthService {
     @Transactional
     public boolean addNewHealthLog( User user ,Map<String, Object> formData) {
         try{
-            String systolic = (String) formData.get("blood_pressure_systolic");
+            System.out.println(formData);
+            String systolic = (String) formData.get("blood_pressure_systolic") ;
+            systolic = systolic==null?"120":systolic;
             String diastolic = (String) formData.get("blood_pressure_diastolic");
+            diastolic = diastolic==null?"80":diastolic;
+            System.out.println(diastolic);
             Integer heartRate = Integer.parseInt((String) formData.get("heart_rate"));
-            double bloodSugar = Double.parseDouble((String) formData.get("blood_sugar"));
+            if (heartRate == null) heartRate = 0;
+            Double bloodSugar = Double.parseDouble((String) formData.get("blood_sugar"));
+            System.out.println(bloodSugar);
+            if (bloodSugar==null) bloodSugar=7.0;
             String logDatetime = "";
 
             String logDate = (String) formData.get("log_date");
@@ -97,10 +104,16 @@ public class HealthService {
                 logDatetime = logDate + "T" + logTime + ":00";
             }
             Double oxygenSaturation = Double.parseDouble((String) formData.get("oxygen_saturation"));
+            if (oxygenSaturation == null) oxygenSaturation = 100.0;
             Integer stressLevel = Integer.parseInt((String) formData.get("stress_level"));
+            if (stressLevel == null) stressLevel = 0;
             Double weight = Double.parseDouble((String) formData.get("weight"));
+            if (weight == null) weight = 0.0;
             String note = (String) formData.get("notes");
+            if (note == null) note = "";
             List<String> otherSymptoms = (List<String>) formData.get("symptoms");
+            if (otherSymptoms == null) otherSymptoms = List.of();
+            System.out.println("hi2");
 
             HealthLog healthLog = HealthLog.builder()
                     .bloodPressure(systolic + "/" + diastolic)

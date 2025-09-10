@@ -41,6 +41,12 @@ const CompleteLogStep = ({ formData, resetForm }) => {
           },
         });
         console.log("Response from server:", response.data);
+        if (response.data.success) {
+          console.log("Vitals successfully sent to server");
+        }
+        else {
+          console.error("Failed to send vitals:", response.data.message);
+        }
       } catch (error) {
         console.error("Error sending vitals to server:", error);
       }

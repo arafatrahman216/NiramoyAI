@@ -238,22 +238,77 @@ const HealthLogForm = ({ isModal = false, onClose = null }) => {
   // ==============================================
   // MAIN RENDER
   // ==============================================
+  const containerClass = isModal 
+    ? "w-full max-w-4xl mx-auto" 
+    : "min-h-screen bg-black text-white flex items-center justify-center p-4";
+
+  const contentClass = isModal 
+    ? "w-full" 
+    : "w-full max-w-4xl";
+
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
+    <div className={containerClass}>
+      <div className={contentClass}>
+        {/* Navigation Header */}
+        {!isModal && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleBackClick}
+                className="flex items-center px-4 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </button>
+              <button
+                onClick={handleDashboardClick}
+                className="flex items-center px-4 py-2 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl transition-colors font-medium"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Dashboard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Header */}
+        {isModal && (
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-700">
+            <h1 className="text-2xl font-light text-white">Health Log Entry</h1>
+            <button
+              onClick={onClose}
+              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
         {/* Progress Bar */}
         <ProgressBar currentStep={currentStep} steps={steps} />
 
         {/* Form Content */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-light text-white mb-2">Health Log Entry</h1>
-            <p className="text-zinc-400">Record your daily health information</p>
-            <div className="flex items-center justify-center mt-4 text-sm text-zinc-500">
-              <span className="mr-2">📅 {formData.log_date}</span>
-              <span>🕐 {formData.log_time}</span>
+          {!isModal && (
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-light text-white mb-2">Health Log Entry</h1>
+              <p className="text-zinc-400">Record your daily health information</p>
+              <div className="flex items-center justify-center mt-4 text-sm text-zinc-500">
+                <span className="mr-2">📅 {formData.log_date}</span>
+                <span>🕐 {formData.log_time}</span>
+              </div>
             </div>
-          </div>
+          )}
+
+          {isModal && (
+            <div className="text-center mb-6">
+              <p className="text-zinc-400">Record your daily health information</p>
+              <div className="flex items-center justify-center mt-3 text-sm text-zinc-500">
+                <span className="mr-2">📅 {formData.log_date}</span>
+                <span>🕐 {formData.log_time}</span>
+              </div>
+            </div>
+          )}
 
           {renderStep()}
 

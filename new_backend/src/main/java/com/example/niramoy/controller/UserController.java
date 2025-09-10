@@ -276,8 +276,15 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         User user = (User) authentication.getPrincipal();
-        boolean success = healthService.addNewHealthLog(user, vitals);
-        response.put("success", success);
+        try{
+            boolean success = healthService.addNewHealthLog(user, vitals);
+            response.put("success", success);
+        }
+        catch (Exception e){
+            response.put("success", false);
+            response.put("message", "Failed to save health log: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
         return ResponseEntity.ok(response);
     }
 

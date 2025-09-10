@@ -28,6 +28,7 @@ import DoctorSchedule from './components/Doctor/DoctorSchedule';
 import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterface';
 import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
 import Timeline from './components/Timeline/Timeline';
+import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
 
 
 const theme = createTheme({
@@ -430,6 +431,12 @@ function App() {
                     </PatientRoute>
                   }
                 />
+                <Route path="/test" element={
+                  <PatientRoute>
+                    
+                  <ExampleDashboardComponent />
+                  </PatientRoute>
+                } />
             </Routes>
           </div>
         </Router>
