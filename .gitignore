@@ -3,6 +3,12 @@
 
 # Log file
 *.log
+node_modules/
+
+*.sql
+*.env
+prompt.txt
+Therap.pdf
 
 # BlueJ files
 *.ctxt
