@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { MiniSpeedometer} from "./MiniSpeedoMeter"
+import MedicationTimeline from "./MedicationTimeline";
 import {
   LineChart,
   Line,
@@ -61,6 +62,7 @@ const Dashboard = () => {
     systolic: "130",
     diastolic: "85",
     heartRate: "75",
+    majorEvents : "Till now Unmarried :')",
     majorHealthEvents: "2022 - COVID Recovery",
     lifestyle: "Non-smoker, Regular exercise",
   };
@@ -182,40 +184,50 @@ const Dashboard = () => {
   </div>
 </div>
 
-        {/* Health Profile - Static Information Cards */}
-        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4">Health Profile</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {Object.entries(healthProfile).map(([key, value]) => {
-              // Only show non-vital cards in health profile
-              const isVital = ['heartRate', 'weight', 'systolic', 'diastolic'].includes(key);
-              
-              if (isVital) return null; // Skip vital signs for health profile
-              
-              return (
-                <div
-                  key={key}
-                  className="bg-gradient-to-br from-zinc-700 to-zinc-800 border border-zinc-700 shadow-lg rounded-xl p-4 flex flex-col items-center justify-between hover:shadow-emerald-500/20 transition-shadow duration-200"
-                >
-                  <div className="flex items-center mb-3 w-full justify-center">
-                    <span className="text-lg mr-2">
-                      {key === 'bloodGroup' ? '🩸' :
-                       key === 'height' ? '📏' :
-                       key === 'allergies' ? '🌾' :
-                       key === 'surgeries' ? '�' :
-                       key === 'chronicDiseases' ? '💊' :
-                       key === 'majorHealthEvents' ? '�' :
-                       key === 'lifestyle' ? '🏃' : '🩺'}
-                    </span>
-                    <span className="text-xs font-semibold capitalize text-emerald-400 text-center">
-                      {key.replace(/([A-Z])/g, ' $1')}
-                    </span>
+
+        {/* Health Profile and Medication Timeline - Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Health Profile - Static Information Cards */}
+          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Health Profile</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {Object.entries(healthProfile).map(([key, value]) => {
+                // Only show non-vital cards in health profile
+                const isVital = ['heartRate', 'weight', 'systolic', 'diastolic'].includes(key);
+                
+                if (isVital) return null; // Skip vital signs for health profile
+                
+                return (
+                  <div
+                    key={key}
+                    className="bg-gradient-to-br from-zinc-700 to-zinc-800 border border-zinc-700 shadow-lg rounded-xl p-4 flex flex-col items-center justify-between hover:shadow-emerald-500/20 transition-shadow duration-200"
+                  >
+                    <div className="flex items-center mb-3 w-full justify-center">
+                      <span className="text-lg mr-2">
+                        {key === 'bloodGroup' ? '🩸' :
+                         key === 'height' ? '📏' :
+                         key === 'allergies' ? '🌾' :
+                         key === 'surgeries' ? '🦠' :
+                         key === 'chronicDiseases' ? '💊' :
+                         key === 'majorHealthEvents' ?  '🩹' :
+                         key === 'majorEvents' ? '🩹' :
+                         key === 'lifestyle' ? '🏃' : '🩺'}
+                      </span>
+                      <span className="text-xs font-semibold capitalize text-emerald-400 text-center">
+                        {key.replace(/([A-Z])/g, ' $1')}
+                      </span>
+                    </div>
+                    
+                    <span className="text-sm font-bold text-white break-words text-center">{value}</span>
                   </div>
-                  
-                  <span className="text-sm font-bold text-white break-words text-center">{value}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Medication Timeline */}
+          <div className="h-fit">
+            <MedicationTimeline />
           </div>
         </div>
 
@@ -263,6 +275,9 @@ const Dashboard = () => {
             })}
           </div>
         </div>
+
+        
+
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -428,6 +443,8 @@ const Dashboard = () => {
           </ResponsiveContainer>
         </div>
         </div>
+
+
 
         {/* Recent Visits */}
         <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
