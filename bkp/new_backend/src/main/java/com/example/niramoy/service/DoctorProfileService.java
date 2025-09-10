@@ -10,7 +10,7 @@ import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.UserRepository;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

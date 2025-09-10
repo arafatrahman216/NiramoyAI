@@ -8,7 +8,7 @@ import com.example.niramoy.enumerate.Role;
 import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.HealthProfileRepository;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,7 +28,7 @@ public class UserService implements UserDetailsService {
 
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
     // until then the query result will be stored in persistence context
-    @Transactional(readOnly = true)
+    @Transactional
     public List<UserDTO> getAllUsers(){
         List<User> users = userRepository.getAll();
         return users.stream()
@@ -67,35 +67,30 @@ public class UserService implements UserDetailsService {
         return newUser1;
     }
 
-    @Transactional(readOnly = true)
     public UserDTO findByUsername(String username) {
         System.out.println("hey");
         User user = userRepository.findByUsername(username);
         return convertToUserDTO(user);
     }
 
-    @Transactional(readOnly = true)
     public UserDTO findByEmail(String email) {
         User user = userRepository.findByEmail(email);
         return convertToUserDTO(user);
     }
 
-        // load user by username for authentication
+    // load user by username for authentication
     @Override
-    @Transactional(readOnly = true)
     public User loadUserByUsername(String username) throws UsernameNotFoundException {
         System.out.println("hello");
         User user = userRepository.findByUsernameOrEmail(username);
         if (user == null) {
-            throw new UsernameNotFoundException("User not found: " + username);
+            throw new UsernameNotFoundException("User not found with username: " + username);
         }
         return user;
     }
 
-    @Transactional(readOnly = true)
     public User findByUserId(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+        return userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
     }
 
     public UserDTO convertToUserDTO(User user) {

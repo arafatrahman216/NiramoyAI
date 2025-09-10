@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL, diagnosisAPI } from '../../services/api';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 // ==============================================
 // UPLOAD VISIT MODAL COMPONENT
@@ -23,6 +24,7 @@ interface VisitData {
 }
 
 const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   // MODAL STATE MANAGEMENT
   const [visitData, setVisitData] = useState<VisitData>({
     appointmentDate: '',
@@ -70,50 +72,28 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
       const formData = new FormData();
       if (visitData.prescriptionFile) {
         console.log(visitData.prescriptionFile);
-        formData.append('image', visitData.prescriptionFile);
+        formData.append('prescriptionFile', visitData.prescriptionFile);
       }
       formData.append('doctorName', visitData.doctorName);
       formData.append('symptoms', visitData.symptoms);
       formData.append('prescription', visitData.prescription);
       formData.append('appointmentDate', visitData.appointmentDate);
-      /* Example implementation:
 
-      // Prescription file is mandatory
+      console.log(formData);
+      diagnosisAPI.uploadVisitData(formData)
+        .then(response => {
+          console.log('Upload successful:', response.data);
+          onClose();
+          alert("Upload successful!");
+          navigate("/diagnosis");
+        })
+        .catch(error => {
+          console.error('Upload failed:', error);
+          resetForm();
+          alert('Upload failed. Please try again.');
+        });
 
-      // Test reports are optional
-      visitData.testReports.forEach((file, index) => {
-        formData.append(`testReport_${index}`, file);
-      });
-      
-      const response = await fetch('/api/visits/upload', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (response.ok) {
-        // Success handling
-        onClose();
-        // Show success message
-        // Refresh visits list
-      } else {
-        // Error handling
-      }
-      */
 
-      // For now, just close the modal
-        const response = await axios.post(`${API_BASE_URL}/upload/prescription`, formData);
-
-        if (response.status === 200) {
-            const result = response.data;
-            console.log('Upload successful:', result);
-            alert('Visit uploaded successfully!');
-            onClose();
-            resetForm();
-        } else {
-            const errorData = await response.data; // Use text() for non-JSON responses
-            console.error('Upload failed:', response.status, errorData);
-            alert('Upload failed. Please try again.');
-        }
     } catch (error) {
       console.error('Upload error:', error);
       alert('Upload failed. Please try again.'); // TODO: Replace with proper error handling

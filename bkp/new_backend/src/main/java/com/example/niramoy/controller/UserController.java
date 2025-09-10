@@ -22,9 +22,8 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
@@ -153,51 +152,11 @@ public class UserController {
         return ResponseEntity.ok("Test endpoint is working!");
     }
 
-    @PostMapping("/upload-visit")
-    public ResponseEntity<String> uploadVisit(@ModelAttribute UploadVisitReqDTO visitDTO){
-        try {
-            log.info("Upload visit endpoint hit");
-            log.info(visitDTO.toString());
-            // log.info("Received visit data: appointmentDate={}, doctorName={}, symptoms={}, prescription={}", 
-            //         visitDTO.getAppointmentDate(), visitDTO.getDoctorName(), 
-            //         visitDTO.getSymptoms(), visitDTO.getPrescription());
-            
-            String prescriptionFileUrl = null;
-            // Check if prescription file is present and upload it
-            if (visitDTO.getPrescriptionFile() != null && !visitDTO.getPrescriptionFile().isEmpty()) {
-                log.info("Prescription file found: {}", visitDTO.getPrescriptionFile().getOriginalFilename());
-                try {
-                    prescriptionFileUrl = imageService.uploadImage(visitDTO.getPrescriptionFile());
-                    log.info("Prescription file uploaded successfully. URL: {}", prescriptionFileUrl);
-                } catch (Exception e) {
-                    log.error("Error uploading prescription file: {}", e.getMessage());
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Error uploading prescription file: " + e.getMessage());
-                }
-            } else {
-                log.warn("No prescription file provided");
-            }
-            
-            // TODO: Handle test reports when implemented
-            // if (visitDTO.getTestReports() != null && !visitDTO.getTestReports().isEmpty()) {
-            //     for (MultipartFile testReport : visitDTO.getTestReports()) {
-            //         String testReportUrl = imageService.uploadImage(testReport);
-            //         log.info("Test report uploaded. URL: {}", testReportUrl);
-            //     }
-            // }
-            
-            log.info("=== UPLOAD SUMMARY ===");
-            log.info("Prescription File URL: {}", prescriptionFileUrl != null ? prescriptionFileUrl : "Not uploaded");
-            log.info("Visit data processed successfully");
-            
-            return ResponseEntity.ok("Visit data received and files uploaded successfully. Prescription URL: " + prescriptionFileUrl);
-            
-        } catch (Exception e) {
-            log.error("Error in upload-visit endpoint: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing visit data: " + e.getMessage());
-        }
-    }
+    // @PostMapping("/upload-visit")
+    // public ResponseEntity<String> uploadVisit(@RequestBody UploadVisitReqDTO visitDTO){
+    //     System.out.println("Received visit data: " + visitDTO);
+    //     return ResponseEntity.ok("Visit data received successfully");   
+    // }
 
 
 }
