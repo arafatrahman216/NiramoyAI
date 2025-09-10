@@ -21,9 +21,9 @@ public class JwtUtil {
     private final SecretKey secretKey;
 
     public JwtUtil() {
-        this.secretKey = generateSecureKey("your-256-bit-secret");
-        // byte[] keyBytes = this.secretKey.getEncoded();
-        // String base64Key = Base64.getEncoder().encodeToString(keyBytes);
+        this.secretKey = generateSecureKey("secretKey");
+        byte[] keyBytes = this.secretKey.getEncoded();
+        String base64Key = Base64.getEncoder().encodeToString(keyBytes);
     }
 
     private final long jwtExpiration = 3600000; // 1 hours in milliseconds

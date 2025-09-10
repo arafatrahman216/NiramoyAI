@@ -9,6 +9,8 @@ const AccessDenied = ({ message, redirectTo, redirectLabel }) => {
   const { user } = useAuth();
 
   const handleRedirect = () => {
+    // COMMENTED OUT - Access denied redirects temporarily disabled
+    /*
     if (redirectTo) {
       navigate(redirectTo);
     } else if (user?.role==='ADMIN') {
@@ -18,6 +20,10 @@ const AccessDenied = ({ message, redirectTo, redirectLabel }) => {
     } else {
       navigate('/dashboard');
     }
+    */
+    
+    // Temporarily disabled - no redirects
+    console.log('Access denied redirect disabled');
   };
 
   return (

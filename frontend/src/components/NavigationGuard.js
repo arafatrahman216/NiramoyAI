@@ -8,6 +8,9 @@ const NavigationGuard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+// COMMENTED OUT - Navigation guard temporarily disabled
+/*
 useEffect(() => {
   if (!loading && user) {
     const currentPath = location.pathname;
@@ -49,10 +52,12 @@ useEffect(() => {
           console.warn('Patient attempted to access unauthorized route:', currentPath);
           navigate('/login', { replace: true });
         }
+        console.log('Patient role detected');
       }
     }
   }
 }, [user, loading, location.pathname, navigate]);
+*/
 
   return null; // This component doesn't render anything
 };
