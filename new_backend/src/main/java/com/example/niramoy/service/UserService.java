@@ -10,11 +10,13 @@ import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.HealthProfileRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,6 +67,7 @@ public class UserService implements UserDetailsService {
 //        return convertToUserDTO(newUser1);
 
         return newUser1;
+
     }
 
     public UserDTO findByUsername(String username) {

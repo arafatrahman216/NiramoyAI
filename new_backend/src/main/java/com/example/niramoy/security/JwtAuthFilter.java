@@ -34,7 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             log.info("Request URL: {}", request.getRequestURL());
             final String path = request.getServletPath() ;
             // skip the auth endpoints jwt checking
-            if (path.startsWith("/auth") || path.startsWith("/public") || path.startsWith("/upload") ){
+            if (path.startsWith("/auth") || path.startsWith("/public") || path.startsWith("/upload") || path.startsWith("/agent") ){
                 filterChain.doFilter(request, response);
                 return;
             }

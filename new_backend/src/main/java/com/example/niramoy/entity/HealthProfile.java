@@ -1,5 +1,7 @@
 package com.example.niramoy.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,37 +21,39 @@ public class HealthProfile {
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")
+    @JsonIgnore
+    @JsonBackReference
     private User user;
 
-    @Column(name = "gender")
-    private String gender;
+    @Column(name = "height" )
+    private String height;
 
-    @Column(name = "date_of_birth")
-    private String dateOfBirth;
+    @Column(name = "weight" )
+    private String weight;
 
-    @Column(name = "weight")
-    private Double weight;
+    @Column(name = "blood_group" )
+    private String bloodGroup;
 
-    @Column(name = "height")
-    private Double height;
+    @Column(name = "allergies" )
+    private String allergies;
 
-    @Column(name = "heart_rate")
+    @Column(name = "surgeries" )
     private Integer heartRate;
 
     @Column(name = "blood_pressure")
-    private String bloodPressure;
+    private String surgeries;
 
-    @Column(name = "blood_type")
-    private String bloodType;
+    @Column(name = "emergency_contact_number" )
+    private String emergencyContactNumber;
 
     @Column(name = "major_health_events")
     private String majorHealthEvents;
 
-    @Column(name = "lifestyle", columnDefinition = "TEXT")
-    private String lifestyle; // Store as JSON string or comma-separated values
+    @Column(name = "emergency_contact_name" )
+    private String emergencyContactName;
 
-    @Column(name = "allergies", columnDefinition = "TEXT")
-    private String allergies; // Store as JSON string or comma-separated values
+    @Column(name = "ongoing_medication" )
+    private String ongoingMedication;
 
     @Column(name = "major_events", columnDefinition = "TEXT")
     private String majorEvents; // Store as JSON string or comma-separated values
