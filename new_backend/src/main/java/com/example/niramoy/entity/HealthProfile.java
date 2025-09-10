@@ -1,5 +1,7 @@
 package com.example.niramoy.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,6 +20,8 @@ public class HealthProfile {
 
     @OneToOne
     @MapsId
+    @JsonIgnore
+    @JsonBackReference
     @JoinColumn(name = "user_id")
     private User user;
 

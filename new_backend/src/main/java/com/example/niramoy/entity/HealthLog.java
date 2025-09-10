@@ -1,8 +1,12 @@
 package com.example.niramoy.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "health_log")
@@ -10,12 +14,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"user"})
 public class HealthLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long healthLogId;
 
     @ManyToOne
+    @JsonIgnore
+    @JsonBackReference
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -41,7 +48,7 @@ public class HealthLog {
     private Double oxygenSaturation;
 
     @Column(name = "other_symptoms")
-    private String otherSymptoms;
+    private List<String> otherSymptoms= new ArrayList<>();
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;

@@ -20,6 +20,7 @@ import DoctorSignup from './components/Doctor/DoctorSignup';
 import SearchDoctors from './components/SearchDoctors';
 import EnhancedSearchDoctors from './components/EnhancedSearchDoctors';
 import BookAppointment from './components/BookAppointment';
+import HealthLogForm from './components/HealthLogInterface/HealthLogForm';
 import BookAppointmentPage from './components/BookAppointmentPage';
 import PatientAppointments from './components/PatientAppointments';
 import DoctorAppointments from './components/Doctor/DoctorAppointments';
@@ -412,6 +413,14 @@ function App() {
                       <HealthDataForm />
                     </PatientRoute>
                   }
+                />
+                <Route
+                path='/healthlog'
+                element={
+                  <PatientRoute>
+                    < HealthLogForm />
+                  </PatientRoute>
+                }
                 />
                 <Route 
                   path='/timeline'

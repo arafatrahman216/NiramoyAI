@@ -158,12 +158,6 @@ public class UserService implements UserDetailsService {
 
 
 
-
-
-
-
-
-
     private void updateHealthProfileFields(HealthProfile healthProfile, HealthProfileDTO dto) {
         healthProfile.setGender(dto.getGender());
         healthProfile.setDateOfBirth(dto.getDateOfBirth());
@@ -206,4 +200,10 @@ public class UserService implements UserDetailsService {
         
         return dto;
     }
+
+
+
+
+
+
 }

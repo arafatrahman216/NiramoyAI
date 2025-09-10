@@ -3,6 +3,9 @@ package com.example.niramoy.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @Table(name = "medicines")
@@ -20,8 +23,9 @@ public class Medicine {
     private Prescription prescription;
 
     private String medicineName;
-    private String frequency;
+    private List<String> frequency= new ArrayList<>();
     private String doses;
     private String duration;
     private String instructions;
+    private String type ; // tablet, capsule, injection, syrup
 }

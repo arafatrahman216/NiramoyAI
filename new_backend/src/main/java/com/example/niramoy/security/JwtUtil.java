@@ -26,7 +26,7 @@ public class JwtUtil {
         String base64Key = Base64.getEncoder().encodeToString(keyBytes);
     }
 
-    private final long jwtExpiration = 3600000; // 1 hours in milliseconds
+    private final long jwtExpiration = 86400000; // 1 hours in milliseconds
 
 
     private SecretKey generateSecureKey(String baseKey) {

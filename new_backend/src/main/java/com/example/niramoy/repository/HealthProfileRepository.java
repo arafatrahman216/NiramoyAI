@@ -7,5 +7,6 @@ import com.example.niramoy.entity.HealthProfile;
 
 @Repository
 public interface HealthProfileRepository extends JpaRepository<HealthProfile, Long> {
+
     HealthProfile findByUserId(Long userId);
 }
