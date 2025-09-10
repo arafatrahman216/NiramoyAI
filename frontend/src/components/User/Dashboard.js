@@ -1,279 +1,449 @@
-import React from 'react';
+// src/components/User/Dashboard.js
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { MiniSpeedometer} from "./MiniSpeedoMeter"
 import {
-  Box,
-  Container,
-  Typography,
-  Card,
-  CardContent,
-  AppBar,
-  Toolbar,
-  Button,
-  Avatar,
-  Grid,
-  Paper,
-  Chip,
-} from '@mui/material';
-import { 
-  Dashboard as DashboardIcon, 
-  Person, 
-  ExitToApp,
-  HealthAndSafety,
-  AdminPanelSettings
-} from '@mui/icons-material';
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { usePreventCrossRoleAccess } from '../../hooks/useRoleProtection';
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  
-  // Prevent doctors and admins from accessing patient dashboard
-  usePreventCrossRoleAccess();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  // Dummy fallback data
+  const fallbackUser = {
+    name: "John Doe",
+    lastName: "Doe",
+    username: "johndoe",
+    email: "john@example.com",
+    phoneNumber: "0123456789",
+    role: "PATIENT",
+    status: "Active",
   };
 
-  const handleProfileClick = () => {
-    navigate('/profile');
+  const fallbackVitals = {
+    bloodPressure: [
+      { date: "2025-09-01", systolic: 120, diastolic: 80 },
+      { date: "2025-09-05", systolic: 125, diastolic: 82 },
+      { date: "2025-09-09", systolic: 130, diastolic: 85 },
+    ],
+    diabetes: [
+      { date: "2025-09-01", sugar: 110 },
+      { date: "2025-09-05", sugar: 130 },
+      { date: "2025-09-09", sugar: 115 },
+    ],
+    heartRate: [
+      { date: "2025-09-01", bpm: 72 },
+      { date: "2025-09-05", bpm: 78 },
+      { date: "2025-09-09", bpm: 75 },
+    ],
   };
 
-  const handleAdminDashboard = () => {
-    navigate('/admin/dashboard');
+  const fallbackVisits = [
+    { date: "2025-08-20", doctor: "Dr. Smith", reason: "General Checkup" },
+    { date: "2025-09-01", doctor: "Dr. Brown", reason: "Blood Test" },
+  ];
+
+  const fallbackProfile = {
+    allergies: "Pollen, Dust",
+    bloodGroup: "O+",
+    height: "175 cm",
+    weight: "70 kg",
+    surgeries: "Appendix Removal",
+    chronicDiseases: "Hypertension",
+    systolic: "130",
+    diastolic: "85",
+    heartRate: "75",
+    majorHealthEvents: "2022 - COVID Recovery",
+    lifestyle: "Non-smoker, Regular exercise",
   };
 
-  // Check if user is admin
-  const isAdmin = user?.role && user.role === 'ADMIN';
+  const [healthVitals, setHealthVitals] = useState(fallbackVitals);
+  const [recentVisits, setRecentVisits] = useState(fallbackVisits);
+  const [healthProfile, setHealthProfile] = useState(fallbackProfile);
+
+  const profile = user || fallbackUser;
+
+
+
+  // Health ranges configuration
+  const getHealthRanges = (key) => {
+    switch(key) {
+      case 'heartRate':
+        return {
+          scale: { min: 40, max: 120 },
+          green: { min: 60, max: 100 },
+          yellow: { min: 100, max: 110 },
+          red: { min: 40, max: 120 }
+        };
+      case 'weight':
+        return {
+          scale: { min: 40, max: 120 },
+          green: { min: 60, max: 80 },
+          yellow: { min: 50, max: 90 },
+          red: { min: 40, max: 120 }
+        };
+      case 'systolic':
+        return {
+          scale: { min: 80, max: 180 },
+          green: { min: 90, max: 120 },
+          yellow: { min: 120, max: 140 },
+          red: { min: 140, max: 180 }
+        };
+      case 'diastolic':
+        return {
+          scale: { min: 50, max: 110 },
+          green: { min: 60, max: 80 },
+          yellow: { min: 80, max: 90 },
+          red: { min: 90, max: 110 }
+        };
+      default:
+        return null;
+    }
+  };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" elevation={1} sx={{ bgcolor: 'white', color: 'text.primary' }}>
-        <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <HealthAndSafety sx={{ mr: 2, color: 'primary.main' }} />
-            <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: 'primary.main' }}>
-              NiramoyAI
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {isAdmin && (
-              <Button
-                startIcon={<AdminPanelSettings />}
-                onClick={handleAdminDashboard}
-                variant="contained"
-                color="secondary"
-                sx={{ textTransform: 'none' }}
-              >
-                Admin Dashboard
-              </Button>
-            )}
-            <Button
-              startIcon={<Person />}
-              onClick={handleProfileClick}
-              sx={{ textTransform: 'none' }}
-            >
-              Profile
-            </Button>
-            <Button
-              startIcon={<ExitToApp />}
-              onClick={handleLogout}
-              color="error"
-              sx={{ textTransform: 'none' }}
-            >
-              Logout
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+    <div className="min-h-screen bg-gray-900 text-gray-100 p-6">
+      {/* Header */}
+      <header className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
+        <button
+          onClick={() => navigate("/add-health-log")}
+          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
+        >
+          + Add Health Log
+        </button>
+      </header>
 
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-            Welcome back, {user?.firstName}!
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Here's your healthcare dashboard overview
-          </Typography>
-        </Box>
+      <div className="space-y-6">
+        {/* User Info - Elegant & Classy Design */}
+       <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-700 relative overflow-hidden">
+  {/* Decorative background element */}
+  <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-emerald-500/10 to-blue-500/10 rounded-full blur-2xl"></div>
+  
+  <div className="relative z-10">
+    {/* Profile Avatar */}
+    <div className="flex items-center mb-4">
+      <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center text-xl font-bold text-white shadow-lg">
+        {profile.name?.charAt(0)}
+      </div>
+      <div className="ml-4">
+        <h2 className="text-xl font-bold text-white">{profile.name}</h2>
+        <p className="text-emerald-400 font-medium text-sm">@{profile.username}</p>
+      </div>
+    </div>
 
-        <Grid container spacing={3}>
-          {/* User Info Card */}
-          <Grid item xs={12} md={4}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                <Avatar
-                  sx={{ 
-                    width: 80, 
-                    height: 80, 
-                    mx: 'auto', 
-                    mb: 2,
-                    bgcolor: 'primary.main',
-                    fontSize: '2rem'
-                  }}
+    {/* Contact Information - in one row, side by side */}
+    <div  className="flex items-center -space-x-20 justify-center">
+<div className="flex items-center space-x-6">
+  {/* Email */}
+  <div className="flex items-center space-x-2"
+  style={{paddingRight: '40px'}}>
+    <div className="w-7 h-7 bg-gray-700 rounded-lg flex items-center justify-center">
+      <span className="text-xs">📧</span>
+    </div>
+    <div>
+      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Email</p>
+      <p className="text-sm font-medium text-white">{profile.email}</p>
+    </div>
+  </div>
+
+  {/* Phone */}
+  <div className="flex items-center space-x-2">
+    <div className="w-7 h-7 bg-gray-700 rounded-lg flex items-center justify-center">
+      <span className="text-xs">📱</span>
+    </div>
+    <div>
+      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Phone</p>
+      <p className="text-sm font-medium text-white">{profile.phoneNumber}</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+    {/* Status & Role */}
+    <div className="flex items-center justify-between mt-5 pt-3 border-t border-gray-700">
+      <div className="flex items-center space-x-2">
+        <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
+        <span className="text-green-400 text-sm font-medium">{profile.status}</span>
+      </div>
+      <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-full shadow-md">
+        {profile.role}
+      </span>
+    </div>
+  </div>
+</div>
+
+        {/* Health Profile - Static Information Cards */}
+        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
+          <h2 className="text-xl font-semibold mb-4">Health Profile</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {Object.entries(healthProfile).map(([key, value]) => {
+              // Only show non-vital cards in health profile
+              const isVital = ['heartRate', 'weight', 'systolic', 'diastolic'].includes(key);
+              
+              if (isVital) return null; // Skip vital signs for health profile
+              
+              return (
+                <div
+                  key={key}
+                  className="bg-gradient-to-br from-zinc-700 to-zinc-800 border border-zinc-700 shadow-lg rounded-xl p-4 flex flex-col items-center justify-between hover:shadow-emerald-500/20 transition-shadow duration-200"
                 >
-                  {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                </Avatar>
-                <Typography variant="h6" gutterBottom>
-                  {user?.firstName} {user?.lastName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  @{user?.username}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {user?.email}
-                </Typography>
-                {user?.phoneNumber && (
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {user.phoneNumber}
-                  </Typography>
-                )}
-                <Box sx={{ mt: 2 }}>
-                  <Chip 
-                    label={user?.status || 'Active'} 
-                    color="success" 
-                    size="small" 
-                  />
-                </Box>
-                {user?.role && (
-                  <Box sx={{ mt: 2 }}>
-                    <Chip 
-                      label={user.role} 
-                        variant="outlined" 
-                        size="small" 
-                        sx={{ 
-                          mr: 1, 
-                          mb: 1,
-                          cursor: user.role === 'ADMIN' ? 'pointer' : 'default',
-                          '&:hover': user.role === 'ADMIN' ? {
-                            backgroundColor: 'secondary.light',
-                            color: 'red'
-                          } : {}
-                        }}
-                        color={user.role === 'ADMIN' ? 'secondary' : 'default'}
-                        onClick={user.role === 'ADMIN' ? handleAdminDashboard : undefined}
-                      />
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
+                  <div className="flex items-center mb-3 w-full justify-center">
+                    <span className="text-lg mr-2">
+                      {key === 'bloodGroup' ? '🩸' :
+                       key === 'height' ? '📏' :
+                       key === 'allergies' ? '🌾' :
+                       key === 'surgeries' ? '�' :
+                       key === 'chronicDiseases' ? '💊' :
+                       key === 'majorHealthEvents' ? '�' :
+                       key === 'lifestyle' ? '🏃' : '🩺'}
+                    </span>
+                    <span className="text-xs font-semibold capitalize text-emerald-400 text-center">
+                      {key.replace(/([A-Z])/g, ' $1')}
+                    </span>
+                  </div>
+                  
+                  <span className="text-sm font-bold text-white break-words text-center">{value}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-          {/* Quick Stats */}
-          <Grid item xs={12} md={8}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Paper sx={{ p: 3, textAlign: 'center' }}>
-                  <Typography variant="h4" color="primary.main" gutterBottom>
-                    0
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    Health Records
-                  </Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Paper sx={{ p: 3, textAlign: 'center' }}>
-                  <Typography variant="h4" color="secondary.main" gutterBottom>
-                    0
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    Appointments
-                  </Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Paper sx={{ p: 3, textAlign: 'center' }}>
-                  <Typography variant="h4" color="success.main" gutterBottom>
-                    0
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    Medications
-                  </Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Paper sx={{ p: 3, textAlign: 'center' }}>
-                  <Typography variant="h4" color="warning.main" gutterBottom>
-                    0
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    Reminders
-                  </Typography>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
+        {/* Current Vitals - Speedometer Cards */}
+        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
+          <h2 className="text-xl font-semibold mb-4">Current Vitals</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Object.entries(healthProfile).map(([key, value]) => {
+              const ranges = getHealthRanges(key);
+              const isVital = ['heartRate', 'weight', 'systolic', 'diastolic'].includes(key);
+              
+              if (!isVital || !ranges) return null; // Only show vital signs with speedometers
+              
+              return (
+                <div
+                  key={key}
+                  className="bg-gradient-to-br from-zinc-700 to-zinc-800 border border-zinc-700 shadow-lg rounded-xl p-4 flex flex-col items-center justify-between hover:shadow-emerald-500/20 transition-shadow duration-200"
+                >
+                  <div className="flex items-center mb-3 w-full justify-center">
+                    <span className="text-lg mr-2">
+                      {key === 'weight' ? '⚖️' :
+                       key === 'systolic' ? '💉' :
+                       key === 'diastolic' ? '💉' :
+                       key === 'heartRate' ? '❤️' : '🩺'}
+                    </span>
+                    <span className="text-xs font-semibold capitalize text-emerald-400 text-center">
+                      {key === 'systolic' ? 'Systolic BP' :
+                       key === 'diastolic' ? 'Diastolic BP' :
+                       key.replace(/([A-Z])/g, ' $1')}
+                    </span>
+                  </div>
+                  
+                  <div className="w-full">
+                    <MiniSpeedometer 
+                      value={value} 
+                      unit={key === 'weight' ? 'kg' : 
+                            key === 'heartRate' ? 'bpm' : 
+                            (key === 'systolic' || key === 'diastolic') ? 'mmHg' : ''}
+                      ranges={ranges}
+                      size={120}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-          {/* Quick Actions */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-                  Quick Actions
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      size="large"
-                      sx={{ py: 2, textTransform: 'none' }}
-                      onClick={() => navigate('/search-doctors')}
-                    >
-                      Find Doctors
-                    </Button>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      size="large"
-                      sx={{ py: 2, textTransform: 'none' }}
-                    >
-                      Add Health Record
-                    </Button>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      size="large"
-                      sx={{ py: 2, textTransform: 'none' }}
-                      onClick={() => navigate('/book-appointment')}
-                    >
-                      Schedule Appointment
-                    </Button>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      size="large"
-                      sx={{ py: 2, textTransform: 'none' }}
-                      onClick={() => navigate('/my-appointments')}
-                    >
-                      My Appointments
-                    </Button>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      size="large"
-                      sx={{ py: 2, textTransform: 'none' }}
-                    >
-                      AI Analysis
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Container>
-    </Box>
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* Enhanced Charts */}
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
+              <span className="text-white text-lg">💉</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Blood Pressure Trends</h2>
+              <p className="text-sm text-gray-400">Systolic & Diastolic readings over time</p>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={healthVitals.bloodPressure} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <defs>
+                <linearGradient id="systolicGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="diastolicGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
+              <XAxis 
+                dataKey="date" 
+                stroke="#9ca3af" 
+                fontSize={12}
+                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              />
+              <YAxis stroke="#9ca3af" fontSize={12} />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: '#1f2937',
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                  color: '#f9fafb'
+                }}
+                labelFormatter={(value) => `Date: ${new Date(value).toLocaleDateString()}`}
+                formatter={(value, name) => [
+                  `${value} mmHg`,
+                  name === 'systolic' ? 'Systolic' : 'Diastolic'
+                ]}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="systolic" 
+                stroke="#22c55e" 
+                strokeWidth={3}
+                dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#22c55e', strokeWidth: 2, fill: '#ffffff' }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="diastolic" 
+                stroke="#3b82f6" 
+                strokeWidth={3}
+                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2, fill: '#ffffff' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mr-3">
+              <span className="text-white text-lg">🍯</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Blood Sugar Monitoring</h2>
+              <p className="text-sm text-gray-400">Glucose levels tracking</p>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={healthVitals.diabetes} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <defs>
+                <linearGradient id="sugarGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#eab308" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#eab308" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
+              <XAxis 
+                dataKey="date" 
+                stroke="#9ca3af" 
+                fontSize={12}
+                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              />
+              <YAxis stroke="#9ca3af" fontSize={12} />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: '#1f2937',
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                  color: '#f9fafb'
+                }}
+                labelFormatter={(value) => `Date: ${new Date(value).toLocaleDateString()}`}
+                formatter={(value) => [`${value} mg/dL`, 'Blood Sugar']}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="sugar" 
+                stroke="#eab308" 
+                strokeWidth={3}
+                dot={{ fill: '#eab308', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#eab308', strokeWidth: 2, fill: '#ffffff' }}
+                fill="url(#sugarGradient)"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+              <span className="text-white text-lg">❤️</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Heart Rate Monitor</h2>
+              <p className="text-sm text-gray-400">Cardiovascular health tracking</p>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={healthVitals.heartRate} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <defs>
+                <linearGradient id="heartRateGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
+              <XAxis 
+                dataKey="date" 
+                stroke="#9ca3af" 
+                fontSize={12}
+                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              />
+              <YAxis stroke="#9ca3af" fontSize={12} />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: '#1f2937',
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                  color: '#f9fafb'
+                }}
+                labelFormatter={(value) => `Date: ${new Date(value).toLocaleDateString()}`}
+                formatter={(value) => [`${value} bpm`, 'Heart Rate']}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="bpm" 
+                stroke="#ef4444" 
+                strokeWidth={3}
+                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#ef4444', strokeWidth: 2, fill: '#ffffff' }}
+                fill="url(#heartRateGradient)"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        </div>
+
+        {/* Recent Visits */}
+        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
+          <h2 className="text-xl font-semibold mb-4">Recent Doctor Visits</h2>
+          <ul className="divide-y divide-gray-700">
+            {recentVisits.map((visit, index) => (
+              <li key={index} className="py-3 flex justify-between">
+                <span>{visit.date}</span>
+                <span>{visit.doctor}</span>
+                <span className="text-gray-400">{visit.reason}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 };
 

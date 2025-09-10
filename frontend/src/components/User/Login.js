@@ -76,9 +76,14 @@ const Login = () => {
           logout();
           alert('Admin users must use the Admin Portal to login.');
           return;
+        }else if (userData.role && userData.role === 'DOCTOR') {
+          navigate('/doctor/dashboard', { replace: true });
+          return;
         }
+        navigate('/dashboard', { replace: true });
+        return;
         
-        redirectBasedOnRole(userData, navigate);
+        // redirectBasedOnRole(userData, navigate);
       }
     }
   };

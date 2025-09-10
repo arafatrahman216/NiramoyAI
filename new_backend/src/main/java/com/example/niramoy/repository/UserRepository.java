@@ -1,5 +1,6 @@
 package com.example.niramoy.repository;
 
+import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
@@ -24,6 +25,8 @@ public interface UserRepository extends JpaRepository<User, Long>
 
 
     User findUserByUsernameOrEmail(String username, String email);
+
+
 
 }
 

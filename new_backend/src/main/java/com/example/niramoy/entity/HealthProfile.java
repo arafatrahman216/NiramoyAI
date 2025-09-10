@@ -21,27 +21,45 @@ public class HealthProfile {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "height" )
-    private Double height;
+    @Column(name = "gender")
+    private String gender;
 
-    @Column(name = "weight" )
+    @Column(name = "date_of_birth")
+    private String dateOfBirth;
+
+    @Column(name = "weight")
     private Double weight;
 
-    @Column(name = "blood_group" )
-    private String bloodGroup;
+    @Column(name = "height")
+    private Double height;
 
-    @Column(name = "allergies" )
-    private String allergies;
+    @Column(name = "heart_rate")
+    private Integer heartRate;
 
-    @Column(name = "surgeries" )
-    private String surgeries;
+    @Column(name = "blood_pressure")
+    private String bloodPressure;
 
-    @Column(name = "emergency_contact_number" )
-    private String emergencyContactNumber;
+    @Column(name = "blood_type")
+    private String bloodType;
 
-    @Column(name = "emergency_contact_name" )
-    private String emergencyContactName;
+    @Column(name = "major_health_events")
+    private String majorHealthEvents;
 
-    @Column(name = "ongoing_medication" )
-    private String ongoingMedication;
+    @Column(name = "lifestyle", columnDefinition = "TEXT")
+    private String lifestyle; // Store as JSON string or comma-separated values
+
+    @Column(name = "allergies", columnDefinition = "TEXT")
+    private String allergies; // Store as JSON string or comma-separated values
+
+    @Column(name = "major_events", columnDefinition = "TEXT")
+    private String majorEvents; // Store as JSON string or comma-separated values
+
+    @Column(name = "chronic_diseases", columnDefinition = "TEXT")
+    private String chronicDiseases; // Store as JSON string or comma-separated values
+
+    @Column(name = "calculated_age")
+    private Integer calculatedAge;
+
+    @Version
+    private Long version;
 }

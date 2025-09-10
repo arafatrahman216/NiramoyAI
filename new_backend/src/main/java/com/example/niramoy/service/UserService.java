@@ -1,20 +1,20 @@
 package com.example.niramoy.service;
 
-
+import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.enumerate.Role;
 import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.UserRepository;
+import com.example.niramoy.repository.HealthProfileRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final HealthProfileRepository healthProfileRepository;
 
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
     // until then the query result will be stored in persistence context
@@ -122,6 +123,84 @@ public class UserService implements UserDetailsService {
             user.setProfilePictureUrl((String) updates.get("profilePictureUrl"));
         }
         return convertToUserDTO(userRepository.save(user));
+    }
+
+    
+    @Transactional
+    public HealthProfileDTO updateHealthProfile(Long userId, HealthProfileDTO healthProfileDTO) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+
+        HealthProfile healthProfile = healthProfileRepository.findByUserId(userId);
         
+        if (healthProfile != null) {
+            updateHealthProfileFields(healthProfile, healthProfileDTO);
+            healthProfile = healthProfileRepository.save(healthProfile);
+        }
+        else {
+            // Create new health profile
+            healthProfile = new HealthProfile();
+            healthProfile.setUserId(userId);
+            healthProfile.setUser(user); // Set the User entity reference
+            updateHealthProfileFields(healthProfile, healthProfileDTO);
+            // Only save for new entities
+
+            System.out.println("This is the health profile to be saved: " + healthProfile);
+            healthProfile = healthProfileRepository.save(healthProfile);
+        }
+
+        return convertToHealthProfileDTO(healthProfile);
+    }
+
+
+
+
+
+
+
+
+
+
+    private void updateHealthProfileFields(HealthProfile healthProfile, HealthProfileDTO dto) {
+        healthProfile.setGender(dto.getGender());
+        healthProfile.setDateOfBirth(dto.getDateOfBirth());
+        healthProfile.setWeight(dto.getWeight());
+        healthProfile.setHeight(dto.getHeight());
+        healthProfile.setHeartRate(dto.getHeartRate());
+        healthProfile.setBloodPressure(dto.getBloodPressure());
+        healthProfile.setBloodType(dto.getBloodType());
+        healthProfile.setMajorHealthEvents(dto.getMajorHealthEvents());
+        healthProfile.setCalculatedAge(dto.getCalculatedAge());
+        
+        // Convert List<String> to JSON strings
+        healthProfile.setLifestyle(dto.getLifestyle() != null ? String.join(",", dto.getLifestyle()) : null);
+        healthProfile.setAllergies(dto.getAllergies() != null ? String.join(",", dto.getAllergies()) : null);
+        healthProfile.setMajorEvents(dto.getMajorEvents() != null ? String.join(",", dto.getMajorEvents()) : null);
+        healthProfile.setChronicDiseases(dto.getChronicDiseases() != null ? String.join(",", dto.getChronicDiseases()) : null);
+    }
+
+    private HealthProfileDTO convertToHealthProfileDTO(HealthProfile healthProfile) {
+        HealthProfileDTO dto = new HealthProfileDTO();
+        dto.setGender(healthProfile.getGender());
+        dto.setDateOfBirth(healthProfile.getDateOfBirth());
+        dto.setWeight(healthProfile.getWeight());
+        dto.setHeight(healthProfile.getHeight());
+        dto.setHeartRate(healthProfile.getHeartRate());
+        dto.setBloodPressure(healthProfile.getBloodPressure());
+        dto.setBloodType(healthProfile.getBloodType());
+        dto.setMajorHealthEvents(healthProfile.getMajorHealthEvents());
+        dto.setCalculatedAge(healthProfile.getCalculatedAge());
+        
+        // Convert comma-separated strings back to List<String>
+        dto.setLifestyle(healthProfile.getLifestyle() != null ? 
+            List.of(healthProfile.getLifestyle().split(",")) : List.of());
+        dto.setAllergies(healthProfile.getAllergies() != null ? 
+            List.of(healthProfile.getAllergies().split(",")) : List.of());
+        dto.setMajorEvents(healthProfile.getMajorEvents() != null ? 
+            List.of(healthProfile.getMajorEvents().split(",")) : List.of());
+        dto.setChronicDiseases(healthProfile.getChronicDiseases() != null ? 
+            List.of(healthProfile.getChronicDiseases().split(",")) : List.of());
+        
+        return dto;
     }
 }

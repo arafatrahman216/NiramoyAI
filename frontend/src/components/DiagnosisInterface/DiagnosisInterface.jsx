@@ -33,7 +33,7 @@ const DiagnosisInterface = () => {
 
 
   const refreshChat = async () => {
-    const response = await api.post('/agent/message', { "chatId" : chatId, "userId" :"2"});
+    const response = await api.post('/user/message', { "chatId" : chatId});
       const data = await response.data;
       console.log(data);
       const messages = data.data;
@@ -53,12 +53,20 @@ const DiagnosisInterface = () => {
     if (!query.trim()) return;
 
     setChatMessages(prev => [...prev, { type: 'query', content: query }]);
-    setQuery('');
     setIsLoadingResponse(true);
     
-
+    
     try {
-      const response = await api.post('/agent/search', { query });
+      
+      const myQuery = query;
+      setQuery('');
+      const response2 = await api.post('/user/chat', { "chatId" : chatId, "message" : myQuery});
+      console.log(response2);
+      const response = await api.post('/agent/search', { "chatId" : chatId, "message" : myQuery});
+      //! after integrating the agent in background. get the response from /user/chat endpoint instead
+      //! of using /agent/search endpoint. and the /user/chat endpoint should 
+      //! return the final response from the agent.
+
       setChatMessages(prev => [
         ...prev,
         { type: 'response', content: response.data.data }

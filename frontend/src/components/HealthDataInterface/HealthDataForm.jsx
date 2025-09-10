@@ -10,7 +10,7 @@ import HealthVitalsStep from './HealthVitalsStep';
 import LifestyleStep from './LifestyleStep';
 import ProgressBar from './ProgressBar';
 import NavigationButtons from './NavigationButtons';
-import api from '../../services/api';
+import {patientAPI} from '../../services/api';
 
 const HealthDataForm = () => {
   // ==============================================
@@ -175,7 +175,7 @@ const HealthDataForm = () => {
       allergies: (formData.allergies || []).filter(Boolean),
       major_events: (formData.major_events || []).filter(Boolean),
       chronic_diseases: (formData.chronic_diseases || []).filter(Boolean),
-      calculatedAge: formData.date_of_birth ? calculateAge(formData.date_of_birth) : null
+      calculated_age: formData.date_of_birth ? calculateAge(formData.date_of_birth) : null
     };
     
     // Remove empty arrays and null values for cleaner submission
@@ -192,20 +192,17 @@ const HealthDataForm = () => {
     
     // Simulate API call for now (replace with actual API when ready)
     try {
-      // api.patientAPI.submitHealthData(cleanSubmissionData)
-      //   .then(response => {
-      //     console.log('Health data submitted successfully:', response.data);
-      //     alert('Health data submitted successfully!');
-      //     resetForm();
-      //   })
-      //   .catch(error => {
-      //     console.error('Error submitting health data:', error);
-      //     alert('Failed to submit health data. Please try again.');
-      //   });
+      patientAPI.submitHealthData(cleanSubmissionData)
+        .then(response => {
+          console.log('Health data submitted successfully, Response:', response.data);
+          alert('Health data submitted successfully!');
+          resetForm();
+        })
+        .catch(error => {
+          console.error('Error submitting health data:', error);
+          alert('Failed to submit health data. Please try again.');
+        });
       
-      // For now, just show success message
-      alert('Health data submitted successfully!');
-      resetForm();
     } catch (error) {
       console.error('Error submitting health data:', error);
       alert('Failed to submit health data. Please try again.');

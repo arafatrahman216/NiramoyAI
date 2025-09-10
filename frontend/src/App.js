@@ -105,7 +105,13 @@ const ProtectedRoute = ({ children }) => {
     );
   }
   
+  // COMMENTED OUT - Protected route redirects temporarily disabled
+  /*
   return user ? <>{children}</> : <Navigate to="/login" />;
+  */
+  
+  // Allow access to all users temporarily
+  return <>{children}</>;
 };
 
 const PatientRoute = ({ children }) => {
@@ -124,6 +130,8 @@ const PatientRoute = ({ children }) => {
     );
   }
   
+  // COMMENTED OUT - Route protection temporarily disabled
+  /*
   // Check if user is authenticated
   if (!user) {
     return <Navigate to="/login" />;
@@ -138,8 +146,9 @@ const PatientRoute = ({ children }) => {
   if (user.role==='ADMIN') {
     return <Navigate to="/admin/dashboard" />;
   }
+  */
   
-  // Allow only patients (users without special roles) to access patient routes
+  // Allow access to all users temporarily
   return <>{children}</>;
 };
 
@@ -159,6 +168,8 @@ const AdminRoute = ({ children }) => {
     );
   }
   
+  // COMMENTED OUT - Route protection temporarily disabled
+  /*
   // Check if user is authenticated
   if (!user) {
     return <Navigate to="/admin/login" />;
@@ -178,6 +189,10 @@ const AdminRoute = ({ children }) => {
   return user.role==='ADMIN' ? 
     <>{children}</> : 
     <Navigate to="/admin/login" />;
+  */
+  
+  // Allow access to all users temporarily
+  return <>{children}</>;
 };
 
 const DoctorRoute = ({ children }) => {
@@ -196,6 +211,8 @@ const DoctorRoute = ({ children }) => {
     );
   }
   
+  // COMMENTED OUT - Route protection temporarily disabled
+  /*
   // Check if user is authenticated
   if (!user) {
     return <Navigate to="/doctor/login" />;
@@ -215,6 +232,10 @@ const DoctorRoute = ({ children }) => {
   return user.role==='DOCTOR' ? 
     <>{children}</> : 
     <Navigate to="/doctor/login" />;
+  */
+  
+  // Allow access to all users temporarily
+  return <>{children}</>;
 };
 
 const PublicRoute = ({ children }) => {
@@ -234,16 +255,6 @@ const PublicRoute = ({ children }) => {
   }
   
   // If user is authenticated, redirect based on their role
-  if (user) {
-    if (user.role==='ADMIN') {
-      return <Navigate to="/admin/dashboard" />;
-    } else if (user.role==='DOCTOR') {
-      return <Navigate to="/doctor/dashboard" />;
-    } else {
-      // Regular patient user
-      return <Navigate to="/dashboard" />;
-    }
-  }
   
   return <>{children}</>;
 };
