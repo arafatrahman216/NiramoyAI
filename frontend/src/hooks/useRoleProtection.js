@@ -7,6 +7,8 @@ export const useRoleProtection = (allowedRoles = [], redirectOnFail = true) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
+  // COMMENTED OUT - Role protection redirects temporarily disabled
+  /*
   useEffect(() => {
     if (!loading && user && redirectOnFail) {
       // Check if user has any of the allowed roles
@@ -25,6 +27,7 @@ export const useRoleProtection = (allowedRoles = [], redirectOnFail = true) => {
       }
     }
   }, [user, loading, allowedRoles, redirectOnFail, navigate]);
+  */
 
   return {
     user,
@@ -62,6 +65,8 @@ export const usePreventCrossRoleAccess = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
+  // COMMENTED OUT - Cross-role access prevention temporarily disabled
+  /*
   useEffect(() => {
     if (!loading && user) {
       const currentPath = window.location.pathname;
@@ -98,6 +103,7 @@ export const usePreventCrossRoleAccess = () => {
       }
     }
   }, [user, loading, navigate]);
+  */
 
   return { user, loading };
 };

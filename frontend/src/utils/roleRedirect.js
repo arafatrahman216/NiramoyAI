@@ -5,6 +5,8 @@
  * @returns {string} - The redirect path
  */
 export const redirectBasedOnRole = (user, navigate) => {
+  // COMMENTED OUT - Role-based redirects temporarily disabled
+  /*
   if (!user || !user.roles || !Array.isArray(user.roles)) {
     // Default to user dashboard if no roles found
     navigate('/dashboard');
@@ -24,7 +26,7 @@ export const redirectBasedOnRole = (user, navigate) => {
     return '/doctor/dashboard';
   }
   
-  if (user.role==='ROLE_USER') {
+  if (user.role==='PATIENT') {
     navigate('/dashboard');
     return '/dashboard';
   }
@@ -32,6 +34,11 @@ export const redirectBasedOnRole = (user, navigate) => {
   // Default fallback
   navigate('/dashboard');
   return '/dashboard';
+  */
+  
+  // Temporarily disabled - no redirects
+  console.log('Role-based redirect disabled');
+  return null;
 };
 
 /**
@@ -52,7 +59,7 @@ export const getDashboardPath = (user) => {
     return '/doctor/dashboard';
   }
   
-  if (user.role==='ROLE_USER') {
+  if (user.role==='USER') {
     return '/dashboard';
   }
 

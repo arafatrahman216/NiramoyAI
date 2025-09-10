@@ -1,6 +1,7 @@
 package com.example.niramoy.entity;
 
 import com.example.niramoy.enumerate.Role;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -78,10 +79,15 @@ public class User implements UserDetails {
     private LocalDate dateOfBirth;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private HealthProfile healthProfile;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<HealthLog> healthLogs= new ArrayList<>();
+
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<ChatSessions> chatSession= new ArrayList<>();
 
     // used for authentication
     @Override
@@ -95,4 +101,6 @@ public class User implements UserDetails {
         this.password= password;
         this.name= name;
     }
+
+
 }
