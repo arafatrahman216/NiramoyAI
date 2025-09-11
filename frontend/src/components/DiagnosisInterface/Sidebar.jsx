@@ -42,7 +42,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
   };
 
   return (
-    <div className="w-16 bg-zinc-950 border-r border-zinc-800 flex flex-col items-center py-4 space-y-6">
+    <div className="fixed left-0 top-0 bottom-0 w-16 bg-zinc-950 border-r border-zinc-800 flex flex-col items-center py-4 space-y-6 z-50">
       {/* PERPLEXITY LOGO */}
       {/* Edit this section to change logo appearance */}
       <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">

@@ -87,8 +87,8 @@ const DiagnosisInterface = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
-      {/* SIDEBAR SECTION */}
+    <div className="min-h-screen bg-black text-white">
+      {/* SIDEBAR SECTION - FIXED */}
       {/* Navigation and user controls */}
       <Sidebar 
         onVisitsClick={() => setIsVisitsSidebarOpen(!isVisitsSidebarOpen)}
@@ -111,8 +111,8 @@ const DiagnosisInterface = () => {
         onClose={() => setIsVisitsSidebarOpen(false)}
       />
 
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col bg-zinc-950">
+      {/* MAIN CONTENT AREA - WITH LEFT MARGIN FOR FIXED SIDEBAR */}
+      <div className={`${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'ml-96' : 'ml-16'} flex flex-col bg-zinc-950 min-h-screen transition-all duration-300`}>
         {/* TOP BAR - UPLOAD BUTTON AND CHAT HEADER */}
         <div className="flex justify-between items-center pt-6 pr-8 pb-4 pl-8">
           {/* LEFT SIDE - CHAT INFO */}
@@ -170,7 +170,7 @@ const DiagnosisInterface = () => {
               </div>
 
               {/* FIXED SEARCH INPUT AT BOTTOM */}
-              <div className="fixed bottom-0 left-0 right-0 py-4">
+              <div className={`fixed bottom-0 ${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'left-96' : 'left-16'} right-0 py-4 bg-zinc-950 z-40 transition-all duration-300`}>
                 <div className="max-w-4xl mx-auto px-6">
                   <SearchInput 
                     query={query} 
