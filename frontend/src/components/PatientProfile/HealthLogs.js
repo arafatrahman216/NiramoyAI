@@ -1,26 +1,27 @@
 // src/components/PatientProfile/HealthLogs.js
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Heart, Thermometer, Activity, Droplet, Eye, Clipboard, Search, Filter } from 'lucide-react';
+import { Calendar, Clock, Heart, Thermometer, Activity, Droplet, Eye, Clipboard, Search, Filter, Zap } from 'lucide-react';
 
 const HealthLogs = ({ patientId }) => {
   const [healthLogs, setHealthLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
 
   // Fallback health logs data
   const fallbackHealthLogs = [
     {
       id: 1,
+      healthLogId: 'HL-2025-001',
       date: '2025-09-11',
       time: '08:30',
-      type: 'routine',
       vitals: {
         bloodPressure: { systolic: 120, diastolic: 80 },
         heartRate: 72,
         temperature: 98.6,
         weight: 165,
-        height: 68
+        bloodSugar: 95,
+        oxygenSaturation: 98,
+        stressLevel: 2
       },
       symptoms: ['None'],
       notes: 'Regular morning checkup. Patient feeling well.',
@@ -28,15 +29,17 @@ const HealthLogs = ({ patientId }) => {
     },
     {
       id: 2,
+      healthLogId: 'HL-2025-002',
       date: '2025-09-09',
       time: '14:20',
-      type: 'symptoms',
       vitals: {
         bloodPressure: { systolic: 118, diastolic: 78 },
         heartRate: 70,
         temperature: 98.3,
         weight: 164,
-        height: 68
+        bloodSugar: 110,
+        oxygenSaturation: 97,
+        stressLevel: 5
       },
       symptoms: ['Mild headache', 'Fatigue'],
       notes: 'Patient reports mild headache after lunch. Advised rest and hydration.',
@@ -44,15 +47,17 @@ const HealthLogs = ({ patientId }) => {
     },
     {
       id: 3,
+      healthLogId: 'HL-2025-003',
       date: '2025-09-07',
       time: '16:45',
-      type: 'medication',
       vitals: {
         bloodPressure: { systolic: 120, diastolic: 80 },
         heartRate: 74,
         temperature: 98.5,
         weight: 165,
-        height: 68
+        bloodSugar: 88,
+        oxygenSaturation: 99,
+        stressLevel: 3
       },
       symptoms: ['None'],
       notes: 'Post-medication monitoring. Blood pressure stable.',
@@ -60,15 +65,17 @@ const HealthLogs = ({ patientId }) => {
     },
     {
       id: 4,
+      healthLogId: 'HL-2025-004',
       date: '2025-09-05',
       time: '11:15',
-      type: 'emergency',
       vitals: {
         bloodPressure: { systolic: 122, diastolic: 79 },
         heartRate: 72,
         temperature: 98.2,
         weight: 163,
-        height: 68
+        bloodSugar: 102,
+        oxygenSaturation: 96,
+        stressLevel: 8
       },
       symptoms: ['Chest discomfort', 'Shortness of breath'],
       notes: 'Patient experienced chest discomfort. ECG normal, symptoms resolved.',
@@ -76,15 +83,17 @@ const HealthLogs = ({ patientId }) => {
     },
     {
       id: 5,
+      healthLogId: 'HL-2025-005',
       date: '2025-09-03',
       time: '14:30',
-      type: 'routine',
       vitals: {
         bloodPressure: { systolic: 128, diastolic: 85 },
         heartRate: 78,
         temperature: 98.6,
         weight: 164,
-        height: 68
+        bloodSugar: 92,
+        oxygenSaturation: 98,
+        stressLevel: 4
       },
       symptoms: ['None'],
       notes: 'Weekly routine checkup. All vitals within normal range.',
@@ -100,58 +109,27 @@ const HealthLogs = ({ patientId }) => {
   useEffect(() => {
     let filtered = healthLogs;
 
-    // Filter by type
-    if (filterType !== 'all') {
-      filtered = filtered.filter(log => log.type === filterType);
-    }
-
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(log => 
         log.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.symptoms.some(symptom => symptom.toLowerCase().includes(searchTerm.toLowerCase()))
+        log.symptoms.some(symptom => symptom.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        log.healthLogId.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     setFilteredLogs(filtered);
-  }, [searchTerm, filterType, healthLogs]);
+  }, [searchTerm, healthLogs]);
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'routine': return <Clipboard className="w-4 h-4" />;
-      case 'symptoms': return <Eye className="w-4 h-4" />;
-      case 'medication': return <Droplet className="w-4 h-4" />;
-      case 'emergency': return <Heart className="w-4 h-4" />;
-      default: return <Clipboard className="w-4 h-4" />;
-    }
-  };
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'routine': return 'text-blue-400 bg-blue-500/20';
-      case 'symptoms': return 'text-yellow-400 bg-yellow-500/20';
-      case 'medication': return 'text-green-400 bg-green-500/20';
-      case 'emergency': return 'text-red-400 bg-red-500/20';
-      default: return 'text-gray-400 bg-gray-500/20';
-    }
+  const getStressLevelColor = (level) => {
+    if (level <= 3) return 'text-green-400';
+    if (level <= 6) return 'text-yellow-400';
+    return 'text-red-400';
   };
 
   const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'low': return 'text-green-400';
-      case 'medium': return 'text-yellow-400';
-      case 'high': return 'text-red-400';
-      default: return 'text-gray-400';
-    }
+    return 'text-gray-400';
   };
-
-  const filterOptions = [
-    { value: 'all', label: 'All Logs' },
-    { value: 'routine', label: 'Routine' },
-    { value: 'symptoms', label: 'Symptoms' },
-    { value: 'medication', label: 'Medication' },
-    { value: 'emergency', label: 'Emergency' }
-  ];
 
   return (
     <div>
@@ -160,32 +138,17 @@ const HealthLogs = ({ patientId }) => {
         <Clipboard className="w-6 h-6 text-emerald-400" />
       </div>
 
-      {/* Search and Filter Controls */}
+      {/* Search Controls */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search logs by symptoms or notes..."
+            placeholder="Search logs by ID, symptoms or notes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
-        </div>
-        
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="pl-10 pr-8 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none"
-          >
-            {filterOptions.map(option => (
-              <option key={option.value} value={option.value} className="bg-gray-700">
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -201,11 +164,12 @@ const HealthLogs = ({ patientId }) => {
             <div key={log.id} className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/50">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-lg ${getTypeColor(log.type)}`}>
-                    {getTypeIcon(log.type)}
+                  <div className="p-2 rounded-lg bg-emerald-500/20">
+                    <Clipboard className="w-4 h-4 text-emerald-400" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-white capitalize">{log.type} Log</h4>
+                    <h4 className="text-lg font-semibold text-white">Health Log</h4>
+                    <p className="text-emerald-400 font-medium text-sm">ID: {log.healthLogId}</p>
                     <div className="flex items-center space-x-4 text-sm text-gray-400">
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
@@ -229,7 +193,7 @@ const HealthLogs = ({ patientId }) => {
               </div>
 
               {/* Vitals */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
                 <div className="bg-gray-600/30 rounded-lg p-3">
                   <div className="flex items-center mb-1">
                     <Heart className="w-4 h-4 text-red-400 mr-2" />
@@ -266,10 +230,42 @@ const HealthLogs = ({ patientId }) => {
                 
                 <div className="bg-gray-600/30 rounded-lg p-3">
                   <div className="flex items-center mb-1">
-                    <span className="w-4 h-4 text-cyan-400 mr-2 text-xs font-bold">H</span>
-                    <span className="text-xs text-gray-400">Height</span>
+                    <Droplet className="w-4 h-4 text-blue-400 mr-2" />
+                    <span className="text-xs text-gray-400">Blood Sugar</span>
                   </div>
-                  <p className="text-sm font-semibold text-white">{log.vitals.height} in</p>
+                  <p className="text-sm font-semibold text-white">{log.vitals.bloodSugar} mg/dL</p>
+                </div>
+
+                <div className="bg-gray-600/30 rounded-lg p-3">
+                  <div className="flex items-center mb-1">
+                    <Eye className="w-4 h-4 text-cyan-400 mr-2" />
+                    <span className="text-xs text-gray-400">Oxygen</span>
+                  </div>
+                  <p className="text-sm font-semibold text-white">{log.vitals.oxygenSaturation}%</p>
+                </div>
+              </div>
+
+              {/* Stress Level */}
+              <div className="mb-4">
+                <div className="bg-gray-600/30 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                      <Zap className="w-4 h-4 text-yellow-400 mr-2" />
+                      <span className="text-sm text-gray-400">Stress Level</span>
+                    </div>
+                    <span className={`text-sm font-semibold ${getStressLevelColor(log.vitals.stressLevel)}`}>
+                      {log.vitals.stressLevel}/10
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-600 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full ${
+                        log.vitals.stressLevel <= 3 ? 'bg-green-500' :
+                        log.vitals.stressLevel <= 6 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${log.vitals.stressLevel * 10}%` }}
+                    ></div>
+                  </div>
                 </div>
               </div>
 
@@ -311,15 +307,21 @@ const HealthLogs = ({ patientId }) => {
           <p className="text-2xl font-bold text-white">{healthLogs.length}</p>
         </div>
         <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-1">Emergency Logs</h4>
-          <p className="text-2xl font-bold text-red-400">
-            {healthLogs.filter(log => log.type === 'emergency').length}
+          <h4 className="text-sm font-medium text-gray-400 mb-1">Avg Blood Sugar</h4>
+          <p className="text-2xl font-bold text-blue-400">
+            {healthLogs.length > 0 
+              ? Math.round(healthLogs.reduce((sum, log) => sum + log.vitals.bloodSugar, 0) / healthLogs.length)
+              : 0
+            } mg/dL
           </p>
         </div>
         <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-1">Routine Checkups</h4>
-          <p className="text-2xl font-bold text-blue-400">
-            {healthLogs.filter(log => log.type === 'routine').length}
+          <h4 className="text-sm font-medium text-gray-400 mb-1">Avg Stress Level</h4>
+          <p className="text-2xl font-bold text-yellow-400">
+            {healthLogs.length > 0 
+              ? (healthLogs.reduce((sum, log) => sum + log.vitals.stressLevel, 0) / healthLogs.length).toFixed(1)
+              : 0
+            }/10
           </p>
         </div>
         <div className="bg-gray-700/30 rounded-lg p-4">

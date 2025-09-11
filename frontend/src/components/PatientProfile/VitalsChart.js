@@ -9,7 +9,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Heart, Thermometer, Activity } from 'lucide-react';
+import { TrendingUp, Heart, Thermometer, Activity, Droplet, Zap } from 'lucide-react';
 
 const VitalsChart = ({ patientId }) => {
   const [vitalsData, setVitalsData] = useState([]);
@@ -40,6 +40,22 @@ const VitalsChart = ({ patientId }) => {
       { date: '2025-09-07', temp: 98.5, time: '16:45' },
       { date: '2025-09-09', temp: 98.3, time: '10:20' },
       { date: '2025-09-11', temp: 98.6, time: '08:30' }
+    ],
+    bloodSugar: [
+      { date: '2025-09-01', level: 105, time: '09:00' },
+      { date: '2025-09-03', level: 112, time: '14:30' },
+      { date: '2025-09-05', level: 98, time: '11:15' },
+      { date: '2025-09-07', level: 108, time: '16:45' },
+      { date: '2025-09-09', level: 102, time: '10:20' },
+      { date: '2025-09-11', level: 95, time: '08:30' }
+    ],
+    stressLevel: [
+      { date: '2025-09-01', level: 3, time: '09:00' },
+      { date: '2025-09-03', level: 5, time: '14:30' },
+      { date: '2025-09-05', level: 2, time: '11:15' },
+      { date: '2025-09-07', level: 4, time: '16:45' },
+      { date: '2025-09-09', level: 3, time: '10:20' },
+      { date: '2025-09-11', level: 2, time: '08:30' }
     ]
   };
 
@@ -68,6 +84,20 @@ const VitalsChart = ({ patientId }) => {
       icon: Thermometer, 
       color: '#f59e0b',
       unit: '°F'
+    },
+    { 
+      id: 'bloodSugar', 
+      label: 'Blood Sugar', 
+      icon: Droplet, 
+      color: '#3b82f6',
+      unit: 'mg/dL'
+    },
+    { 
+      id: 'stressLevel', 
+      label: 'Stress Level', 
+      icon: Zap, 
+      color: '#8b5cf6',
+      unit: '/10'
     }
   ];
 
@@ -141,7 +171,9 @@ const VitalsChart = ({ patientId }) => {
       );
     }
 
-    const dataKey = selectedVital === 'heartRate' ? 'rate' : 'temp';
+    const dataKey = selectedVital === 'heartRate' ? 'rate' 
+                   : selectedVital === 'temperature' ? 'temp'
+                   : 'level'; // for bloodSugar and stressLevel
     
     return (
       <ResponsiveContainer width="100%" height={400}>
@@ -228,7 +260,9 @@ const VitalsChart = ({ patientId }) => {
                   ? `${vitalsData[selectedVital][vitalsData[selectedVital].length - 1].systolic}/${vitalsData[selectedVital][vitalsData[selectedVital].length - 1].diastolic}`
                   : selectedVital === 'heartRate'
                   ? vitalsData[selectedVital][vitalsData[selectedVital].length - 1].rate
-                  : vitalsData[selectedVital][vitalsData[selectedVital].length - 1].temp
+                  : selectedVital === 'temperature'
+                  ? vitalsData[selectedVital][vitalsData[selectedVital].length - 1].temp
+                  : vitalsData[selectedVital][vitalsData[selectedVital].length - 1].level
                 }
                 {selectedVital !== 'bloodPressure' && (
                   <span className="text-sm text-gray-400 ml-1">
@@ -245,7 +279,11 @@ const VitalsChart = ({ patientId }) => {
                   ? `${Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.systolic, 0) / vitalsData[selectedVital].length)}/${Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.diastolic, 0) / vitalsData[selectedVital].length)}`
                   : selectedVital === 'heartRate'
                   ? Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.rate, 0) / vitalsData[selectedVital].length)
-                  : Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.temp, 0) / vitalsData[selectedVital].length * 10) / 10
+                  : selectedVital === 'temperature'
+                  ? Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.temp, 0) / vitalsData[selectedVital].length * 10) / 10
+                  : selectedVital === 'stressLevel'
+                  ? Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.level, 0) / vitalsData[selectedVital].length * 10) / 10
+                  : Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.level, 0) / vitalsData[selectedVital].length)
                 }
                 {selectedVital !== 'bloodPressure' && (
                   <span className="text-sm text-gray-400 ml-1">
