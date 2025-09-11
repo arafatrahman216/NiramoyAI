@@ -26,6 +26,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages update
@@ -129,10 +130,26 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     }
   };
 
+  // Handle copy functionality with visual feedback
+  const handleCopyMessage = async (messageId: number, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessageId(messageId);
+      console.log('Message copied to clipboard');
+      
+      // Reset the tick back to copy icon after 2 seconds
+      setTimeout(() => {
+        setCopiedMessageId(null);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy message:', error);
+    }
+  };
+
   if (embedded) {
-    // Embedded mode - only messages, no header or input
+    // Embedded mode - ChatGPT style with full-width messages
     return (
-      <div className="space-y-4">
+      <div className="w-full">
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full"></div>
@@ -150,19 +167,65 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
           messages.map((message) => (
             <div
               key={message.messageId}
-              className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}
+              className="w-full py-6"
             >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  !message.agent
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-zinc-800 text-zinc-100'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-                <p className="text-xs mt-1 opacity-70">
-                  {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
-                </p>
+              <div className="max-w-3xl mx-auto px-6">
+                <div className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`${!message.agent ? 'max-w-2xl' : 'flex-1'}`}>
+                    {!message.agent ? (
+                      /* USER MESSAGE - Wrapped in leaner, rounder box */
+                      <div className="bg-zinc-800 rounded-3xl px-3 py-2 inline-block">
+                        <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap">
+                          {message.content}
+                        </p>
+                      </div>
+                    ) : (
+                      /* AI MESSAGE - Plain text with action buttons */
+                      <div className="flex-1">
+                        <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
+                          {message.content}
+                        </p>
+                        
+                        {/* ACTION BUTTONS FOR AI RESPONSES */}
+                        <div className="flex items-center space-x-2 mt-2">
+                          {/* Copy functionality with visual feedback */}
+                          <button
+                            onClick={() => handleCopyMessage(message.messageId, message.content)}
+                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+                            title={copiedMessageId === message.messageId ? "Copied!" : "Copy response"}
+                          >
+                            {copiedMessageId === message.messageId ? (
+                              /* Checkmark icon when copied */
+                              <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              /* Copy icon default state */
+                              <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            )}
+                          </button>
+
+                          {/* TODO: Read aloud functionality - implement text-to-speech */}
+                          <button
+                            onClick={() => {
+                              // TODO: Implement text-to-speech functionality
+                              // Use Web Speech API or external TTS service
+                              console.log('Read aloud functionality - TODO');
+                            }}
+                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+                            title="Read aloud"
+                          >
+                            <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           ))

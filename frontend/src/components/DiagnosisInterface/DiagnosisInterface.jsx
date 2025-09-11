@@ -113,8 +113,34 @@ const DiagnosisInterface = () => {
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col bg-zinc-950">
-        {/* UPLOAD VISIT BUTTON - TOP RIGHT */}
-        <div className="flex justify-end pt-6 pr-8 pb-4">
+        {/* TOP BAR - UPLOAD BUTTON AND CHAT HEADER */}
+        <div className="flex justify-between items-center pt-6 pr-8 pb-4 pl-8">
+          {/* LEFT SIDE - CHAT INFO */}
+          <div className="flex items-center space-x-3">
+            {selectedChatId && (
+              <>
+                <button
+                  onClick={handleBackToSearch}
+                  className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                  title="Back to search"
+                >
+                  <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">
+                    {selectedChatData?.title || 'Chat Conversation'}
+                  </h2>
+                  <p className="text-sm text-zinc-400">
+                    {selectedChatData?.messages?.length || 0} messages
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* RIGHT SIDE - UPLOAD BUTTON */}
           <button 
             onClick={handleUploadVisit}
             className="bg-zinc-900 border border-zinc-700 rounded-2xl px-6 py-3 hover:border-zinc-600 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all group"
@@ -129,35 +155,12 @@ const DiagnosisInterface = () => {
         </div>
 
         {/* MAIN CONTENT AREA - CHATGPT STYLE */}
-        <div className="flex-1 flex flex-col px-8">
+        <div className="flex-1 flex flex-col relative">
           {selectedChatId ? (
-            /* CHAT MODE - CONVERSATION + INPUT AT BOTTOM */
+            /* CHAT MODE - CONVERSATION + FIXED INPUT AT BOTTOM */
             <>
-              {/* CHAT HEADER */}
-              <div className="flex items-center justify-between py-4 border-b border-zinc-800">
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={handleBackToSearch}
-                    className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                    title="Back to search"
-                  >
-                    <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <div>
-                    <h2 className="text-lg font-semibold text-white">
-                      {selectedChatData?.title || 'Chat Conversation'}
-                    </h2>
-                    <p className="text-sm text-zinc-400">
-                      {selectedChatData?.messages?.length || 0} messages
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {/* MESSAGES AREA */}
-              <div className="flex-1 overflow-y-auto py-4">
+              <div className="flex-1 overflow-y-auto pb-24">
                 <ChatConversation 
                   chatId={selectedChatId}
                   onBack={handleBackToSearch}
@@ -166,19 +169,21 @@ const DiagnosisInterface = () => {
                 />
               </div>
 
-              {/* SEARCH INPUT AT BOTTOM */}
-              <div className="py-4 border-t border-zinc-800">
-                <SearchInput 
-                  query={query} 
-                  setQuery={setQuery} 
-                  onSearch={handleSearch}
-                  placeholder="Continue conversation or search..."
-                />
+              {/* FIXED SEARCH INPUT AT BOTTOM */}
+              <div className="fixed bottom-0 left-0 right-0 py-4">
+                <div className="max-w-4xl mx-auto px-6">
+                  <SearchInput 
+                    query={query} 
+                    setQuery={setQuery} 
+                    onSearch={handleSearch}
+                    placeholder="Continue conversation or search..."
+                  />
+                </div>
               </div>
             </>
           ) : (
             /* DEFAULT SEARCH VIEW - CENTERED LOGO AND SEARCH */
-            <div className="flex-1 flex flex-col items-center justify-center">
+            <div className="flex-1 flex flex-col items-center justify-center px-8">
               {/* LOGO SECTION */}
               <MainLogo />
 

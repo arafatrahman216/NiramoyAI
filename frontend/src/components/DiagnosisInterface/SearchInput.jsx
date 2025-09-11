@@ -44,7 +44,7 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
   };
 
   return (
-    <div className="w-full max-w-2xl">
+    <div className="w-full max-w-4xl">
       <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600">
         {/* MAIN INPUT FIELD */}
         {/* Edit placeholder text, styling here */}
