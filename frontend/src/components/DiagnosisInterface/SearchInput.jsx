@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe, MessageSquare, HelpCircle, UserCheck, Calendar } from 'lucide-react';
 
 // ==============================================
 // SEARCH INPUT COMPONENT
@@ -7,6 +7,14 @@ import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe } from 'lucide-r
 // Contains: Input field and all action buttons
 // Edit individual button handlers to add functionality
 const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything..." }) => {
+  const [activeMode, setActiveMode] = useState('explain');
+
+  const modes = [
+    { id: 'explain', label: 'Explain', icon: MessageSquare },
+    { id: 'qna', label: 'Q&A', icon: HelpCircle },
+    { id: 'consult', label: 'Consult', icon: UserCheck },
+    { id: 'plan', label: 'Plan', icon: Calendar }
+  ];
   // TODO: Add focus functionality
   const handleFocus = () => {
     console.log('Search input focused');
@@ -37,20 +45,47 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
     // Add dropdown menu, additional settings, etc.
   };
 
+  // TODO: Mode-specific functionalities
+  const handleModeAction = (mode) => {
+    console.log(`${mode} mode activated`);
+    switch (mode) {
+      case 'explain':
+        // Add explain mode logic - detailed explanations, step-by-step breakdowns
+        break;
+      case 'qna':
+        // Add Q&A mode logic - structured question-answer format
+        break;
+      case 'consult':
+        // Add consult mode logic - professional advice, recommendations
+        break;
+      case 'plan':
+        // Add plan mode logic - planning, scheduling, strategy creation
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
+      handleModeAction(activeMode);
       onSearch();
     }
   };
 
+  const handleSearchWithMode = () => {
+    handleModeAction(activeMode);
+    onSearch();
+  };
+
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full max-w-3xl">
       <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600">
         {/* MAIN INPUT FIELD */}
         {/* Edit placeholder text, styling here */}
         <input
           type="text"
-          placeholder={placeholder}
+          placeholder={`Ask anything in ${activeMode} mode...`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyPress={handleKeyPress}
@@ -60,31 +95,43 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
         
         {/* ACTION BUTTONS ROW */}
         <div className="flex items-center justify-between mt-4">
-          {/* LEFT SIDE BUTTONS */}
-          {/* Edit these handlers to add functionality */}
+          {/* LEFT SIDE - MODE SELECTOR */}
           <div className="flex items-center space-x-2">
-            {/* Search Button - currently just visual */}
-            <button className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group">
-              <Search size={18} className="text-emerald-400 group-hover:text-emerald-300" />
-            </button>
-            
-            {/* Attachment Button - edit handleAttachment() */}
-            <button 
-              onClick={handleAttachment}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-              title="Attach files"
-            >
-              <Paperclip size={18} className="text-zinc-500 group-hover:text-zinc-300" />
-            </button>
-            
-            {/* Focus Mode Button - edit handleFocusMode() */}
-            <button 
-              onClick={handleFocusMode}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-              title="Focus mode"
-            >
-              <Globe size={18} className="text-zinc-500 group-hover:text-zinc-300" />
-            </button>
+            {/* MODE SELECTOR EMBEDDED */}
+            <div className="flex items-center bg-zinc-800 rounded-lg p-1.5 border border-zinc-700">
+              {modes.map((mode, idx) => {
+                const IconComponent = mode.icon;
+                const getTooltipText = (modeId) => {
+                  switch (modeId) {
+                    case 'explain': return 'Explain - Get detailed explanations and step-by-step breakdowns';
+                    case 'qna': return 'Q&A - Structured question-answer format for quick insights';
+                    case 'consult': return 'Consult - Professional advice and expert recommendations';
+                    case 'plan': return 'Plan - Create strategies, schedules and action plans';
+                    default: return `${mode.label} mode`;
+                  }
+                };
+                
+                return (
+                  <React.Fragment key={mode.id}>
+                    <button
+                      onClick={() => setActiveMode(mode.id)}
+                      className={`relative p-2 rounded-md transition-all duration-200 flex items-center justify-center ${
+                        activeMode === mode.id
+                          ? 'bg-emerald-500 text-white shadow-lg'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
+                      }`}
+                      title={getTooltipText(mode.id)}
+                      aria-label={getTooltipText(mode.id)}
+                    >
+                      <IconComponent size={16} />
+                    </button>
+                    {idx < modes.length - 1 && (
+                      <span className="mx-1 text-zinc-600 select-none text-lg">|</span>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
           </div>
           
           {/* RIGHT SIDE BUTTONS */}
@@ -124,12 +171,12 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
             </button>
             
             {/* SUBMIT BUTTON - Main search trigger */}
-            {/* This button calls the main search function */}
+            {/* This button calls the main search function with mode context */}
             <button 
-              onClick={onSearch}
+              onClick={handleSearchWithMode}
               disabled={!query.trim()}
               className="bg-emerald-500 p-2 rounded-lg hover:bg-emerald-600 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors group"
-              title="Search"
+              title={`Search in ${activeMode} mode`}
             >
               <ArrowUp size={18} className="text-white group-disabled:text-zinc-500" />
             </button>
@@ -141,3 +188,9 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
 };
 
 export default SearchInput;
+
+
+
+
+
+
