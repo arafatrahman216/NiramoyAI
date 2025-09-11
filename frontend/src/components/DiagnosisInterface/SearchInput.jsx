@@ -6,7 +6,7 @@ import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe } from 'lucide-r
 // ==============================================
 // Contains: Input field and all action buttons
 // Edit individual button handlers to add functionality
-const SearchInput = ({ query, setQuery, onSearch }) => {
+const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything..." }) => {
   // TODO: Add focus functionality
   const handleFocus = () => {
     console.log('Search input focused');
@@ -50,7 +50,7 @@ const SearchInput = ({ query, setQuery, onSearch }) => {
         {/* Edit placeholder text, styling here */}
         <input
           type="text"
-          placeholder="Ask anything..."
+          placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyPress={handleKeyPress}

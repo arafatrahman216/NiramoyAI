@@ -18,9 +18,10 @@ interface ChatConversationProps {
   chatId: string;
   onBack: () => void;
   chatData?: any;
+  embedded?: boolean;
 }
 
-const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData }) => {
+const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
@@ -127,6 +128,49 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
       handleSendMessage();
     }
   };
+
+  if (embedded) {
+    // Embedded mode - only messages, no header or input
+    return (
+      <div className="space-y-4">
+        {loading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full"></div>
+            <span className="ml-3 text-zinc-400">Loading conversation...</span>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="text-center text-zinc-500 mt-8">
+            <svg className="w-12 h-12 mx-auto mb-4 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p className="text-sm">No messages yet</p>
+            <p className="text-xs text-zinc-600 mt-1">Start the conversation by sending a message</p>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <div
+              key={message.messageId}
+              className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  !message.agent
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-zinc-800 text-zinc-100'
+                }`}
+              >
+                <p className="text-sm">{message.content}</p>
+                <p className="text-xs mt-1 opacity-70">
+                  {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col bg-zinc-950">

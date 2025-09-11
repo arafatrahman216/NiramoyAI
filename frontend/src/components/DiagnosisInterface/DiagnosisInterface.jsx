@@ -128,28 +128,69 @@ const DiagnosisInterface = () => {
           </button>
         </div>
 
-        {/* CENTER CONTENT - CONDITIONAL DISPLAY */}
-        {selectedChatId ? (
-          /* CHAT CONVERSATION VIEW */
-          <ChatConversation 
-            chatId={selectedChatId}
-            onBack={handleBackToSearch}
-            chatData={selectedChatData}
-          />
-        ) : (
-          /* DEFAULT SEARCH VIEW - LOGO AND SEARCH */
-          <div className="flex-1 flex flex-col items-center justify-center px-8">
-            {/* LOGO SECTION */}
-            <MainLogo />
+        {/* MAIN CONTENT AREA - CHATGPT STYLE */}
+        <div className="flex-1 flex flex-col px-8">
+          {selectedChatId ? (
+            /* CHAT MODE - CONVERSATION + INPUT AT BOTTOM */
+            <>
+              {/* CHAT HEADER */}
+              <div className="flex items-center justify-between py-4 border-b border-zinc-800">
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleBackToSearch}
+                    className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                    title="Back to search"
+                  >
+                    <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">
+                      {selectedChatData?.title || 'Chat Conversation'}
+                    </h2>
+                    <p className="text-sm text-zinc-400">
+                      {selectedChatData?.messages?.length || 0} messages
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            {/* SEARCH SECTION */}
-            <SearchInput 
-              query={query} 
-              setQuery={setQuery} 
-              onSearch={handleSearch} 
-            />
-          </div>
-        )}
+              {/* MESSAGES AREA */}
+              <div className="flex-1 overflow-y-auto py-4">
+                <ChatConversation 
+                  chatId={selectedChatId}
+                  onBack={handleBackToSearch}
+                  chatData={selectedChatData}
+                  embedded={true}
+                />
+              </div>
+
+              {/* SEARCH INPUT AT BOTTOM */}
+              <div className="py-4 border-t border-zinc-800">
+                <SearchInput 
+                  query={query} 
+                  setQuery={setQuery} 
+                  onSearch={handleSearch}
+                  placeholder="Continue conversation or search..."
+                />
+              </div>
+            </>
+          ) : (
+            /* DEFAULT SEARCH VIEW - CENTERED LOGO AND SEARCH */
+            <div className="flex-1 flex flex-col items-center justify-center">
+              {/* LOGO SECTION */}
+              <MainLogo />
+
+              {/* SEARCH SECTION */}
+              <SearchInput 
+                query={query} 
+                setQuery={setQuery} 
+                onSearch={handleSearch} 
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* UPLOAD VISIT MODAL */}
