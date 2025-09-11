@@ -89,7 +89,7 @@ export const chatbotAPI = {
   
   // Start new conversation
   startConversation: () => 
-    api.post('/chatbot/conversation/start'),
+    api.post('/user/start-conversation'),
 
   // Get user's chat sessions
   getChatSessions: () => 

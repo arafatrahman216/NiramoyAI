@@ -50,4 +50,19 @@ public class MessageService {
             return false;
         }
     }
+
+    public ChatSessions createNewChatSession(com.example.niramoy.entity.User user) {
+        try {
+            ChatSessions newChatSession = ChatSessions.builder()
+                    .user(user)
+                    .createdAt(java.time.LocalDateTime.now())
+                    .title("New Chat")
+                    .build();
+            
+            ChatSessions savedSession = chatSessionRepository.save(newChatSession);
+            return savedSession;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create new chat session: " + e.getMessage());
+        }
+    }
 }

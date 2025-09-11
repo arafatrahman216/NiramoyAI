@@ -138,6 +138,36 @@ public class UserController {
 
     }
 
+    @PostMapping("/start-conversation")
+    public ResponseEntity<HashMap<String, Object>> startConversation(){
+        HashMap<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to start conversation");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        try {
+            User user = (User) authentication.getPrincipal();
+            ChatSessions newChatSession = messageService.createNewChatSession(user);
+            
+            response.put("success", true);
+            response.put("message", "New chat session created successfully");
+            response.put("conversationId", newChatSession.getChatId());
+            response.put("chatId", newChatSession.getChatId());
+            response.put("createdAt", newChatSession.getCreatedAt());
+            response.put("title", newChatSession.getTitle());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to create new chat session: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 
     @PostMapping("/chat")
     public ResponseEntity<HashMap<String, Object>> sendMessage(@RequestBody Map<String, String> body){

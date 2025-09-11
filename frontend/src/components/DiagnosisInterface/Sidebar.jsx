@@ -6,7 +6,7 @@ import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
 // ==============================================
 // Contains: Logo, New Chat, Navigation, Sign In
 // Edit handleNavigation() to add routing/page changes
-const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSidebarOpen }) => {
+const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSidebarOpen, onNewChat }) => {
   // TODO: Add navigation logic here
   const handleNavigation = (section) => {
     console.log(`Navigate to: ${section}`);
@@ -29,10 +29,12 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
     }
   };
 
-  // TODO: Add new chat functionality
+  // NEW CHAT FUNCTIONALITY
   const handleNewChat = () => {
-    console.log('Start new chat');
-    // Add logic to reset chat state, clear messages, etc.
+    console.log('Start new chat from sidebar');
+    if (onNewChat) {
+      onNewChat();
+    }
   };
 
   // TODO: Add sign in functionality

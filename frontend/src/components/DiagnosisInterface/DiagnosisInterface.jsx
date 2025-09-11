@@ -86,6 +86,35 @@ const DiagnosisInterface = () => {
     console.log('Selected full chat data:', chatData);
   };
 
+  // HANDLE NEW CHAT CREATION
+  const handleNewChat = async () => {
+    try {
+      // Import chatbotAPI dynamically
+      const { chatbotAPI } = await import('../../services/api');
+      
+      console.log('Starting new chat...');
+      const response = await chatbotAPI.startConversation();
+      const newChatId = response.data.conversationId || response.data.chatId;
+      
+      if (newChatId) {
+        // Set the new chat as selected
+        setSelectedChatId(newChatId);
+        setSelectedChatData({
+          chatId: newChatId,
+          title: 'New Chat',
+          messages: []
+        });
+        
+        // Clear any existing query
+        setQuery('');
+        
+        console.log('New chat created and selected:', newChatId);
+      }
+    } catch (error) {
+      console.error('Error creating new chat:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* SIDEBAR SECTION - FIXED */}
@@ -95,6 +124,7 @@ const DiagnosisInterface = () => {
         isVisitsSidebarOpen={isVisitsSidebarOpen}
         onChatsClick={() => setIsChatsSidebarOpen(!isChatsSidebarOpen)}
         isChatsSidebarOpen={isChatsSidebarOpen}
+        onNewChat={handleNewChat}
       />
 
       {/* CHATS SIDEBAR */}
