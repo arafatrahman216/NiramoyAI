@@ -5,6 +5,7 @@ import MainLogo from './MainLogo';
 import VisitsSidebar from './VisitsSidebar';
 import ChatsSidebar from './ChatsSidebar';
 import UploadVisitModal from './UploadVisitModal';
+import ChatConversation from './ChatConversation';
 
 import agentAPI from '../../services/api'
 
@@ -22,6 +23,12 @@ const DiagnosisInterface = () => {
   
   // CHATS SIDEBAR STATE
   const [isChatsSidebarOpen, setIsChatsSidebarOpen] = useState(false);
+  
+  // CHAT ID STATE - tracks selected chat
+  const [selectedChatId, setSelectedChatId] = useState(null);
+  
+  // SELECTED CHAT DATA - tracks full chat data with messages
+  const [selectedChatData, setSelectedChatData] = useState(null);
   
   // UPLOAD VISIT MODAL STATE
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -60,6 +67,25 @@ const DiagnosisInterface = () => {
     // - Initialize form data
   };
 
+  // CHAT SELECTION HANDLER
+  const handleChatSelection = (chatId) => {
+    setSelectedChatId(chatId);
+    console.log('Selected chat ID:', chatId);
+  };
+
+  // BACK TO SEARCH HANDLER
+  const handleBackToSearch = () => {
+    setSelectedChatId(null);
+    setSelectedChatData(null);
+    console.log('Returning to search interface');
+  };
+
+  // HANDLE SELECTED CHAT DATA
+  const handleSelectedChat = (chatData) => {
+    setSelectedChatData(chatData);
+    console.log('Selected full chat data:', chatData);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex">
       {/* SIDEBAR SECTION */}
@@ -75,6 +101,8 @@ const DiagnosisInterface = () => {
       <ChatsSidebar 
         isOpen={isChatsSidebarOpen}
         onClose={() => setIsChatsSidebarOpen(false)}
+        setChatid={handleChatSelection}
+        setSelectedChat={handleSelectedChat}
       />
 
       {/* VISITS SIDEBAR */}
@@ -100,18 +128,28 @@ const DiagnosisInterface = () => {
           </button>
         </div>
 
-        {/* CENTER CONTENT - LOGO AND SEARCH */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8">
-          {/* LOGO SECTION */}
-          <MainLogo />
-
-          {/* SEARCH SECTION */}
-          <SearchInput 
-            query={query} 
-            setQuery={setQuery} 
-            onSearch={handleSearch} 
+        {/* CENTER CONTENT - CONDITIONAL DISPLAY */}
+        {selectedChatId ? (
+          /* CHAT CONVERSATION VIEW */
+          <ChatConversation 
+            chatId={selectedChatId}
+            onBack={handleBackToSearch}
+            chatData={selectedChatData}
           />
-        </div>
+        ) : (
+          /* DEFAULT SEARCH VIEW - LOGO AND SEARCH */
+          <div className="flex-1 flex flex-col items-center justify-center px-8">
+            {/* LOGO SECTION */}
+            <MainLogo />
+
+            {/* SEARCH SECTION */}
+            <SearchInput 
+              query={query} 
+              setQuery={setQuery} 
+              onSearch={handleSearch} 
+            />
+          </div>
+        )}
       </div>
 
       {/* UPLOAD VISIT MODAL */}

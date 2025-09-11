@@ -90,6 +90,10 @@ export const chatbotAPI = {
   // Start new conversation
   startConversation: () => 
     api.post('/chatbot/conversation/start'),
+
+  // Get user's chat sessions
+  getChatSessions: () => 
+    api.get('/user/chat-sessions'),
 };
 
 
