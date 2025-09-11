@@ -22,6 +22,7 @@ import DoctorSignup from './components/Doctor/DoctorSignup';
 import SearchDoctors from './components/SearchDoctors';
 import EnhancedSearchDoctors from './components/EnhancedSearchDoctors';
 import BookAppointment from './components/BookAppointment';
+import HealthLogForm from './components/HealthLogInterface/HealthLogForm';
 import BookAppointmentPage from './components/BookAppointmentPage';
 import PatientAppointments from './components/PatientAppointments';
 import DoctorAppointments from './components/Doctor/DoctorAppointments';
@@ -29,6 +30,7 @@ import DoctorSchedule from './components/Doctor/DoctorSchedule';
 import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterface';
 import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
 import Timeline from './components/Timeline/Timeline';
+import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
 
 
 const theme = createTheme({
@@ -415,6 +417,14 @@ function App() {
                     </PatientRoute>
                   }
                 />
+                <Route
+                path='/healthlog'
+                element={
+                  <PatientRoute>
+                    < HealthLogForm />
+                  </PatientRoute>
+                }
+                />
                 <Route 
                   path='/timeline'
                   element={
@@ -423,6 +433,12 @@ function App() {
                     </PatientRoute>
                   }
                 />
+                <Route path="/test" element={
+                  <PatientRoute>
+                    
+                  <ExampleDashboardComponent />
+                  </PatientRoute>
+                } />
             </Routes>
           </div>
         </Router>

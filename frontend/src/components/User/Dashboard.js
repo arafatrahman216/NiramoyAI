@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { MiniSpeedometer} from "./MiniSpeedoMeter"
 import MedicationTimeline from "./MedicationTimeline";
+import { Home, User, Activity, LogOut } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -14,9 +15,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import axios from "axios";
+import { API_BASE_URL } from "../../services/api";
+
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  
 
   // Dummy fallback data
   const fallbackUser = {
@@ -31,20 +37,9 @@ const Dashboard = () => {
 
   const fallbackVitals = {
     bloodPressure: [
-      { date: "2025-09-01", systolic: 120, diastolic: 80 },
-      { date: "2025-09-05", systolic: 125, diastolic: 82 },
-      { date: "2025-09-09", systolic: 130, diastolic: 85 },
     ],
-    diabetes: [
-      { date: "2025-09-01", sugar: 110 },
-      { date: "2025-09-05", sugar: 130 },
-      { date: "2025-09-09", sugar: 115 },
-    ],
-    heartRate: [
-      { date: "2025-09-01", bpm: 72 },
-      { date: "2025-09-05", bpm: 78 },
-      { date: "2025-09-09", bpm: 75 },
-    ],
+    diabetes: [],
+    heartRate: [],
   };
 
   const fallbackVisits = [
@@ -53,18 +48,17 @@ const Dashboard = () => {
   ];
 
   const fallbackProfile = {
-    allergies: "Pollen, Dust",
-    bloodGroup: "O+",
-    height: "175 cm",
-    weight: "70 kg",
-    surgeries: "Appendix Removal",
-    chronicDiseases: "Hypertension",
-    systolic: "130",
-    diastolic: "85",
-    heartRate: "75",
-    majorEvents : "Till now Unmarried :')",
-    majorHealthEvents: "2022 - COVID Recovery",
-    lifestyle: "Non-smoker, Regular exercise",
+    allergies: "...",
+    bloodGroup: "...",
+    height: "...",
+    weight: "...",
+    chronicDiseases: "...",
+    systolic: "...",
+    diastolic: "...",
+    heartRate: "...",
+    majorEvents : "...",
+    majorHealthEvents: "...",
+    lifestyle: "...",
   };
 
   const [healthVitals, setHealthVitals] = useState(fallbackVitals);
@@ -73,6 +67,50 @@ const Dashboard = () => {
 
   const profile = user || fallbackUser;
 
+
+  useEffect( () => {
+    document.title = "Dashboard - NiramoyAI";
+
+    const dashboardStats = async () =>{
+
+    try
+    {
+        const response= await axios.get(`${API_BASE_URL}/user/dashboard`, {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+      const fetchedProfile = response.data.healthProfile;
+      console.log("Fetched profile data:", fetchedProfile);
+        const bloodPressure = fetchedProfile.bloodPressure;
+        const systolicPressure = bloodPressure.split('/')[0];
+        const diastolicPressure = bloodPressure.split('/')[1];
+        console.log(systolicPressure, diastolicPressure);
+      const profile = {
+        allergies: fetchedProfile.allergies,
+        bloodGroup:fetchedProfile.bloodType,
+        height: fetchedProfile.height,
+        weight: fetchedProfile.weight,
+        chronicDiseases: fetchedProfile.chronicDiseases,
+        systolic: systolicPressure,
+        diastolic: diastolicPressure,
+        heartRate: fetchedProfile.heartRate,
+        majorEvents : fetchedProfile.majorEvents,
+        majorHealthEvents: fetchedProfile.majorHealthEvents,
+        lifestyle: fetchedProfile.lifestyle,
+      }
+      setHealthProfile(profile);
+      setHealthVitals(response.data.vitals);
+      console.log("Fetched profile:", profile);
+      }
+    catch(error){
+        console.error("Error fetching dashboard stats:", error);
+        return null;
+    }
+  }
+  dashboardStats();
+
+  }, []);
 
 
   // Health ranges configuration
@@ -111,13 +149,57 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-6">
+    <div className="min-h-screen bg-gray-900 text-gray-100">
+      {/* Navbar */}
+      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <Activity className="w-8 h-8 text-emerald-400 mr-2" />
+              <span className="text-xl font-bold text-white">NiramoyAI</span>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center px-3 py-2 text-emerald-400 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Home
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="p-6">
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
         <button
-          onClick={() => navigate("/add-health-log")}
+          onClick={() => navigate("/healthlog")}
           className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
         >
           + Add Health Log
@@ -196,7 +278,7 @@ const Dashboard = () => {
                 const isVital = ['heartRate', 'weight', 'systolic', 'diastolic'].includes(key);
                 
                 if (isVital) return null; // Skip vital signs for health profile
-                
+                if (value==="" || value===null || value===undefined) return null;
                 return (
                   <div
                     key={key}
@@ -207,7 +289,6 @@ const Dashboard = () => {
                         {key === 'bloodGroup' ? '🩸' :
                          key === 'height' ? '📏' :
                          key === 'allergies' ? '🌾' :
-                         key === 'surgeries' ? '🦠' :
                          key === 'chronicDiseases' ? '💊' :
                          key === 'majorHealthEvents' ?  '🩹' :
                          key === 'majorEvents' ? '🩹' :
@@ -459,6 +540,7 @@ const Dashboard = () => {
             ))}
           </ul>
         </div>
+      </div>
       </div>
     </div>
   );

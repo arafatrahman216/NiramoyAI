@@ -1,32 +1,21 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Card,
-  CardContent,
-  AppBar,
-  Toolbar,
-  Button,
-  TextField,
-  Avatar,
-  Grid,
-  Divider,
-  Chip,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
-import { 
-  ArrowBack,
-  Edit,
-  Save,
-  Cancel,
-  HealthAndSafety,
-  AdminPanelSettings
-} from '@mui/icons-material';
+
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { usePreventCrossRoleAccess } from '../../hooks/useRoleProtection';
+import { 
+  ArrowLeft, 
+  Edit, 
+  Save, 
+  X, 
+  User, 
+  Mail, 
+  Phone, 
+  Calendar,
+  Activity,
+  Home,
+  LogOut,
+  Shield
+} from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../services/api';
 
@@ -34,36 +23,29 @@ const Profile = () => {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   
-  // Prevent doctors and admins from accessing patient profile
-  usePreventCrossRoleAccess();
-  
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [editData, setEditData] = useState({
+    name: user?.name || '',
     email: user?.email || '',
     phoneNumber: user?.phoneNumber || '',
   });
-
-  const handleBack = () => {
-    navigate('/dashboard');
-  };
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const handleAdminDashboard = () => {
-    navigate('/admin/dashboard');
-  };
-
-  // Check if user is admin
-  const isAdmin = user?.role && user.role==='ADMIN';
+  const isAdmin = user?.role === 'ADMIN';
 
   const handleEdit = () => {
-    editData.name = user?.name || '';
+    setEditData({
+      name: user?.name || '',
+      email: user?.email || '',
+      phoneNumber: user?.phoneNumber || '',
+    });
     setIsEditing(true);
     setError('');
     setSuccess('');
@@ -75,34 +57,23 @@ const Profile = () => {
     setSuccess('');
     
     try {
-      console.log(editData);
       const token = localStorage.getItem('token');
-      console.log(token);
-
-      const response = await axios.patch(`${API_BASE_URL}/user/profile`, editData,
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Access-Control-Allow-Origin": "*"
+      const response = await axios.patch(`${API_BASE_URL}/user/profile`, editData, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
         }
       });
       
       if (response.data.success) {
-        // Update the user data in auth context and localStorage
         const updatedUserData = response.data.user;
         updateUser(updatedUserData);
-        console.log(updatedUserData);
-        
         setSuccess('Profile updated successfully!');
         setIsEditing(false);
         
-        // Update editData with the new data
         setEditData({
-          
           name: updatedUserData.name || '',
           email: updatedUserData.email || '',
           phoneNumber: updatedUserData.phoneNumber || '',
-          createdAt: updatedUserData.createdAt || ''
         });
       } else {
         setError(response.data.message || 'Failed to update profile');
@@ -117,11 +88,13 @@ const Profile = () => {
 
   const handleCancel = () => {
     setEditData({
+      name: user?.name || '',
       email: user?.email || '',
       phoneNumber: user?.phoneNumber || '',
-      name: user?.name || '',
     });
     setIsEditing(false);
+    setError('');
+    setSuccess('');
   };
 
   const handleInputChange = (e) => {
@@ -133,217 +106,225 @@ const Profile = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" elevation={1} sx={{ bgcolor: 'white', color: 'text.primary' }}>
-        <Toolbar>
-          <Button
-            startIcon={<ArrowBack />}
-            onClick={handleBack}
-            sx={{ mr: 2, textTransform: 'none' }}
-          >
-            Back to Dashboard
-          </Button>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <HealthAndSafety sx={{ mr: 2, color: 'primary.main' }} />
-            <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: 'primary.main' }}>
-              NiramoyAI
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {isAdmin && (
-              <Button
-                startIcon={<AdminPanelSettings />}
-                onClick={handleAdminDashboard}
-                variant="contained"
-                color="secondary"
-                sx={{ textTransform: 'none' }}
-              >
-                Admin Dashboard
-              </Button>
-            )}
-            <Button
-              onClick={handleLogout}
-              color="error"
-              sx={{ textTransform: 'none' }}
-            >
-              Logout
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+    <div className="min-h-screen bg-gray-900 text-gray-100">
+      {/* Navbar */}
+      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <Activity className="w-8 h-8 text-emerald-400 mr-2" />
+              <span className="text-xl font-bold text-white">NiramoyAI</span>
+            </div>
 
-      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-            Profile Settings
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Manage your account information
-          </Typography>
-        </Box>
-
-        <Card>
-          <CardContent sx={{ p: 4 }}>
-            {/* Profile Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-              <Avatar
-                sx={{ 
-                  width: 100, 
-                  height: 100, 
-                  mr: 3,
-                  bgcolor: 'primary.main',
-                  fontSize: '2.5rem'
-                }}
+            {/* Navigation Links */}
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
               >
+                <Home className="w-4 h-4 mr-2" />
+                Home
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center px-3 py-2 text-emerald-400 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Profile Settings</h1>
+          <p className="text-gray-400">Manage your account information</p>
+        </div>
+
+        {/* Profile Card */}
+        <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700">
+          {/* Profile Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg mr-6">
                 {user?.name?.charAt(0)}
-              </Avatar>
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="h5" gutterBottom>
-                  {user?.name} 
-                </Typography>
-                <Typography variant="body1" color="text.secondary" gutterBottom>
-                  @{user?.username}
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Chip 
-                    label={user?.status || 'ACTIVE'} 
-                    color="success" 
-                    size="small" 
-                    sx={{ mr: 1 }}
-                  />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">{user?.name}</h2>
+                <p className="text-emerald-400 text-lg">@{user?.username}</p>
+                <div className="flex items-center mt-2 space-x-3">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
+                    {user?.status || 'ACTIVE'}
+                  </span>
                   {user?.role && (
-                    <Chip
-                      label={user.role}
-                      variant="outlined"
-                      size="small"
-                      sx={{
-                        mr: 1,
-                        cursor: user.role === 'ADMIN' ? 'pointer' : 'default',
-                        '&:hover': user.role === 'ADMIN' ? {
-                          backgroundColor: 'secondary.light',
-                          color: 'red'
-                        } : {}
-                      }}
-                      color={user.role === 'ADMIN' ? 'secondary' : 'default'}
-                      onClick={user.role === 'ADMIN' ? handleAdminDashboard : undefined}
-                    />
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      <Shield className="w-3 h-3 mr-1" />
+                      {user.role}
+                    </span>
                   )}
-                </Box>
-              </Box>
-              <Box>
-                {!isEditing ? (
-                  <Button
-                    startIcon={<Edit />}
-                    variant="outlined"
-                    onClick={handleEdit}
-                    sx={{ textTransform: 'none' }}
+                </div>
+              </div>
+            </div>
+
+            {/* Edit Button */}
+            <div className="flex space-x-3">
+              {!isEditing ? (
+                <button
+                  onClick={handleEdit}
+                  className="flex items-center px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="flex items-center px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50"
                   >
-                    Edit Profile
-                  </Button>
-                ) : (
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                      startIcon={<Save />}
-                      variant="contained"
-                      onClick={handleSave}
-                      disabled={loading}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      {loading ? <CircularProgress size={16} /> : 'Save'}
-                    </Button>
-                    <Button
-                      startIcon={<Cancel />}
-                      variant="outlined"
-                      onClick={handleCancel}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      Cancel
-                    </Button>
-                  </Box>
-                )}
-              </Box>
-            </Box>
+                    <Save className="w-4 h-4 mr-2" />
+                    {loading ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
 
-            <Divider sx={{ mb: 4 }} />
+          {/* Messages */}
+          {success && (
+            <div className="mb-6 p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
+              <p className="text-green-400">{success}</p>
+            </div>
+          )}
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-400">{error}</p>
+            </div>
+          )}
 
-            {/* Success/Error Messages */}
-            {success && (
-              <Alert severity="success" sx={{ mb: 3 }}>
-                {success}
-              </Alert>
-            )}
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            )}
+          {/* Profile Form */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Name */}
+            <div>
+              <label className="flex items-center text-gray-300 mb-2">
+                <User className="w-4 h-4 mr-2" />
+                Full Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={isEditing ? editData.name : user?.name || ''}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                  isEditing 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-emerald-500 focus:outline-none' 
+                    : 'bg-gray-700/50 border-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+              />
+            </div>
 
-            {/* Profile Form */}
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Name"
-                  name="name"
-                  value={isEditing ? editData.name : user?.name || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  variant={isEditing ? "outlined" : "filled"}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  name="email"
-                  type="email"
-                  value={isEditing ? editData.email : user?.email || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  variant={isEditing ? "outlined" : "filled"}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Phone Number"
-                  name="phoneNumber"
-                  value={isEditing ? editData.phoneNumber : user?.phoneNumber || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  variant={isEditing ? "outlined" : "filled"}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Username"
-                  value={user?.username || ''}
-                  disabled
-                  variant="filled"
-                  helperText="Username cannot be changed"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Member Since"
-                  value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                  disabled
-                  variant="filled"
-                />
-              </Grid>
-            </Grid>
+            {/* Email */}
+            <div>
+              <label className="flex items-center text-gray-300 mb-2">
+                <Mail className="w-4 h-4 mr-2" />
+                Email Address
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={isEditing ? editData.email : user?.email || ''}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                  isEditing 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-emerald-500 focus:outline-none' 
+                    : 'bg-gray-700/50 border-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+              />
+            </div>
 
-            {isEditing && (
-              <Alert severity="info" sx={{ mt: 3 }}>
-                Note: Some changes may require email verification.
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
+            {/* Phone */}
+            <div>
+              <label className="flex items-center text-gray-300 mb-2">
+                <Phone className="w-4 h-4 mr-2" />
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={isEditing ? editData.phoneNumber : user?.phoneNumber || ''}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                  isEditing 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-emerald-500 focus:outline-none' 
+                    : 'bg-gray-700/50 border-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+              />
+            </div>
+
+            {/* Username */}
+            <div>
+              <label className="flex items-center text-gray-300 mb-2">
+                <User className="w-4 h-4 mr-2" />
+                Username
+              </label>
+              <input
+                type="text"
+                value={user?.username || ''}
+                disabled
+                className="w-full px-4 py-3 rounded-lg border bg-gray-700/50 border-gray-600 text-gray-400 cursor-not-allowed"
+              />
+              <p className="text-gray-500 text-sm mt-1">Username cannot be changed</p>
+            </div>
+
+            {/* Member Since */}
+            <div className="md:col-span-2">
+              <label className="flex items-center text-gray-300 mb-2">
+                <Calendar className="w-4 h-4 mr-2" />
+                Member Since
+              </label>
+              <input
+                type="text"
+                value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                disabled
+                className="w-full px-4 py-3 rounded-lg border bg-gray-700/50 border-gray-600 text-gray-400 cursor-not-allowed"
+              />
+            </div>
+          </div>
+
+          {isEditing && (
+            <div className="mt-6 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-400 text-sm">
+                <strong>Note:</strong> Some changes may require email verification.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
