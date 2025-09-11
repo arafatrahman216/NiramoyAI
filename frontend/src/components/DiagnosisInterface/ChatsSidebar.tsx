@@ -106,7 +106,7 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, setSelec
       </div>
       
       {/* SIDEBAR CONTENT */}
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-800 hover:scrollbar-thumb-zinc-700">
         {loading ? (
           /* Loading State */
           <div className="text-center text-zinc-500 mt-8">

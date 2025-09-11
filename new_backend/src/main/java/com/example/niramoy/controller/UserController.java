@@ -6,6 +6,7 @@ import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
+import com.example.niramoy.entity.Messages;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.service.HealthService;
@@ -176,16 +177,56 @@ public class UserController {
         if (authentication == null) {
             response.put("success", false);
             response.put("message", "Authentication token is null. Please login to send message");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-        User user = (User) authentication.getPrincipal();
-        String message = body.get("message");
-        Long chatId = Long.parseLong(body.get("chatId"));
-        boolean success = messageService.addMessageToChat(chatId, message);
-
-        response.put("success", success);
-        return ResponseEntity.ok(response);
-
+        
+        try {
+            User user = (User) authentication.getPrincipal();
+            String message = body.get("message");
+            String chatIdStr = body.get("chatId");
+            
+            if (message == null || message.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Message cannot be empty");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (chatIdStr == null) {
+                response.put("success", false);
+                response.put("message", "Chat ID is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Long chatId = Long.parseLong(chatIdStr);
+            
+            // Process message and get AI reply (synchronous for now, but DB saves are async internally)
+            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message);
+            
+            response.put("success", true);
+            response.put("message", "Message sent and processed successfully");
+            response.put("userMessage", Map.of(
+                "content", message,
+                "isAgent", false,
+                "chatId", chatId
+            ));
+            response.put("aiResponse", Map.of(
+                "messageId", aiReply.getMessageId(),
+                "content", aiReply.getContent(),
+                "isAgent", aiReply.isAgent(),
+                "chatId", chatId
+            ));
+            
+            return ResponseEntity.ok(response);
+        } catch (NumberFormatException e) {
+            response.put("success", false);
+            response.put("message", "Invalid chat ID format");
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            log.error("Error processing message: ", e);
+            response.put("success", false);
+            response.put("message", "Failed to process message: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     @PostMapping("/message")

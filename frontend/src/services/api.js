@@ -80,8 +80,8 @@ export const testCenterAPI = {
 // AI Chatbot API endpoints
 export const chatbotAPI = {
   // Send message to AI chatbot
-  sendMessage: (message, conversationId = null) => 
-    api.post('/chatbot/message', { message, conversationId }),
+  sendMessage: (message, chatId) => 
+    api.post('/user/chat', { message, chatId: chatId.toString() }),
   
   // Get conversation history
   getConversation: (conversationId) => 

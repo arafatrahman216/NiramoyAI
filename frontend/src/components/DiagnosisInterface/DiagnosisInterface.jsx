@@ -7,7 +7,7 @@ import ChatsSidebar from './ChatsSidebar';
 import UploadVisitModal from './UploadVisitModal';
 import ChatConversation from './ChatConversation';
 
-import agentAPI from '../../services/api'
+import { chatbotAPI, doctorAPI } from '../../services/api'
 
 // ==============================================
 // DIAGNOSIS INTERFACE MAIN CONTAINER
@@ -34,27 +34,130 @@ const DiagnosisInterface = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // MAIN SEARCH HANDLER
-  // TODO: Replace this with your actual search implementation
-  const handleSearch = () => {
+  // Handles search/message sending based on current context
+  const handleSearch = async () => {
     if (!query.trim()) return;
     
-    console.log('Searching for:', query);
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to send messages.');
+      return;
+    }
     
-    // ADD YOUR SEARCH LOGIC HERE:
-    // - API calls to your backend
-    // - Navigate to results page
-    // - Update global state
-    // - Show loading states
-    // Example:
-    // searchAPI(query).then(results => {
-    //   setSearchResults(results);
-    //   navigate('/results');
-    // });
-
-    agentAPI.searchAPI(query).then(response => {
-        console.log('Diagnosis results:', response.data);
-    });
-
+    // If we're in chat mode, send message to current chat
+    if (selectedChatId) {
+      console.log('Sending message to current chat:', selectedChatId);
+      console.log('Message content:', query);
+      console.log('Auth token exists:', !!localStorage.getItem('token'));
+      
+      // Add user message immediately to local state
+      const userMessage = {
+        messageId: Date.now(),
+        content: query.trim(),
+        isAgent: false,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Update local chat data immediately to show user message
+      if (selectedChatData) {
+        const updatedChatData = {
+          ...selectedChatData,
+          messages: [...(selectedChatData.messages || []), userMessage]
+        };
+        setSelectedChatData(updatedChatData);
+      }
+      
+      const messageToSend = query.trim();
+      setQuery(''); // Clear input immediately
+      
+      try {
+        // Send message to current chat using chatbotAPI
+        const response = await chatbotAPI.sendMessage(messageToSend, selectedChatId);
+        
+        console.log('API Response:', response);
+        
+        if (response.data.success) {
+          console.log('Message sent successfully:', response.data);
+          
+          // Add AI reply to local state
+          const aiReply = {
+            messageId: response.data.aiResponse.messageId || Date.now() + 1,
+            content: response.data.aiResponse.content,
+            isAgent: true,
+            timestamp: new Date().toISOString()
+          };
+          
+          // Update local chat data with AI reply
+          if (selectedChatData) {
+            const updatedChatData = {
+              ...selectedChatData,
+              messages: [...(selectedChatData.messages || []), userMessage, aiReply]
+            };
+            setSelectedChatData(updatedChatData);
+          }
+          
+          // Force a refresh of the chat conversation component
+          window.dispatchEvent(new CustomEvent('chatRefresh'));
+          
+        } else {
+          console.error('Failed to send message:', response.data.message);
+          alert('Failed to send message: ' + response.data.message);
+          
+          // Remove the user message from local state since sending failed
+          if (selectedChatData) {
+            setSelectedChatData({
+              ...selectedChatData,
+              messages: selectedChatData.messages.slice(0, -1)
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Full error object:', error);
+        console.error('Error response:', error.response);
+        console.error('Error status:', error.response?.status);
+        console.error('Error data:', error.response?.data);
+        
+        // Remove the user message from local state since sending failed
+        if (selectedChatData) {
+          setSelectedChatData({
+            ...selectedChatData,
+            messages: selectedChatData.messages.slice(0, -1)
+          });
+        }
+        
+        if (error.response?.status === 401) {
+          alert('Authentication failed. Please log in again.');
+        } else if (error.response?.status === 403) {
+          alert('Access denied. You don\'t have permission to send messages.');
+        } else {
+          alert('Error sending message. Please try again.');
+        }
+      }
+    } else {
+      // If not in chat mode, create new chat (default search behavior)
+      console.log('Creating new chat for search query:', query);
+      
+      try {
+        const response = await chatbotAPI.startConversation();
+        const newChatId = response.data.conversationId || response.data.chatId;
+        
+        if (newChatId) {
+          setSelectedChatId(newChatId);
+          setSelectedChatData({
+            chatId: newChatId,
+            title: 'New Chat',
+            messages: []
+          });
+          
+          // Don't clear query here - let user send it as first message
+          console.log('New chat created, user can now send their query');
+        }
+      } catch (error) {
+        console.error('Error creating new chat:', error);
+        alert('Unable to start new chat. Please try again.');
+      }
+    }
   };
 
   // UPLOAD VISIT HANDLER
@@ -190,7 +293,7 @@ const DiagnosisInterface = () => {
             /* CHAT MODE - CONVERSATION + FIXED INPUT AT BOTTOM */
             <>
               {/* MESSAGES AREA */}
-              <div className="flex-1 overflow-y-auto pb-24">
+              <div className="flex-1 overflow-y-auto pb-40 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-800 hover:scrollbar-thumb-zinc-700">
                 <ChatConversation 
                   chatId={selectedChatId}
                   onBack={handleBackToSearch}
@@ -200,7 +303,7 @@ const DiagnosisInterface = () => {
               </div>
 
               {/* FIXED SEARCH INPUT AT BOTTOM */}
-              <div className={`fixed bottom-0 ${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'left-96' : 'left-16'} right-0 py-4 bg-zinc-950 z-40 transition-all duration-300`}>
+              <div className={`fixed bottom-0 ${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'left-96' : 'left-16'} right-0 py-4 bg-gradient-to-t from-zinc-950 via-zinc-950 to-zinc-950/80 backdrop-blur-sm z-40 transition-all duration-300`}>
                 <div className="max-w-4xl mx-auto px-6">
                   <SearchInput 
                     query={query} 

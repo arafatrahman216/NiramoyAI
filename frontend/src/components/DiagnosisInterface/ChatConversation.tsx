@@ -38,47 +38,109 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     scrollToBottom();
   }, [messages]);
 
-  // Fetch conversation messages
+  // Listen for chat updates from search input
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!chatId) return;
-      
-      setLoading(true);
-      
-      // If we have chatData with messages, use it directly
-      if (chatData && chatData.messages) {
-        console.log('Using chatData messages:', chatData.messages);
-        setMessages(chatData.messages);
-        setLoading(false);
-        return;
-      }
-      
-      // Otherwise, fetch from API
-      try {
-        const response = await chatbotAPI.getConversation(chatId);
-        const conversationData = response.data;
-        
-        console.log('Full API Response:', response);
-        console.log('Conversation Data:', conversationData);
-        console.log('Messages from API:', conversationData.messages);
-        
-        // The messages are directly in the response with the correct format
-        const formattedMessages: Message[] = conversationData.messages || [];
-        console.log('Formatted Messages:', formattedMessages);
-        setMessages(formattedMessages);
-        
-        console.log('Final messages state:', formattedMessages);
-      } catch (error) {
-        console.error('Error fetching conversation:', error);
-        console.error('Full error object:', error);
-        setMessages([]);
-      } finally {
-        setLoading(false);
-      }
+    const handleChatUpdate = () => {
+      // Refetch messages when chat is updated
+      fetchMessages();
     };
 
+    window.addEventListener('chatRefresh', handleChatUpdate);
+    return () => window.removeEventListener('chatRefresh', handleChatUpdate);
+  }, [chatId]);
+
+  // Fetch messages function
+  const fetchMessages = async () => {
+    if (!chatId) return;
+    
+    setLoading(true);
+    
+    // If we have chatData with messages, use it directly
+    if (chatData && chatData.messages) {
+      console.log('Using chatData messages:', chatData.messages);
+      const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
+        messageId: msg.messageId,
+        content: msg.content,
+        agent: msg.isAgent || msg.agent || false,
+        timestamp: msg.timestamp
+      }));
+      setMessages(formattedMessages);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise fetch from API
+    try {
+      console.log('Fetching messages for chat ID:', chatId);
+      
+      const response = await fetch('/api/user/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ chatId: chatId.toString() })
+      });
+      
+      const conversationData = await response.json();
+      
+      console.log('Full API Response:', response);
+      console.log('Conversation Data:', conversationData);
+      console.log('Messages from API:', conversationData.data);
+      
+      // The messages are in conversationData.data with the correct format
+      const formattedMessages: Message[] = (conversationData.data || []).map((msg: any) => ({
+        messageId: msg.messageId,
+        content: msg.content,
+        agent: msg.isAgent || msg.agent || false,
+        timestamp: msg.timestamp
+      }));
+      
+      console.log('Formatted Messages:', formattedMessages);
+      setMessages(formattedMessages);
+      
+      console.log('Final messages state:', formattedMessages);
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      console.error('Full error object:', error);
+      setMessages([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch conversation messages
+  useEffect(() => {
     fetchMessages();
   }, [chatId, chatData]);
+
+  // Update messages immediately when chatData changes (from parent component)
+  useEffect(() => {
+    if (chatData && chatData.messages) {
+      console.log('ChatData updated from parent:', chatData.messages);
+      const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
+        messageId: msg.messageId,
+        content: msg.content,
+        agent: msg.isAgent || msg.agent || false,
+        timestamp: msg.timestamp
+      }));
+      setMessages(formattedMessages);
+      // Scroll to bottom when new data comes from parent
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [chatData]);
+
+  // Listen for chat refresh events
+  useEffect(() => {
+    const handleChatRefresh = () => {
+      fetchMessages();
+    };
+
+    window.addEventListener('chatRefresh', handleChatRefresh);
+    return () => {
+      window.removeEventListener('chatRefresh', handleChatRefresh);
+    };
+  }, []);
 
   // Send new message
   const handleSendMessage = async () => {
