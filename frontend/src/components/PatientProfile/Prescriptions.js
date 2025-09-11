@@ -1,6 +1,20 @@
 // src/components/PatientProfile/Prescriptions.js
 import React, { useState, useEffect } from 'react';
-import { Pill, Clock, Calendar, AlertTriangle, CheckCircle, XCircle, Search, Filter, Plus, Eye } from 'lucide-react';
+import { 
+  Pill, 
+  Plus, 
+  Search, 
+  Filter, 
+  Eye, 
+  Download, 
+  Printer, 
+  Calendar,
+  FileText,
+  Activity,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
 import AddPrescriptionModal from './AddPrescriptionModal';
 
 const Prescriptions = ({ patientId }) => {
@@ -9,98 +23,119 @@ const Prescriptions = ({ patientId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [expandedPrescriptions, setExpandedPrescriptions] = useState(new Set());
 
-  // Fallback prescriptions data
+  // Fallback prescriptions data - Updated to match new prescription format
   const fallbackPrescriptions = [
     {
       id: 1,
-      medicationName: 'Lisinopril',
-      dosage: '10mg',
-      frequency: 'Once daily',
-      duration: '30 days',
-      startDate: '2025-09-01',
-      endDate: '2025-10-01',
-      status: 'active',
+      date: '2025-09-11',
       prescribedBy: 'Dr. Sarah Johnson',
-      instructions: 'Take with or without food. Monitor blood pressure regularly.',
-      refillsRemaining: 2,
-      totalRefills: 3,
-      purpose: 'High blood pressure',
-      sideEffects: ['Dizziness', 'Dry cough', 'Fatigue'],
-      interactions: ['NSAIDs', 'Potassium supplements'],
-      pharmacy: 'CVS Pharmacy - Main St'
+      status: 'active',
+      patientId: 1,
+      diagnosis: 'Hypertension and Type 2 Diabetes',
+      symptoms: 'Patient complaints of occasional headaches and fatigue',
+      medicines: [
+        {
+          id: 1,
+          name: 'Lisinopril',
+          type: 'tab',
+          morning: true,
+          noon: false,
+          evening: false,
+          night: false,
+          dose: '1 tablet',
+          duration: '30 days',
+          purpose: 'High blood pressure',
+          instruction: 'Take with or without food. Monitor blood pressure regularly.'
+        },
+        {
+          id: 2,
+          name: 'Metformin',
+          type: 'tab',
+          morning: true,
+          noon: false,
+          evening: true,
+          night: false,
+          dose: '1 tablet',
+          duration: '90 days',
+          purpose: 'Type 2 diabetes',
+          instruction: 'Take with meals to reduce stomach upset.'
+        }
+      ],
+      tests: ['Blood Sugar (Fasting)', 'Blood Pressure Monitoring', 'HbA1c'],
+      advice: 'Maintain regular exercise, low-sodium diet, and monitor blood pressure daily.',
+      followUpDate: '2025-10-11',
+      customInstructions: 'Check blood pressure daily and maintain log book.'
     },
     {
       id: 2,
-      medicationName: 'Metformin',
-      dosage: '500mg',
-      frequency: 'Twice daily',
-      duration: '90 days',
-      startDate: '2025-08-15',
-      endDate: '2025-11-15',
+      date: '2025-09-05',
+      prescribedBy: 'Dr. Emily Rodriguez',
       status: 'active',
-      prescribedBy: 'Dr. Michael Chen',
-      instructions: 'Take with meals to reduce stomach upset.',
-      refillsRemaining: 1,
-      totalRefills: 2,
-      purpose: 'Type 2 diabetes',
-      sideEffects: ['Nausea', 'Diarrhea', 'Metallic taste'],
-      interactions: ['Alcohol', 'Contrast dyes'],
-      pharmacy: 'Walgreens - Oak Ave'
+      patientId: 1,
+      diagnosis: 'Bacterial Upper Respiratory Infection',
+      symptoms: 'Cough, fever, and throat pain for 3 days',
+      medicines: [
+        {
+          id: 1,
+          name: 'Amoxicillin',
+          type: 'cap',
+          morning: true,
+          noon: true,
+          evening: true,
+          night: false,
+          dose: '1 capsule',
+          duration: '7 days',
+          purpose: 'Bacterial infection',
+          instruction: 'Complete entire course even if feeling better.'
+        },
+        {
+          id: 2,
+          name: 'Paracetamol',
+          type: 'tab',
+          morning: false,
+          noon: false,
+          evening: false,
+          night: false,
+          dose: '1 tablet',
+          duration: '5 days',
+          purpose: 'Fever and pain',
+          instruction: 'Take as needed for fever or pain. Maximum 4 tablets per day.'
+        }
+      ],
+      tests: ['Complete Blood Count (CBC)', 'Throat Culture'],
+      advice: 'Take adequate rest, drink plenty of fluids, and avoid cold drinks.',
+      followUpDate: '2025-09-12',
+      customInstructions: 'Return if symptoms worsen or fever persists after 3 days.'
     },
     {
       id: 3,
-      medicationName: 'Atorvastatin',
-      dosage: '20mg',
-      frequency: 'Once daily (evening)',
-      duration: '30 days',
-      startDate: '2025-07-20',
-      endDate: '2025-08-20',
-      status: 'completed',
-      prescribedBy: 'Dr. Sarah Johnson',
-      instructions: 'Take in the evening. Avoid grapefruit juice.',
-      refillsRemaining: 0,
-      totalRefills: 1,
-      purpose: 'High cholesterol',
-      sideEffects: ['Muscle pain', 'Liver problems'],
-      interactions: ['Grapefruit', 'Warfarin'],
-      pharmacy: 'CVS Pharmacy - Main St'
-    },
-    {
-      id: 4,
-      medicationName: 'Amoxicillin',
-      dosage: '500mg',
-      frequency: 'Three times daily',
-      duration: '7 days',
-      startDate: '2025-09-05',
-      endDate: '2025-09-12',
-      status: 'completed',
-      prescribedBy: 'Dr. Emily Rodriguez',
-      instructions: 'Complete entire course even if feeling better.',
-      refillsRemaining: 0,
-      totalRefills: 0,
-      purpose: 'Bacterial infection',
-      sideEffects: ['Nausea', 'Diarrhea', 'Rash'],
-      interactions: ['Birth control pills', 'Warfarin'],
-      pharmacy: 'Rite Aid - Center St'
-    },
-    {
-      id: 5,
-      medicationName: 'Omeprazole',
-      dosage: '20mg',
-      frequency: 'Once daily (morning)',
-      duration: '60 days',
-      startDate: '2025-08-01',
-      endDate: '2025-10-01',
-      status: 'paused',
+      date: '2025-08-28',
       prescribedBy: 'Dr. Michael Chen',
-      instructions: 'Take 30 minutes before breakfast.',
-      refillsRemaining: 1,
-      totalRefills: 2,
-      purpose: 'Acid reflux',
-      sideEffects: ['Headache', 'Nausea', 'Diarrhea'],
-      interactions: ['Clopidogrel', 'Atazanavir'],
-      pharmacy: 'CVS Pharmacy - Main St'
+      status: 'completed',
+      patientId: 1,
+      diagnosis: 'Acid Reflux (GERD)',
+      symptoms: 'Heartburn after meals, chest discomfort',
+      medicines: [
+        {
+          id: 1,
+          name: 'Omeprazole',
+          type: 'cap',
+          morning: true,
+          noon: false,
+          evening: false,
+          night: false,
+          dose: '1 capsule',
+          duration: '30 days',
+          purpose: 'Acid reflux',
+          instruction: 'Take 30 minutes before breakfast on empty stomach.'
+        }
+      ],
+      tests: ['Upper GI Endoscopy'],
+      advice: 'Avoid spicy foods, caffeine, and late night meals. Eat smaller portions.',
+      followUpDate: '2025-09-28',
+      customInstructions: 'Maintain food diary to identify trigger foods.'
     }
   ];
 
@@ -120,33 +155,42 @@ const Prescriptions = ({ patientId }) => {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(prescription => 
-        prescription.medicationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prescription.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prescription.prescribedBy.toLowerCase().includes(searchTerm.toLowerCase())
+        prescription.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        prescription.prescribedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        prescription.medicines.some(med => 
+          med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          med.purpose.toLowerCase().includes(searchTerm.toLowerCase())
+        ) ||
+        prescription.tests.some(test => 
+          test.toLowerCase().includes(searchTerm.toLowerCase())
+        )
       );
     }
 
     setFilteredPrescriptions(filtered);
   }, [searchTerm, filterStatus, prescriptions]);
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'active': return <CheckCircle className="w-4 h-4 text-green-400" />;
-      case 'completed': return <CheckCircle className="w-4 h-4 text-blue-400" />;
-      case 'paused': return <XCircle className="w-4 h-4 text-yellow-400" />;
-      case 'expired': return <XCircle className="w-4 h-4 text-red-400" />;
-      default: return <Clock className="w-4 h-4 text-gray-400" />;
-    }
+  const getTimingText = (medicine) => {
+    const times = [];
+    if (medicine.morning) times.push('Morning');
+    if (medicine.noon) times.push('Noon');
+    if (medicine.evening) times.push('Evening');
+    if (medicine.night) times.push('Night');
+    return times.join(' - ') || 'As needed';
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'text-green-400 bg-green-500/20';
-      case 'completed': return 'text-blue-400 bg-blue-500/20';
-      case 'paused': return 'text-yellow-400 bg-yellow-500/20';
-      case 'expired': return 'text-red-400 bg-red-500/20';
-      default: return 'text-gray-400 bg-gray-500/20';
-    }
+  const getMedicineTypeLabel = (type) => {
+    const types = {
+      'tab': 'Tablet',
+      'cap': 'Capsule', 
+      'syr': 'Syrup',
+      'inj': 'Injection',
+      'drops': 'Drops',
+      'oint': 'Ointment',
+      'powder': 'Powder',
+      'spray': 'Spray'
+    };
+    return types[type] || type;
   };
 
   const filterOptions = [
@@ -156,14 +200,6 @@ const Prescriptions = ({ patientId }) => {
     { value: 'paused', label: 'Paused' },
     { value: 'expired', label: 'Expired' }
   ];
-
-  const getDaysRemaining = (endDate) => {
-    const today = new Date();
-    const end = new Date(endDate);
-    const diffTime = end - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
 
   const handleAddPrescription = (newPrescription) => {
     setPrescriptions(prev => [newPrescription, ...prev]);
@@ -176,6 +212,18 @@ const Prescriptions = ({ patientId }) => {
 
   const handleCloseAddModal = () => {
     setShowAddModal(false);
+  };
+
+  const togglePrescriptionExpansion = (prescriptionId) => {
+    setExpandedPrescriptions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(prescriptionId)) {
+        newSet.delete(prescriptionId);
+      } else {
+        newSet.add(prescriptionId);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -231,113 +279,172 @@ const Prescriptions = ({ patientId }) => {
             <p className="text-gray-400">No prescriptions found</p>
           </div>
         ) : (
-          filteredPrescriptions.map((prescription) => (
-            <div key={prescription.id} className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/50">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-emerald-500/20">
-                    <Pill className="w-5 h-5 text-emerald-400" />
+          filteredPrescriptions.map((prescription) => {
+            const isExpanded = expandedPrescriptions.has(prescription.id);
+            
+            return (
+            <div key={prescription.id} className="bg-gray-700/50 rounded-xl border border-gray-600/50 overflow-hidden">
+              {/* Header - Always Visible */}
+              <div 
+                className="p-6 cursor-pointer hover:bg-gray-600/20 transition-colors"
+                onClick={() => togglePrescriptionExpansion(prescription.id)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <Pill className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        Prescription #{prescription.id}
+                      </h3>
+                      <p className="text-gray-400">
+                        by Dr. {prescription.prescribedBy} • {prescription.date}
+                      </p>
+                      <p className="text-gray-300 text-sm mt-1">
+                        {prescription.diagnosis} • {prescription.medicines.length} medicine{prescription.medicines.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xl font-semibold text-white">{prescription.medicationName}</h4>
-                    <p className="text-emerald-400 font-medium">{prescription.dosage} • {prescription.frequency}</p>
-                    <p className="text-sm text-gray-400">Prescribed by {prescription.prescribedBy}</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      prescription.status === 'active' 
+                        ? 'bg-green-900 text-green-300' 
+                        : 'bg-gray-700 text-gray-300'
+                    }`}>
+                      {prescription.status}
+                    </span>
+                    {isExpanded ? (
+                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    )}
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className={`flex items-center px-3 py-1 rounded-full ${getStatusColor(prescription.status)}`}>
-                    {getStatusIcon(prescription.status)}
-                    <span className="ml-2 text-sm font-medium capitalize">{prescription.status}</span>
-                  </div>
-                  <button className="p-2 text-gray-400 hover:text-white transition-colors">
-                    <Eye className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
 
-              {/* Prescription Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <div className="bg-gray-600/30 rounded-lg p-3">
-                  <div className="flex items-center mb-2">
-                    <Calendar className="w-4 h-4 text-blue-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-300">Duration</span>
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="px-6 pb-6 border-t border-gray-600/50">
+                  {/* Diagnosis & Symptoms */}
+                  <div className="mb-4 mt-4">
+                    <h4 className="text-white font-medium mb-2 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Diagnosis & Symptoms
+                    </h4>
+                    <p className="text-gray-300 mb-2">{prescription.diagnosis}</p>
+                    {prescription.symptoms && (
+                      <p className="text-gray-400 text-sm">Symptoms: {prescription.symptoms}</p>
+                    )}
                   </div>
-                  <p className="text-white">{prescription.duration}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(prescription.startDate).toLocaleDateString()} - {new Date(prescription.endDate).toLocaleDateString()}
-                  </p>
-                  {prescription.status === 'active' && (
-                    <p className="text-xs text-emerald-400 mt-1">
-                      {getDaysRemaining(prescription.endDate)} days remaining
-                    </p>
+
+                  {/* Medicines */}
+                  <div className="mb-4">
+                    <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                      <Pill className="w-4 h-4" />
+                      Medicines ({prescription.medicines.length})
+                    </h4>
+                    <div className="space-y-3">
+                      {prescription.medicines.map((medicine, index) => (
+                        <div key={index} className="bg-gray-600/30 p-4 rounded-lg">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h5 className="text-white font-medium">{medicine.name}</h5>
+                              <p className="text-gray-400 text-sm">
+                                {getMedicineTypeLabel(medicine.type)} • {medicine.dose} • {medicine.duration}
+                              </p>
+                            </div>
+                            <span className="text-blue-400 text-sm">{getTimingText(medicine)}</span>
+                          </div>
+                          <div className="text-gray-300 text-sm mb-2">
+                            <span className="font-medium">Purpose:</span> {medicine.purpose}
+                          </div>
+                          {medicine.instructions && (
+                            <div className="text-gray-400 text-sm">
+                              <span className="font-medium">Instructions:</span> {medicine.instructions}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tests */}
+                  {prescription.tests && prescription.tests.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-white font-medium mb-2 flex items-center gap-2">
+                        <Activity className="w-4 h-4" />
+                        Recommended Tests
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {prescription.tests.map((test, index) => (
+                          <span 
+                            key={index}
+                            className="px-3 py-1 bg-gray-600/50 text-gray-300 rounded-full text-sm"
+                          >
+                            {test}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </div>
 
-                <div className="bg-gray-600/30 rounded-lg p-3">
-                  <div className="flex items-center mb-2">
-                    <span className="w-4 h-4 text-purple-400 mr-2 text-sm font-bold">Rx</span>
-                    <span className="text-sm font-medium text-gray-300">Refills</span>
-                  </div>
-                  <p className="text-white">{prescription.refillsRemaining} of {prescription.totalRefills} remaining</p>
-                  <div className="w-full bg-gray-600 rounded-full h-2 mt-2">
-                    <div 
-                      className="bg-emerald-500 h-2 rounded-full" 
-                      style={{
-                        width: `${(prescription.refillsRemaining / prescription.totalRefills) * 100}%`
-                      }}
-                    ></div>
-                  </div>
-                </div>
+                  {/* Advice */}
+                  {prescription.advice && (
+                    <div className="mb-4">
+                      <h4 className="text-white font-medium mb-2 flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4" />
+                        Doctor's Advice
+                      </h4>
+                      <p className="text-gray-300 text-sm bg-gray-600/20 rounded-lg p-3">{prescription.advice}</p>
+                    </div>
+                  )}
 
-                <div className="bg-gray-600/30 rounded-lg p-3">
-                  <div className="flex items-center mb-2">
-                    <span className="w-4 h-4 text-orange-400 mr-2 text-sm font-bold">⚕</span>
-                    <span className="text-sm font-medium text-gray-300">Purpose</span>
-                  </div>
-                  <p className="text-white">{prescription.purpose}</p>
-                  <p className="text-xs text-gray-400 mt-1">{prescription.pharmacy}</p>
-                </div>
-              </div>
+                  {/* Custom Instructions */}
+                  {prescription.customInstructions && (
+                    <div className="mb-4">
+                      <h4 className="text-white font-medium mb-2">Additional Instructions</h4>
+                      <p className="text-gray-300 text-sm bg-gray-600/20 rounded-lg p-3">{prescription.customInstructions}</p>
+                    </div>
+                  )}
 
-              {/* Instructions */}
-              <div className="mb-4">
-                <h5 className="text-sm font-medium text-gray-300 mb-2">Instructions:</h5>
-                <p className="text-gray-300 text-sm bg-gray-600/20 rounded-lg p-3">{prescription.instructions}</p>
-              </div>
-
-              {/* Side Effects and Interactions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h5 className="text-sm font-medium text-gray-300 mb-2">Side Effects:</h5>
-                  <div className="flex flex-wrap gap-2">
-                    {prescription.sideEffects.map((effect, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs"
+                  {/* Follow-up & Actions */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-600">
+                    <div className="flex items-center gap-4 text-sm text-gray-400">
+                      {prescription.followUpDate && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          Follow-up: {prescription.followUpDate}
+                        </span>
+                      )}
+                      <span>Prescribed: {prescription.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        {effect}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h5 className="text-sm font-medium text-gray-300 mb-2">Drug Interactions:</h5>
-                  <div className="flex flex-wrap gap-2">
-                    {prescription.interactions.map((interaction, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs flex items-center"
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button 
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        {interaction}
-                      </span>
-                    ))}
+                        <Printer className="w-4 h-4" />
+                      </button>
+                      <button 
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -360,9 +467,9 @@ const Prescriptions = ({ patientId }) => {
           </p>
         </div>
         <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-1">Refills Needed</h4>
+          <h4 className="text-sm font-medium text-gray-400 mb-1">Total Medicines</h4>
           <p className="text-2xl font-bold text-yellow-400">
-            {prescriptions.filter(p => p.refillsRemaining === 0 && p.status === 'active').length}
+            {prescriptions.reduce((total, prescription) => total + (prescription.medicines?.length || 0), 0)}
           </p>
         </div>
       </div>

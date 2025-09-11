@@ -40,10 +40,22 @@ const AddPrescriptionModal = ({ isOpen, onClose, patientId, onPrescriptionAdded 
 
   useEffect(() => {
     try {
-        if (user?.role==='DOCTOR') {
-            const doctor = axios.post(`{API_BASE_URL}/doctor/profile`);
-            setDoctor(doctor.data);
+       
+        const fetchDoctorInformation = async () => {
+            try
+            {
+                if (user?.role==='DOCTOR') {
+                    const doctor = await axios.post(`${API_BASE_URL}/doctor/profile`);
+                    console.log(doctor);
+                    setDoctor(doctor.data);
+                }
+            }
+            catch (error) {
+                console.error('Error fetching doctor information:', error);
+            }
         }
+
+        fetchDoctorInformation();
     } catch (error) {
         console.error('Error fetching doctor information:', error);
     }
