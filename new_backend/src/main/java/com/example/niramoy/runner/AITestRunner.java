@@ -2,6 +2,7 @@ package com.example.niramoy.runner;
 
 import com.example.niramoy.service.AIAgentService;
 import com.example.niramoy.service.GoogleAIService;
+import com.example.niramoy.service.LangChain4jAgentService;
 import com.example.niramoy.service.SerpApiService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
@@ -14,13 +15,16 @@ public class AITestRunner implements CommandLineRunner {
     private final AIAgentService aiAgentService;
     private final GoogleAIService googleAIService;
     private final SerpApiService serpApiService;
+    private final LangChain4jAgentService langChain4jAgentService;
 
     public AITestRunner(AIAgentService aiAgentService, 
                        GoogleAIService googleAIService, 
-                       SerpApiService serpApiService) {
+                       SerpApiService serpApiService,
+                       LangChain4jAgentService langChain4jAgentService) {
         this.aiAgentService = aiAgentService;
         this.googleAIService = googleAIService;
         this.serpApiService = serpApiService;
+        this.langChain4jAgentService = langChain4jAgentService;
     }
 
     @Override
@@ -62,6 +66,17 @@ public class AITestRunner implements CommandLineRunner {
             String agentResponse = aiAgentService.processQuery(agentQuery);
             System.out.println("Agent Query: " + agentQuery);
             System.out.println("Agent Response: " + agentResponse.substring(0, Math.min(200, agentResponse.length())) + "...");
+            
+            // Test 4: LangChain4j AI Agent with Tools (equivalent to Python LangChain agents)
+            System.out.println("\n--- Test 4: LangChain4j Agent with Tools ---");
+            if (langChain4jAgentService.isConfigured()) {
+                String langChainQuery = "Search for the latest AI developments and summarize them";
+                String langChainResponse = langChain4jAgentService.processQuery(langChainQuery);
+                System.out.println("LangChain Query: " + langChainQuery);
+                System.out.println("LangChain Response: " + langChainResponse.substring(0, Math.min(200, langChainResponse.length())) + "...");
+            } else {
+                System.out.println("LangChain4j Agent not fully configured");
+            }
             
             System.out.println("\n✅ All AI services are working correctly!");
             

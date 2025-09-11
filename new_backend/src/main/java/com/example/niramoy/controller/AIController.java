@@ -2,6 +2,7 @@ package com.example.niramoy.controller;
 
 import com.example.niramoy.service.AIAgentService;
 import com.example.niramoy.service.GoogleAIService;
+import com.example.niramoy.service.LangChain4jAgentService;
 import com.example.niramoy.service.SerpApiService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +17,16 @@ public class AIController {
     private final AIAgentService aiAgentService;
     private final GoogleAIService googleAIService;
     private final SerpApiService serpApiService;
+    private final LangChain4jAgentService langChain4jAgentService;
 
     public AIController(AIAgentService aiAgentService, 
                        GoogleAIService googleAIService, 
-                       SerpApiService serpApiService) {
+                       SerpApiService serpApiService,
+                       LangChain4jAgentService langChain4jAgentService) {
         this.aiAgentService = aiAgentService;
         this.googleAIService = googleAIService;
         this.serpApiService = serpApiService;
+        this.langChain4jAgentService = langChain4jAgentService;
     }
 
     /**
@@ -120,16 +124,46 @@ public class AIController {
     }
 
     /**
+     * Process query using LangChain4j AI agent with tools
+     * POST /api/ai/langchain
+     */
+    @PostMapping("/langchain")
+    public ResponseEntity<Map<String, String>> processLangChainQuery(@RequestBody Map<String, String> request) {
+        try {
+            String query = request.get("query");
+            if (query == null || query.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Query parameter is required"));
+            }
+
+            String response = langChain4jAgentService.processQuery(query);
+            return ResponseEntity.ok(Map.of(
+                "query", query,
+                "response", response,
+                "type", "langchain4j_agent"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", "Error processing LangChain query: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Check service configuration status
      * GET /api/ai/status
      */
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getStatus() {
         Map<String, Boolean> configStatus = aiAgentService.getConfigurationStatus();
+        Map<String, Boolean> langChainStatus = langChain4jAgentService.getConfigurationStatus();
+        
         return ResponseEntity.ok(Map.of(
             "status", "OK",
-            "services", configStatus,
-            "description", "AI Agent Service Status"
+            "services", Map.of(
+                "basic_agent", configStatus,
+                "langchain4j_agent", langChainStatus
+            ),
+            "description", "AI Agent Services Status"
         ));
     }
 
