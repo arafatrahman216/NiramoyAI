@@ -1,80 +1,12 @@
 // src/components/PatientProfile/TestReports.js
 import React, { useState, useEffect } from 'react';
 import { FileText, Search, AlertTriangle, Calendar, Eye } from 'lucide-react';
+import { fallbackTestReports } from '../../utils/dummyData';
 
 const TestReports = ({ patientId }) => {
   const [testReports, setTestReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Fallback test reports data - simplified structure
-  const fallbackTestReports = [
-    {
-      id: 1,
-      testName: 'Complete Blood Count (CBC)',
-      testDateTime: '2025-09-10T09:30:00',
-      summary: 'All blood cell counts within normal limits. No signs of infection, anemia, or bleeding disorders. White blood cells: 7.2 K/uL, Red blood cells: 4.5 M/uL, Hemoglobin: 14.2 g/dL.',
-      urgency: 'normal',
-      imageLinks: [
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png',
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png'
-      ]
-    },
-    {
-      id: 2,
-      testName: 'Lipid Panel',
-      testDateTime: '2025-09-10T09:30:00',
-      summary: 'LDL cholesterol slightly elevated at 125 mg/dL (should be <100). Total cholesterol 195 mg/dL, HDL 45 mg/dL, Triglycerides 150 mg/dL. Recommend dietary modifications.',
-      urgency: 'moderate',
-      imageLinks: [
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png'
-      ]
-    },
-    {
-      id: 3,
-      testName: 'HbA1c (Glycated Hemoglobin)',
-      testDateTime: '2025-09-08T11:15:00',
-      summary: 'Diabetes well controlled with HbA1c at 6.8% (target <7.0%). Estimated average glucose 148 mg/dL. Continue current diabetes management plan.',
-      urgency: 'normal',
-      imageLinks: [
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png',
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png'
-      ]
-    },
-    {
-      id: 4,
-      testName: 'Chest X-Ray',
-      testDateTime: '2025-09-05T14:45:00',
-      summary: 'Normal chest X-ray with clear lung fields and normal heart size. No acute cardiopulmonary abnormalities detected. Pleural spaces normal.',
-      urgency: 'normal',
-      imageLinks: [
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png',
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png'
-      ]
-    },
-    {
-      id: 5,
-      testName: 'Electrocardiogram (ECG)',
-      testDateTime: '2025-09-05T14:30:00',
-      summary: 'Normal sinus rhythm at 95 bpm. No signs of acute cardiac ischemia, arrhythmia, or conduction abnormalities. QRS duration and QT interval within normal limits.',
-      urgency: 'normal',
-      imageLinks: [
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png'
-      ]
-    },
-    {
-      id: 6,
-      testName: 'Comprehensive Metabolic Panel',
-      testDateTime: '2025-08-28T10:00:00',
-      summary: 'Fasting glucose elevated at 118 mg/dL (normal <100), consistent with diabetes diagnosis. Kidney function normal with creatinine 1.0 mg/dL and eGFR >60. Electrolytes balanced.',
-      urgency: 'moderate',
-      imageLinks: [
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png',
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png',
-        'https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/images/8f79b282-5c9d-4ffc-8d7a-487cf06b7b9b.png'
-      ]
-    }
-  ];
 
   useEffect(() => {
     setTestReports(fallbackTestReports);

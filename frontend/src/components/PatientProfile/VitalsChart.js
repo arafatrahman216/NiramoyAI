@@ -1,66 +1,21 @@
 // src/components/PatientProfile/VitalsChart.js
 import React, { useState, useEffect } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
 import { TrendingUp, Heart, Thermometer, Activity, Droplet, Zap } from 'lucide-react';
+import {
+  BloodPressureChart,
+  HeartRateChart,
+  TemperatureChart,
+  BloodSugarChart,
+  StressLevelChart
+} from '../VitalCharts';
+import { fallbackVitals } from '../../utils/dummyData';
 
 const VitalsChart = ({ patientId }) => {
   const [vitalsData, setVitalsData] = useState([]);
   const [selectedVital, setSelectedVital] = useState('bloodPressure');
 
-  // Fallback vitals data
-  const fallbackVitalsData = {
-    bloodPressure: [
-      { date: '2025-09-01', systolic: 125, diastolic: 82, time: '09:00' },
-      { date: '2025-09-03', systolic: 128, diastolic: 85, time: '14:30' },
-      { date: '2025-09-05', systolic: 122, diastolic: 79, time: '11:15' },
-      { date: '2025-09-07', systolic: 120, diastolic: 80, time: '16:45' },
-      { date: '2025-09-09', systolic: 118, diastolic: 78, time: '10:20' },
-      { date: '2025-09-11', systolic: 120, diastolic: 80, time: '08:30' }
-    ],
-    heartRate: [
-      { date: '2025-09-01', rate: 75, time: '09:00' },
-      { date: '2025-09-03', rate: 78, time: '14:30' },
-      { date: '2025-09-05', rate: 72, time: '11:15' },
-      { date: '2025-09-07', rate: 74, time: '16:45' },
-      { date: '2025-09-09', rate: 70, time: '10:20' },
-      { date: '2025-09-11', rate: 72, time: '08:30' }
-    ],
-    temperature: [
-      { date: '2025-09-01', temp: 98.4, time: '09:00' },
-      { date: '2025-09-03', temp: 98.6, time: '14:30' },
-      { date: '2025-09-05', temp: 98.2, time: '11:15' },
-      { date: '2025-09-07', temp: 98.5, time: '16:45' },
-      { date: '2025-09-09', temp: 98.3, time: '10:20' },
-      { date: '2025-09-11', temp: 98.6, time: '08:30' }
-    ],
-    bloodSugar: [
-      { date: '2025-09-01', level: 105, time: '09:00' },
-      { date: '2025-09-03', level: 112, time: '14:30' },
-      { date: '2025-09-05', level: 98, time: '11:15' },
-      { date: '2025-09-07', level: 108, time: '16:45' },
-      { date: '2025-09-09', level: 102, time: '10:20' },
-      { date: '2025-09-11', level: 95, time: '08:30' }
-    ],
-    stressLevel: [
-      { date: '2025-09-01', level: 3, time: '09:00' },
-      { date: '2025-09-03', level: 5, time: '14:30' },
-      { date: '2025-09-05', level: 2, time: '11:15' },
-      { date: '2025-09-07', level: 4, time: '16:45' },
-      { date: '2025-09-09', level: 3, time: '10:20' },
-      { date: '2025-09-11', level: 2, time: '08:30' }
-    ]
-  };
-
   useEffect(() => {
-    setVitalsData(fallbackVitalsData);
+    setVitalsData(fallbackVitals);
   }, [patientId]);
 
   const vitalTypes = [
@@ -101,119 +56,23 @@ const VitalsChart = ({ patientId }) => {
     }
   ];
 
-  const formatTooltipLabel = (value, payload) => {
-    if (payload && payload.length > 0 && payload[0].payload) {
-      const data = payload[0].payload;
-      const date = new Date(value).toLocaleDateString();
-      const time = data.time || '';
-      return `${date} ${time}`;
-    }
-    return new Date(value).toLocaleDateString();
-  };
-
   const renderChart = () => {
     const data = vitalsData[selectedVital] || [];
-    const vitalType = vitalTypes.find(v => v.id === selectedVital);
 
-    if (selectedVital === 'bloodPressure') {
-      return (
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-            <defs>
-              <linearGradient id="systolicGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-              </linearGradient>
-              <linearGradient id="diastolicGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
-            <XAxis 
-              dataKey="date" 
-              stroke="#9ca3af" 
-              fontSize={12}
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            />
-            <YAxis stroke="#9ca3af" fontSize={12} />
-            <Tooltip 
-              contentStyle={{
-                backgroundColor: '#1f2937',
-                border: '1px solid #374151',
-                borderRadius: '8px',
-                color: '#f9fafb'
-              }}
-              labelFormatter={formatTooltipLabel}
-              formatter={(value, name) => [
-                `${value} mmHg`,
-                name === 'systolic' ? 'Systolic' : 'Diastolic'
-              ]}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="systolic" 
-              stroke="#ef4444" 
-              strokeWidth={3}
-              dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#ef4444', strokeWidth: 2, fill: '#ffffff' }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="diastolic" 
-              stroke="#3b82f6" 
-              strokeWidth={3}
-              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2, fill: '#ffffff' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      );
+    switch (selectedVital) {
+      case 'bloodPressure':
+        return <BloodPressureChart data={data} height={400} />;
+      case 'heartRate':
+        return <HeartRateChart data={data} height={400} />;
+      case 'temperature':
+        return <TemperatureChart data={data} height={400} />;
+      case 'bloodSugar':
+        return <BloodSugarChart data={data} height={400} />;
+      case 'stressLevel':
+        return <StressLevelChart data={data} height={400} />;
+      default:
+        return <div className="text-gray-400 text-center py-8">No chart available</div>;
     }
-
-    const dataKey = selectedVital === 'heartRate' ? 'rate' 
-                   : selectedVital === 'temperature' ? 'temp'
-                   : 'level'; // for bloodSugar and stressLevel
-    
-    return (
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-          <defs>
-            <linearGradient id={`${selectedVital}Gradient`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={vitalType.color} stopOpacity={0.3}/>
-              <stop offset="95%" stopColor={vitalType.color} stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
-          <XAxis 
-            dataKey="date" 
-            stroke="#9ca3af" 
-            fontSize={12}
-            tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          />
-          <YAxis stroke="#9ca3af" fontSize={12} />
-          <Tooltip 
-            contentStyle={{
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#f9fafb'
-            }}
-            labelFormatter={formatTooltipLabel}
-            formatter={(value) => [`${value} ${vitalType.unit}`, vitalType.label]}
-          />
-          <Line 
-            type="monotone" 
-            dataKey={dataKey}
-            stroke={vitalType.color} 
-            strokeWidth={3}
-            dot={{ fill: vitalType.color, strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, stroke: vitalType.color, strokeWidth: 2, fill: '#ffffff' }}
-            fill={`url(#${selectedVital}Gradient)`}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    );
   };
 
   return (

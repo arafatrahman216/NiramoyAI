@@ -1,105 +1,12 @@
 // src/components/PatientProfile/HealthLogs.js
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Heart, Thermometer, Activity, Droplet, Eye, Clipboard, Search, Filter, Zap } from 'lucide-react';
+import { fallbackHealthLogs } from '../../utils/dummyData';
 
 const HealthLogs = ({ patientId }) => {
   const [healthLogs, setHealthLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Fallback health logs data
-  const fallbackHealthLogs = [
-    {
-      id: 1,
-      healthLogId: 'HL-2025-001',
-      date: '2025-09-11',
-      time: '08:30',
-      vitals: {
-        bloodPressure: { systolic: 120, diastolic: 80 },
-        heartRate: 72,
-        temperature: 98.6,
-        weight: 165,
-        bloodSugar: 95,
-        oxygenSaturation: 98,
-        stressLevel: 2
-      },
-      symptoms: ['None'],
-      notes: 'Regular morning checkup. Patient feeling well.',
-      severity: 'low'
-    },
-    {
-      id: 2,
-      healthLogId: 'HL-2025-002',
-      date: '2025-09-09',
-      time: '14:20',
-      vitals: {
-        bloodPressure: { systolic: 118, diastolic: 78 },
-        heartRate: 70,
-        temperature: 98.3,
-        weight: 164,
-        bloodSugar: 110,
-        oxygenSaturation: 97,
-        stressLevel: 5
-      },
-      symptoms: ['Mild headache', 'Fatigue'],
-      notes: 'Patient reports mild headache after lunch. Advised rest and hydration.',
-      severity: 'medium'
-    },
-    {
-      id: 3,
-      healthLogId: 'HL-2025-003',
-      date: '2025-09-07',
-      time: '16:45',
-      vitals: {
-        bloodPressure: { systolic: 120, diastolic: 80 },
-        heartRate: 74,
-        temperature: 98.5,
-        weight: 165,
-        bloodSugar: 88,
-        oxygenSaturation: 99,
-        stressLevel: 3
-      },
-      symptoms: ['None'],
-      notes: 'Post-medication monitoring. Blood pressure stable.',
-      severity: 'low'
-    },
-    {
-      id: 4,
-      healthLogId: 'HL-2025-004',
-      date: '2025-09-05',
-      time: '11:15',
-      vitals: {
-        bloodPressure: { systolic: 122, diastolic: 79 },
-        heartRate: 72,
-        temperature: 98.2,
-        weight: 163,
-        bloodSugar: 102,
-        oxygenSaturation: 96,
-        stressLevel: 8
-      },
-      symptoms: ['Chest discomfort', 'Shortness of breath'],
-      notes: 'Patient experienced chest discomfort. ECG normal, symptoms resolved.',
-      severity: 'high'
-    },
-    {
-      id: 5,
-      healthLogId: 'HL-2025-005',
-      date: '2025-09-03',
-      time: '14:30',
-      vitals: {
-        bloodPressure: { systolic: 128, diastolic: 85 },
-        heartRate: 78,
-        temperature: 98.6,
-        weight: 164,
-        bloodSugar: 92,
-        oxygenSaturation: 98,
-        stressLevel: 4
-      },
-      symptoms: ['None'],
-      notes: 'Weekly routine checkup. All vitals within normal range.',
-      severity: 'low'
-    }
-  ];
 
   useEffect(() => {
     setHealthLogs(fallbackHealthLogs);
