@@ -257,6 +257,21 @@ public class UserController {
     }
 
 
+    public ResponseEntity<HashMap<String, Object>> createChatSession(@RequestBody Map<String, Object> body){
+        HashMap<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+        }
+        User user = (User) authentication.getPrincipal() ;
+
+
+        return ResponseEntity.ok(response);
+
+    }
+
+
     @GetMapping("/all")
     public ResponseEntity<List<UserDTO>> getAll() {
         return ResponseEntity.ok(userService.getAllUsers());
