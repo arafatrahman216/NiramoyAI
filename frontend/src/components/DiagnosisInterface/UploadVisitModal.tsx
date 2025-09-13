@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { diagnosisAPI } from '../../services/api';
 
 // ==============================================
@@ -22,6 +24,8 @@ interface VisitData {
 }
 
 const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
+  
   // MODAL STATE MANAGEMENT
   const [visitData, setVisitData] = useState<VisitData>({
     appointmentDate: '',
@@ -56,59 +60,109 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
 
   // UPLOAD HANDLER
   const handleFinalUpload = async () => {
-    try {
-      console.log('Uploading visit data:', visitData);
-      
-      // Validate required fields
-      if (!visitData.appointmentDate || !visitData.doctorName || !visitData.symptoms || 
-          !visitData.prescription || !visitData.prescriptionFile) {
-        alert('Please fill in all required fields and upload a prescription image.');
-        return;
-      }
-      
-      const formData = new FormData();
-      formData.append('appointmentDate', visitData.appointmentDate);
-      formData.append('doctorName', visitData.doctorName);
-      formData.append('symptoms', visitData.symptoms);
-      formData.append('prescription', visitData.prescription);
-      
-      // Prescription file is mandatory
-      if (visitData.prescriptionFile) {
-        formData.append('prescriptionFile', visitData.prescriptionFile);
-      }
-      
-      // Test reports are optional - append each file with the same field name
-      visitData.testReports.forEach((file) => {
-        formData.append('testReports', file);
+    // Validate required fields
+    if (!visitData.appointmentDate || !visitData.doctorName || !visitData.symptoms || 
+        !visitData.prescription || !visitData.prescriptionFile) {
+      toast.error('Please fill in all required fields and upload a prescription image.', {
+        style: {
+          background: '#7f1d1d',
+          color: '#fff',
+          border: '1px solid #dc2626',
+          borderRadius: '6px',
+          padding: '12px 16px',
+          fontSize: '14px',
+        },
       });
-      
-      // Use the diagnosisAPI from api.js
-      const response = await diagnosisAPI.uploadVisitData(formData);
-
-      if(response.status !== 200) {
-        throw new Error('Upload failed with status ' + response.status);
-      }
-      
-      // Success handling
-      alert('Visit uploaded successfully!');
-      console.log('Upload success:', response.data);
-      onClose();
-      resetForm();
-      
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      
-      // Handle different error status codes
-      if (error.response?.status === 401) {
-        alert('Authentication failed. Please log in again.');
-      } else if (error.response?.status === 500) {
-        alert('Server error. Please try again later.');
-      } else if (error.response?.status === 400) {
-        alert('Bad request. Please check your data and try again.');
-      } else {
-        alert('Upload failed. Please check your connection and try again.');
-      }
+      return;
     }
+    
+    // Close modal and navigate immediately
+    onClose();
+    resetForm();
+    navigate('/diagnosis');
+    
+    // Create FormData for upload
+    const formData = new FormData();
+    formData.append('appointmentDate', visitData.appointmentDate);
+    formData.append('doctorName', visitData.doctorName);
+    formData.append('symptoms', visitData.symptoms);
+    formData.append('prescription', visitData.prescription);
+    
+    // Prescription file is mandatory
+    if (visitData.prescriptionFile) {
+      formData.append('prescriptionFile', visitData.prescriptionFile);
+    }
+    
+    // Test reports are optional - append each file with the same field name
+    visitData.testReports.forEach((file) => {
+      formData.append('testReports', file);
+    });
+    
+    // Show promise-based toast that tracks upload progress
+    toast.promise(
+      diagnosisAPI.uploadVisitData(formData),
+      {
+        loading: 'Uploading visit data...',
+        success: 'Visit uploaded successfully! 🎉',
+        error: (err) => {
+          console.error('Upload error:', err);
+          
+          // Handle different error status codes
+          if (err.response?.status === 401) {
+            return 'Authentication failed. Please log in again.';
+          } else if (err.response?.status === 500) {
+            return 'Server error. Please try again later.';
+          } else if (err.response?.status === 400) {
+            return 'Bad request. Please check your data.';
+          } else {
+            return 'Upload failed. Please try again.';
+          }
+        }
+      },
+      {
+        style: {
+          background: '#1f2937',
+          color: '#fff',
+          border: '1px solid #374151',
+          borderRadius: '6px',
+          padding: '12px 16px',
+          fontSize: '14px',
+          minWidth: '300px',
+        },
+        success: {
+          duration: 3000,
+          style: {
+            background: '#065f46',
+            color: '#fff',
+            border: '1px solid #10b981',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            fontSize: '14px',
+          },
+        },
+        error: {
+          duration: 5000,
+          style: {
+            background: '#7f1d1d',
+            color: '#fff',
+            border: '1px solid #dc2626',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            fontSize: '14px',
+          },
+        },
+        loading: {
+          style: {
+            background: '#1f2937',
+            color: '#fff',
+            border: '1px solid #374151',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            fontSize: '14px',
+          },
+        },
+      }
+    );
   };
 
   // UTILITY FUNCTIONS
