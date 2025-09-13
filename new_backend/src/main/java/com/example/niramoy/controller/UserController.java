@@ -184,7 +184,11 @@ public class UserController {
             User user = (User) authentication.getPrincipal();
             String message = body.get("message");
             String chatIdStr = body.get("chatId");
-            
+            String mode = body.get("mode");
+
+            log.info("Received message: {}", message);
+            log.info("Received mode: {}", mode);
+
             if (message == null || message.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "Message cannot be empty");
@@ -200,8 +204,8 @@ public class UserController {
             Long chatId = Long.parseLong(chatIdStr);
             
             // Process message and get AI reply (synchronous for now, but DB saves are async internally)
-            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message);
-            
+            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message, mode);
+
             response.put("success", true);
             response.put("message", "Message sent and processed successfully");
             response.put("userMessage", Map.of(

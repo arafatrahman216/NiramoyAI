@@ -100,12 +100,21 @@
             <artifactId>neo4j-java-driver</artifactId>
             <version>5.22.0</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20240303</version>
+        </dependency>
+
         <!-- LangChain4j Dependencies -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
             <version>0.35.0</version>
         </dependency>
+
+
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-google-ai-gemini</artifactId>

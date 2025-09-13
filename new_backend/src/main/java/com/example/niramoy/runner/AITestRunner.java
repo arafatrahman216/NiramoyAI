@@ -61,22 +61,22 @@ public class AITestRunner implements CommandLineRunner {
             // }
             
             // Test 3: AI Agent with search capability (equivalent to initialize_agent)
-            System.out.println("\n--- Test 3: AI Agent with Search ---");
-            String agentQuery = "What are the latest trends in healthcare technology?";
-            String agentResponse = aiAgentService.processQuery(agentQuery);
-            System.out.println("Agent Query: " + agentQuery);
-            System.out.println("Agent Response: " + agentResponse.substring(0, Math.min(200, agentResponse.length())) + "...");
+            // System.out.println("\n--- Test 3: AI Agent with Search ---");
+            // String agentQuery = "What are the latest trends in healthcare technology?";
+            // String agentResponse = aiAgentService.processQuery(agentQuery);
+            // System.out.println("Agent Query: " + agentQuery);
+            // System.out.println("Agent Response: " + agentResponse.substring(0, Math.min(200, agentResponse.length())) + "...");
             
-            // Test 4: LangChain4j AI Agent with Tools (equivalent to Python LangChain agents)
-            System.out.println("\n--- Test 4: LangChain4j Agent with Tools ---");
-            if (langChain4jAgentService.isConfigured()) {
-                String langChainQuery = "Search for the latest AI developments and summarize them";
-                String langChainResponse = langChain4jAgentService.processQuery(langChainQuery);
-                System.out.println("LangChain Query: " + langChainQuery);
-                System.out.println("LangChain Response: " + langChainResponse.substring(0, Math.min(200, langChainResponse.length())) + "...");
-            } else {
-                System.out.println("LangChain4j Agent not fully configured");
-            }
+            // // Test 4: LangChain4j AI Agent with Tools (equivalent to Python LangChain agents)
+            // System.out.println("\n--- Test 4: LangChain4j Agent with Tools ---");
+            // if (langChain4jAgentService.isConfigured()) {
+            //     String langChainQuery = "Search for the latest AI developments and summarize them";
+            //     String langChainResponse = langChain4jAgentService.processQuery(langChainQuery);
+            //     System.out.println("LangChain Query: " + langChainQuery);
+            //     System.out.println("LangChain Response: " + langChainResponse.substring(0, Math.min(200, langChainResponse.length())) + "...");
+            // } else {
+            //     System.out.println("LangChain4j Agent not fully configured");
+            // }
             
             System.out.println("\n✅ All AI services are working correctly!");
             

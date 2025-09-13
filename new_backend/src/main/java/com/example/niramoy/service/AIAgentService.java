@@ -115,4 +115,23 @@ public class AIAgentService {
             return "general information about the topic";
         }
     }
+
+
+    private String getAiResponse(String userMessage, String mode) {
+        if(mode.trim().isEmpty()){
+            throw new IllegalArgumentException("Mode cannot be empty");
+        }
+
+        try {
+            switch (mode.toLowerCase()) {
+                case "explain":
+                    return generateAIResponse(userMessage);
+                default:
+                    return "Invalid mode. Please choose 'explain', 'plan', or 'consult'.";
+                    
+            }
+        } catch (Exception e) {
+            return "Error occurred while getting AI response: " + e.getMessage();
+        }
+    }
 }

@@ -35,7 +35,7 @@ const DiagnosisInterface = () => {
 
   // MAIN SEARCH HANDLER
   // Handles search/message sending based on current context
-  const handleSearch = async () => {
+  const handleSearch = async (mode = 'explain') => {
     if (!query.trim()) return;
     
     // Check if user is authenticated
@@ -73,7 +73,7 @@ const DiagnosisInterface = () => {
       
       try {
         // Send message to current chat using chatbotAPI
-        const response = await chatbotAPI.sendMessage(messageToSend, selectedChatId);
+        const response = await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode);
         
         console.log('API Response:', response);
         

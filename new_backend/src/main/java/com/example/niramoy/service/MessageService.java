@@ -5,7 +5,13 @@ import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.Messages;
 import com.example.niramoy.repository.ChatSessionRepository;
 import com.example.niramoy.repository.MessageRepository;
+import com.example.niramoy.service.AIAgentService;
+import com.example.niramoy.service.agent.Agent;
+import com.example.niramoy.service.agent.AgentSelector; 
+import com.example.niramoy.utils.JsonParser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,12 +19,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MessageService {
 
     private final MessageRepository messageRepository;
     private final ChatSessionRepository chatSessionRepository;
+    private final AgentSelector agentSelector;
+
 
 
 
@@ -26,7 +35,6 @@ public class MessageService {
         ChatSessions chatSessions = chatSessionRepository.findChatSessionsByChatId(chatId);
         return chatSessions;
     }
-
 
     public boolean addMessageToChat(Long chatId, String message ) {
         try {
@@ -39,7 +47,6 @@ public class MessageService {
             return false;
         }
     }
-
 
     public boolean addMessageToChat(Long chatId, String message, boolean isAgent ) {
         try {
@@ -68,7 +75,7 @@ public class MessageService {
         }
     }
 
-    public Messages sendMessageAndGetReply(Long chatId, String message) {
+    public Messages sendMessageAndGetReply(Long chatId, String message, String mode) {
         try {
             // 1. Save user message to database
             ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
@@ -80,11 +87,27 @@ public class MessageService {
             messageRepository.save(userMessage);
 
             // 2. Process message and generate AI reply
-            String aiReply = processMessageAndGenerateReply(message, chatSession);
+            String aiReply;
+            Agent agentWithMode = agentSelector.selectAgent(mode);
+            log.info("Message : " + message);
+            
+            try{
+                aiReply = agentWithMode.processQuery(message);
+            } catch (Exception e){
+                Messages aiMessage = Messages.builder()
+                    .content("AI Service is currently unavailable. Please try again later.")
+                    .isAgent(true)
+                    .chatSession(chatSession)
+                    .build();
+                Messages savedAiMessage = messageRepository.save(aiMessage);
+                return savedAiMessage;
+            }
+
+            String parsedAiReply = JsonParser.parseResponse(aiReply, mode);
 
             // 3. Save AI reply to database
             Messages aiMessage = Messages.builder()
-                    .content(aiReply)
+                    .content(parsedAiReply)
                     .isAgent(true)
                     .chatSession(chatSession)
                     .build();
@@ -96,56 +119,16 @@ public class MessageService {
         }
     }
 
-    @Async
-    public CompletableFuture<Messages> processMessageAsync(Long chatId, String message) {
-        try {
-            // 1. Save user message to database (synchronous)
-            ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
-            Messages userMessage = Messages.builder()
-                    .content(message)
-                    .isAgent(false)
-                    .chatSession(chatSession)
-                    .build();
-            messageRepository.save(userMessage);
 
-            // 2. Process message and generate AI reply (asynchronous)
-            String aiReply = processMessageAndGenerateReply(message, chatSession);
 
-            // 3. Save AI reply to database (asynchronous)
-            Messages aiMessage = Messages.builder()
-                    .content(aiReply)
-                    .isAgent(true)
-                    .chatSession(chatSession)
-                    .build();
-            Messages savedAiMessage = messageRepository.save(aiMessage);
 
-            return CompletableFuture.completedFuture(savedAiMessage);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to process message asynchronously: " + e.getMessage());
-        }
-    }
 
-    // TODO: Replace this with actual AI processing logic
-    // This method will be enhanced to call OpenAI/other AI services in the future
-    private String processMessageAndGenerateReply(String userMessage, ChatSessions chatSession) {
-        // TODO: Implement AI processing here
-        // 1. Get conversation history from chatSession.getMessages()
-        // 2. Format messages for AI model (system prompt + conversation history + new message)
-        // 3. Call AI API (OpenAI GPT-4, Anthropic Claude, etc.)
-        // 4. Process AI response and extract medical advice
-        // 5. Return formatted reply with medical recommendations
-        
-        // Simulate AI processing delay
-        try {
-            Thread.sleep(1000); // Simulate AI processing time
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        
-        // TEMPLATE REPLY - Replace this with actual AI logic
-        String templateReply = "Thanks for your question! I'm here to help with medical guidance. " +
-                              "How can I assist you today?";
-        
-        return templateReply;
-    }
+
+
+
+
+
+
+
+
 }
