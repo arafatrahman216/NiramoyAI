@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { diagnosisAPI } from '../../services/api';
 
 // ==============================================
 // UPLOAD VISIT MODAL COMPONENT
@@ -58,14 +59,13 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     try {
       console.log('Uploading visit data:', visitData);
       
-      // TODO: Implement actual upload logic
-      // - Create FormData with files
-      // - Send to backend API
-      // - Handle upload progress
-      // - Show success/error messages
-      // - Update visits list
+      // Validate required fields
+      if (!visitData.appointmentDate || !visitData.doctorName || !visitData.symptoms || 
+          !visitData.prescription || !visitData.prescriptionFile) {
+        alert('Please fill in all required fields and upload a prescription image.');
+        return;
+      }
       
-      /* Example implementation:
       const formData = new FormData();
       formData.append('appointmentDate', visitData.appointmentDate);
       formData.append('doctorName', visitData.doctorName);
@@ -77,33 +77,37 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
         formData.append('prescriptionFile', visitData.prescriptionFile);
       }
       
-      // Test reports are optional
-      visitData.testReports.forEach((file, index) => {
-        formData.append(`testReport_${index}`, file);
+      // Test reports are optional - append each file with the same field name
+      visitData.testReports.forEach((file) => {
+        formData.append('testReports', file);
       });
       
-      const response = await fetch('/api/visits/upload', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (response.ok) {
-        // Success handling
-        onClose();
-        // Show success message
-        // Refresh visits list
-      } else {
-        // Error handling
+      // Use the diagnosisAPI from api.js
+      const response = await diagnosisAPI.uploadVisitData(formData);
+
+      if(response.status !== 200) {
+        throw new Error('Upload failed with status ' + response.status);
       }
-      */
       
-      // For now, just close the modal
-      alert('Visit uploaded successfully!'); // TODO: Replace with proper notification
+      // Success handling
+      alert('Visit uploaded successfully!');
+      console.log('Upload success:', response.data);
       onClose();
       resetForm();
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Upload error:', error);
-      alert('Upload failed. Please try again.'); // TODO: Replace with proper error handling
+      
+      // Handle different error status codes
+      if (error.response?.status === 401) {
+        alert('Authentication failed. Please log in again.');
+      } else if (error.response?.status === 500) {
+        alert('Server error. Please try again later.');
+      } else if (error.response?.status === 400) {
+        alert('Bad request. Please check your data and try again.');
+      } else {
+        alert('Upload failed. Please check your connection and try again.');
+      }
     }
   };
 
@@ -243,7 +247,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                   <div className="border-2 border-dashed border-emerald-600 rounded-lg p-6 text-center hover:border-emerald-500 transition-colors bg-emerald-500/5">
                     <input
                       type="file"
-                      accept=".jpg,.jpeg,.png"
+                      accept=".jpg,.jpeg,.png,.pdf"
                       onChange={handlePrescriptionFileChange}
                       className="hidden"
                       id="prescription-upload"
@@ -258,7 +262,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                       <span className="text-emerald-400 font-medium">
                         {visitData.prescriptionFile ? visitData.prescriptionFile.name : 'Click to upload prescription'}
                       </span>
-                      <span className="text-zinc-400 text-xs">JPG, PNG files accepted (Required)</span>
+                      <span className="text-zinc-400 text-xs">JPG, PNG, PDF files accepted (Required)</span>
                     </label>
                   </div>
                 </div>
@@ -271,7 +275,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                   <div className="border-2 border-dashed border-zinc-600 rounded-lg p-6 text-center hover:border-zinc-500 transition-colors">
                     <input
                       type="file"
-                      accept=".jpg,.jpeg,.png"
+                      accept=".jpg,.jpeg,.png,.pdf"
                       multiple
                       onChange={handleTestReportFileChange}
                       className="hidden"
@@ -287,7 +291,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                       <span className="text-zinc-400">
                         Click to upload test reports
                       </span>
-                      <span className="text-zinc-500 text-xs">JPG, PNG files. Multiple files allowed (Optional)</span>
+                      <span className="text-zinc-500 text-xs">JPG, PNG, PDF files. Multiple files allowed (Optional)</span>
                     </label>
                   </div>
                 </div>
