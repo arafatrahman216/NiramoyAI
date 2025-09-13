@@ -2,19 +2,20 @@ package com.example.niramoy.service;
 
 
 import com.example.niramoy.dto.DoctorProfileDTO;
-import com.example.niramoy.entity.Doctor;
-import com.example.niramoy.entity.DoctorProfile;
-import com.example.niramoy.entity.User;
+import com.example.niramoy.dto.MedicineResponseDTO;
+import com.example.niramoy.dto.PrescriptionResponseDTO;
+import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.entity.*;
 import com.example.niramoy.enumerate.DoctorSource;
 import com.example.niramoy.error.DuplicateUserException;
-import com.example.niramoy.repository.DoctorProfileRepository;
-import com.example.niramoy.repository.DoctorRepository;
-import com.example.niramoy.repository.UserRepository;
+import com.example.niramoy.repository.*;
+import org.modelmapper.ModelMapper;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -25,6 +26,10 @@ public class DoctorProfileService {
     private final DoctorRepository doctorRepository;
     private final DoctorProfileRepository doctorProfileRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
+    private final VisitsRepository visitsRepository;
+    private final PrescriptionRepository prescriptionRepository;
+    private final ModelMapper modelMapper;
 
     public DoctorProfile findDoctorByUsername(String username){
         return doctorProfileRepository.findByUsername(username);
@@ -148,16 +153,73 @@ public class DoctorProfileService {
 
     }
 
-    public Map<String, Object> getPatientData(User doctor, int patientId) {
-        //current vitals from health profile
-        //user info from user table using dto
-        // last 10 health logs
+    @Transactional(readOnly = true)
+    public Map<String, Object> getPatientData(User doctor, long patientId) {
+        //current vitals from health profile ok
+        //user info from user table using dto   ok
+        // last 10 health logs   ok
         // prescriptions of the user for the doctor
         // visit data for the doctor visit timeline
         // test report from test report table
-        return  null;
+        User patient = userRepository.findById(patientId).orElseThrow();
+        DoctorProfile doctorProfile = doctorProfileRepository.findByUser(doctor);
+        Doctor doctor1 = doctorProfile.getDoctor();
+        UserDTO userDTO = userService.convertToUserDTO(patient);
+        List<HealthLog> healthLogs = patient.getHealthLogs().stream().limit(10).toList();
+        HealthProfile currentVitals = patient.getHealthProfile();
+        List<Visits> visits = visitsRepository.findByDoctorAndUser(doctor1, patient);
+        // Convert visits to prescriptions using streams and safe conversion
+        List<PrescriptionResponseDTO> prescriptions = new ArrayList<>();
+        for (Visits visit : visits) {
+            var prescOptional = prescriptionRepository.findByVisits(visit);
+            if (prescOptional.isPresent()) {
+                Prescription presc = prescOptional.get();
+                try {
+                    PrescriptionResponseDTO prescriptionDTO = convertToPrescriptionDTO(presc, visit.getVisitId());
+                    prescriptions.add(prescriptionDTO);
+                } catch (Exception e) {
+                    // Log the error and continue with next prescription
+                    System.err.println("Error converting prescription: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+//        List<TestReport> testReports = testReportRepository.findByUserAndDoctorId(patient, doctor.getId());
+        //System.out.println(testReports);
 
+        Map<String, Object> patientData = Map.of("user", userDTO, "vitals", currentVitals, "healthLogs", healthLogs, "prescriptions", prescriptions);
+        return patientData;
+    }
 
-
+    /**
+     * Helper method to convert Prescription entity to PrescriptionResponseDTO safely
+     */
+    private PrescriptionResponseDTO convertToPrescriptionDTO(Prescription prescription, Long visitId) {
+        PrescriptionResponseDTO prescriptionDTO = PrescriptionResponseDTO.builder()
+                .prescriptionId(prescription.getPrescriptionId()).imageUrl(prescription.getImageUrl())
+                .symptoms(prescription.getSymptoms()).diagnosis(prescription.getDiagnosis())
+                .visitId(visitId)
+                .build();
+        // Handle medicines collection safely with lazy loading check
+        List<MedicineResponseDTO> medicinesDTO = new ArrayList<>();
+        try {
+            if (prescription.getMedicines() != null) {
+                // Force initialization of the collection by accessing it
+                prescription.getMedicines().size(); // This triggers lazy loading
+                
+                for (Medicine medicine : prescription.getMedicines()) {
+                    // Use ModelMapper for individual Medicine entities 
+                    MedicineResponseDTO medicineDTO = modelMapper.map(medicine, MedicineResponseDTO.class);
+                    medicinesDTO.add(medicineDTO);
+                }
+            }
+        } catch (Exception e) {
+            // If lazy loading fails, just set empty list
+            System.err.println("Error loading medicines for prescription " + prescription.getPrescriptionId() + ": " + e.getMessage());
+            medicinesDTO = new ArrayList<>();
+        }
+        
+        prescriptionDTO.setMedicines(medicinesDTO);
+        return prescriptionDTO;
     }
 }

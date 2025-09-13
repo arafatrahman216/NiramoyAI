@@ -17,7 +17,7 @@ public class Prescription {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long prescriptionId;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visit_id")
     private Visits visits;
 

@@ -29,8 +29,9 @@ public class Visits {
     private String doctorName;
     
     // Add doctor_id to satisfy database constraint (nullable for now since we only have doctor name)
-    @Column(name = "doctor_id", nullable = true)
-    private Long doctorId;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "doctor_id", nullable = true)
+    private Doctor doctor;
     
     @Column(name = "symptoms")
     private String symptoms;
@@ -47,7 +48,7 @@ public class Visits {
     @Column(name = "test_report_url")
     private List<String> testReportUrls;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

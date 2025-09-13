@@ -19,8 +19,8 @@ public class Medicine {
     private Long medicineId;
 
     @ManyToOne
-    @JoinColumn(name = "prescription_id", nullable = false)
-    private Prescription prescription;
+    @JoinColumn(name = "visit_id", nullable = false)
+    private Visits visits;
 
     private String medicineName;
     private List<String> frequency= new ArrayList<>();

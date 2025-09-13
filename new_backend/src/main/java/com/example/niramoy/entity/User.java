@@ -86,7 +86,7 @@ public class User implements UserDetails {
     private List<HealthLog> healthLogs= new ArrayList<>();
 
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ChatSessions> chatSession= new ArrayList<>();
 
     // used for authentication

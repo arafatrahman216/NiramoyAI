@@ -3,6 +3,7 @@ package com.example.niramoy.repository;
 
 import com.example.niramoy.entity.Doctor;
 import com.example.niramoy.entity.DoctorProfile;
+import com.example.niramoy.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +20,11 @@ public interface DoctorProfileRepository extends JpaRepository<DoctorProfile, Lo
             "JOIN dp.user u " +    // Join from that Doctor to its User
             "WHERE u.username = :username") // Filter by the User's username
     DoctorProfile findByUsername( String username);
+
+
+    DoctorProfile findByUser(User user);
+    DoctorProfile findByDoctor(Doctor doctor);
+
 
 
 

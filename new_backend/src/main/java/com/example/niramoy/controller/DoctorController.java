@@ -62,7 +62,7 @@ public class DoctorController {
 
 
     @PostMapping("/patient")
-    public ResponseEntity<Map<String, Object>> getPatientData(@RequestBody int patientId){
+    public ResponseEntity<Map<String, Object>> getPatientData(@RequestBody Map<String, Object> patientMap){
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "Patient data retrieved successfully");
@@ -74,6 +74,8 @@ public class DoctorController {
         }
         User doctor = (User) authentication.getPrincipal();
 
+        Long patientId = Long.parseLong(patientMap.get("patientId").toString());
+        patientId  = Long.valueOf(2);
         Map<String, Object> patientData = doctorProfileService.getPatientData(doctor, patientId);
         response.put("patientData", patientData);
         return ResponseEntity.ok(response);
