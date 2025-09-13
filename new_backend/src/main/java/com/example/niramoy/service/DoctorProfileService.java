@@ -148,4 +148,16 @@ public class DoctorProfileService {
 
     }
 
+    public Map<String, Object> getPatientData(User doctor, int patientId) {
+        //current vitals from health profile
+        //user info from user table using dto
+        // last 10 health logs
+        // prescriptions of the user for the doctor
+        // visit data for the doctor visit timeline
+        // test report from test report table
+        return  null;
+
+
+
+    }
 }

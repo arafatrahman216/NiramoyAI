@@ -59,4 +59,23 @@ public class DoctorController {
         doctorProfileService.updateProfile(user, updates);
         return ResponseEntity.ok(response);
     }
+
+
+    @PostMapping("/patient")
+    public ResponseEntity<Map<String, Object>> getPatientData(@RequestBody int patientId){
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Patient data retrieved successfully");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null");
+            return ResponseEntity.ok(response);
+        }
+        User doctor = (User) authentication.getPrincipal();
+
+        Map<String, Object> patientData = doctorProfileService.getPatientData(doctor, patientId);
+        response.put("patientData", patientData);
+        return ResponseEntity.ok(response);
+    }
 }

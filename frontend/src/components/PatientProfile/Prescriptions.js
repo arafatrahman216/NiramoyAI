@@ -16,6 +16,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import AddPrescriptionModal from './AddPrescriptionModal';
+import { fallbackPrescriptions } from '../../utils/dummyData';
 
 const Prescriptions = ({ patientId }) => {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -24,120 +25,6 @@ const Prescriptions = ({ patientId }) => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedPrescriptions, setExpandedPrescriptions] = useState(new Set());
-
-  // Fallback prescriptions data - Updated to match new prescription format
-  const fallbackPrescriptions = [
-    {
-      id: 1,
-      date: '2025-09-11',
-      prescribedBy: 'Dr. Sarah Johnson',
-      status: 'active',
-      patientId: 1,
-      diagnosis: 'Hypertension and Type 2 Diabetes',
-      symptoms: 'Patient complaints of occasional headaches and fatigue',
-      medicines: [
-        {
-          id: 1,
-          name: 'Lisinopril',
-          type: 'tab',
-          morning: true,
-          noon: false,
-          evening: false,
-          night: false,
-          dose: '1 tablet',
-          duration: '30 days',
-          purpose: 'High blood pressure',
-          instruction: 'Take with or without food. Monitor blood pressure regularly.'
-        },
-        {
-          id: 2,
-          name: 'Metformin',
-          type: 'tab',
-          morning: true,
-          noon: false,
-          evening: true,
-          night: false,
-          dose: '1 tablet',
-          duration: '90 days',
-          purpose: 'Type 2 diabetes',
-          instruction: 'Take with meals to reduce stomach upset.'
-        }
-      ],
-      tests: ['Blood Sugar (Fasting)', 'Blood Pressure Monitoring', 'HbA1c'],
-      advice: 'Maintain regular exercise, low-sodium diet, and monitor blood pressure daily.',
-      followUpDate: '2025-10-11',
-      customInstructions: 'Check blood pressure daily and maintain log book.'
-    },
-    {
-      id: 2,
-      date: '2025-09-05',
-      prescribedBy: 'Dr. Emily Rodriguez',
-      status: 'active',
-      patientId: 1,
-      diagnosis: 'Bacterial Upper Respiratory Infection',
-      symptoms: 'Cough, fever, and throat pain for 3 days',
-      medicines: [
-        {
-          id: 1,
-          name: 'Amoxicillin',
-          type: 'cap',
-          morning: true,
-          noon: true,
-          evening: true,
-          night: false,
-          dose: '1 capsule',
-          duration: '7 days',
-          purpose: 'Bacterial infection',
-          instruction: 'Complete entire course even if feeling better.'
-        },
-        {
-          id: 2,
-          name: 'Paracetamol',
-          type: 'tab',
-          morning: false,
-          noon: false,
-          evening: false,
-          night: false,
-          dose: '1 tablet',
-          duration: '5 days',
-          purpose: 'Fever and pain',
-          instruction: 'Take as needed for fever or pain. Maximum 4 tablets per day.'
-        }
-      ],
-      tests: ['Complete Blood Count (CBC)', 'Throat Culture'],
-      advice: 'Take adequate rest, drink plenty of fluids, and avoid cold drinks.',
-      followUpDate: '2025-09-12',
-      customInstructions: 'Return if symptoms worsen or fever persists after 3 days.'
-    },
-    {
-      id: 3,
-      date: '2025-08-28',
-      prescribedBy: 'Dr. Michael Chen',
-      status: 'completed',
-      patientId: 1,
-      diagnosis: 'Acid Reflux (GERD)',
-      symptoms: 'Heartburn after meals, chest discomfort',
-      medicines: [
-        {
-          id: 1,
-          name: 'Omeprazole',
-          type: 'cap',
-          morning: true,
-          noon: false,
-          evening: false,
-          night: false,
-          dose: '1 capsule',
-          duration: '30 days',
-          purpose: 'Acid reflux',
-          instruction: 'Take 30 minutes before breakfast on empty stomach.'
-        }
-      ],
-      tests: ['Upper GI Endoscopy'],
-      advice: 'Avoid spicy foods, caffeine, and late night meals. Eat smaller portions.',
-      followUpDate: '2025-09-28',
-      customInstructions: 'Maintain food diary to identify trigger foods.'
-    }
-  ];
 
   useEffect(() => {
     setPrescriptions(fallbackPrescriptions);
