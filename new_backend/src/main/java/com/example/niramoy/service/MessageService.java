@@ -5,16 +5,13 @@ import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.Messages;
 import com.example.niramoy.repository.ChatSessionRepository;
 import com.example.niramoy.repository.MessageRepository;
-import com.example.niramoy.service.AIAgentService;
 import com.example.niramoy.service.agent.Agent;
 import com.example.niramoy.service.agent.AgentSelector; 
 import com.example.niramoy.utils.JsonParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.scheduling.annotation.Async;
+import com.example.niramoy.customExceptions.AgentProcessingException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -94,13 +91,7 @@ public class MessageService {
             try{
                 aiReply = agentWithMode.processQuery(message);
             } catch (Exception e){
-                Messages aiMessage = Messages.builder()
-                    .content("AI Service is currently unavailable. Please try again later.")
-                    .isAgent(true)
-                    .chatSession(chatSession)
-                    .build();
-                Messages savedAiMessage = messageRepository.save(aiMessage);
-                return savedAiMessage;
+                throw new AgentProcessingException("AI Service is currently unavailable. Please try again later.", e);
             }
 
             String parsedAiReply = JsonParser.parseResponse(aiReply, mode);

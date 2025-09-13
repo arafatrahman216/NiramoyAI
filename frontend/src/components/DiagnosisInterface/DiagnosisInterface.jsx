@@ -101,38 +101,47 @@ const DiagnosisInterface = () => {
           window.dispatchEvent(new CustomEvent('chatRefresh'));
           
         } else {
-          console.error('Failed to send message:', response.data.message);
+          console.error('Failed to send message:');
           alert('Failed to send message: ' + response.data.message);
           
-          // Remove the user message from local state since sending failed
+
           if (selectedChatData) {
+            const errorMessage = {
+              messageId: Date.now() + 2,
+              content: "Something went wrong. Please try again.",
+              isAgent: true,
+              timestamp: new Date().toISOString()
+            };
             setSelectedChatData({
               ...selectedChatData,
-              messages: selectedChatData.messages.slice(0, -1)
+              messages: [...(selectedChatData.messages || []), errorMessage]
             });
           }
+
+
         }
       } catch (error) {
         console.error('Full error object:', error);
         console.error('Error response:', error.response);
         console.error('Error status:', error.response?.status);
         console.error('Error data:', error.response?.data);
+      
         
-        // Remove the user message from local state since sending failed
-        if (selectedChatData) {
-          setSelectedChatData({
-            ...selectedChatData,
-            messages: selectedChatData.messages.slice(0, -1)
-          });
-        }
-        
-        if (error.response?.status === 401) {
-          alert('Authentication failed. Please log in again.');
-        } else if (error.response?.status === 403) {
-          alert('Access denied. You don\'t have permission to send messages.');
-        } else {
-          alert('Error sending message. Please try again.');
-        }
+          if (error.response?.status === 401) {
+            alert('Authentication failed. Please log in again.');
+          } else if (error.response?.status === 403) {
+            alert('Access denied. You don\'t have permission to send messages.');
+          } else if (error.response?.status === 500) {
+            alert('Server error. Please try again later.');
+          } else if (error.response == 400){
+            alert('Bad request. Please check your message and try again.');
+          } else if (error.response?.status === 429) {
+            alert('Too many requests. Please slow down.');
+          } else if (error.response?.status === 503) {
+            alert('Service unavailable. Try again.');
+          } else {
+            alert('Error sending message. Please try again.');
+          }
       }
     } else {
       // If not in chat mode, create new chat (default search behavior)

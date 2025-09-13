@@ -1,5 +1,6 @@
 package com.example.niramoy.controller;
 
+import com.example.niramoy.customExceptions.AgentProcessingException;
 import com.example.niramoy.dto.UserDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
 import com.example.niramoy.entity.ChatSessions;
@@ -225,6 +226,10 @@ public class UserController {
             response.put("success", false);
             response.put("message", "Invalid chat ID format");
             return ResponseEntity.badRequest().body(response);
+        } catch (AgentProcessingException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
         } catch (Exception e) {
             log.error("Error processing message: ", e);
             response.put("success", false);
