@@ -16,9 +16,9 @@ import java.util.UUID;
 public class ImageService {
     //FIXME: shift to .env file
     private final RestTemplate restTemplate = new RestTemplate();
-    private static final String STORAGE_URL = "https://gbnroyjolasnhydnpxwp.supabase.co/storage/v1/object/public/";
+    private static final String STORAGE_URL = "https://fazcrlmvdczokbxfvyyn.supabase.co/storage/v1/object/public/";
     private static final String BUCKET_NAME = "images";
-    private static final String anonKey = " eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNheWJwbGV0cGN0ZWRreWxwdG1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4MTA2NTEsImV4cCI6MjA2OTM4NjY1MX0.AR65YS0jDcGIPXf2FAmi5aX0P5tLSK0gOzQ3rwJbHk0";
+    private static final String anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhemNybG12ZGN6b2tieGZ2eXluIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njk5NTg1NiwiZXhwIjoyMDcyNTcxODU2fQ.9-F1Jlym4IA-4FH9egAgk_r0WQs8T9BATs22IehvpeU";
 
 
     public String uploadImage(MultipartFile image) {
@@ -52,7 +52,7 @@ public class ImageService {
     private String uploadToSupabase(MultipartFile file, String filename, String contentType) throws IOException {
         try {
             //FIXME: Fix this hardcoded URL
-            String url = "https://caybpletpctedkylptmh.storage.supabase.co/storage/v1/object/" + BUCKET_NAME + "/" + filename;
+            String url = "https://fazcrlmvdczokbxfvyyn.storage.supabase.co/storage/v1/object/" + BUCKET_NAME + "/" + filename;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
