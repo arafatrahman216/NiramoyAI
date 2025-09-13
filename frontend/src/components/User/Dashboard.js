@@ -4,16 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { MiniSpeedometer} from "./MiniSpeedoMeter"
 import MedicationTimeline from "./MedicationTimeline";
+import Chart from "./Chart";
 import { Home, User, Activity, LogOut } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
 
 import axios from "axios";
 import { API_BASE_URL } from "../../services/api";
@@ -362,167 +354,39 @@ const Dashboard = () => {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {/* Enhanced Charts */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700">
-          <div className="flex items-center mb-6">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white text-lg">💉</span>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Blood Pressure Trends</h2>
-              <p className="text-sm text-gray-400">Systolic & Diastolic readings over time</p>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={healthVitals.bloodPressure} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-              <defs>
-                <linearGradient id="systolicGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="diastolicGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
-              <XAxis 
-                dataKey="date" 
-                stroke="#9ca3af" 
-                fontSize={12}
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              />
-              <YAxis stroke="#9ca3af" fontSize={12} />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#f9fafb'
-                }}
-                labelFormatter={(value) => `Date: ${new Date(value).toLocaleDateString()}`}
-                formatter={(value, name) => [
-                  `${value} mmHg`,
-                  name === 'systolic' ? 'Systolic' : 'Diastolic'
-                ]}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="systolic" 
-                stroke="#22c55e" 
-                strokeWidth={3}
-                dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#22c55e', strokeWidth: 2, fill: '#ffffff' }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="diastolic" 
-                stroke="#3b82f6" 
-                strokeWidth={3}
-                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2, fill: '#ffffff' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700">
-          <div className="flex items-center mb-6">
-            <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white text-lg">🍯</span>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Blood Sugar Monitoring</h2>
-              <p className="text-sm text-gray-400">Glucose levels tracking</p>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={healthVitals.diabetes} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-              <defs>
-                <linearGradient id="sugarGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#eab308" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#eab308" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
-              <XAxis 
-                dataKey="date" 
-                stroke="#9ca3af" 
-                fontSize={12}
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              />
-              <YAxis stroke="#9ca3af" fontSize={12} />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#f9fafb'
-                }}
-                labelFormatter={(value) => `Date: ${new Date(value).toLocaleDateString()}`}
-                formatter={(value) => [`${value} mg/dL`, 'Blood Sugar']}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="sugar" 
-                stroke="#eab308" 
-                strokeWidth={3}
-                dot={{ fill: '#eab308', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#eab308', strokeWidth: 2, fill: '#ffffff' }}
-                fill="url(#sugarGradient)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700">
-          <div className="flex items-center mb-6">
-            <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white text-lg">❤️</span>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Heart Rate Monitor</h2>
-              <p className="text-sm text-gray-400">Cardiovascular health tracking</p>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={healthVitals.heartRate} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-              <defs>
-                <linearGradient id="heartRateGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
-              <XAxis 
-                dataKey="date" 
-                stroke="#9ca3af" 
-                fontSize={12}
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              />
-              <YAxis stroke="#9ca3af" fontSize={12} />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#f9fafb'
-                }}
-                labelFormatter={(value) => `Date: ${new Date(value).toLocaleDateString()}`}
-                formatter={(value) => [`${value} bpm`, 'Heart Rate']}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="bpm" 
-                stroke="#ef4444" 
-                strokeWidth={3}
-                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#ef4444', strokeWidth: 2, fill: '#ffffff' }}
-                fill="url(#heartRateGradient)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+          <Chart
+            chartType="bloodPressure"
+            title="Blood Pressure Trends"
+            subtitle="Systolic & Diastolic readings over time"
+            icon="💉"
+            color="#22c55e"
+            unit="mmHg"
+            healthVitals={healthVitals}
+          />
+          
+          <Chart
+            chartType="diabetes"
+            dataKey="sugar"
+            title="Blood Sugar Monitoring"
+            subtitle="Glucose levels tracking"
+            icon="🍯"
+            color="#eab308"
+            gradientId="sugarGradient"
+            unit="mg/dL"
+            healthVitals={healthVitals}
+          />
+          
+          <Chart
+            chartType="heartRate"
+            dataKey="bpm"
+            title="Heart Rate Monitor"
+            subtitle="Cardiovascular health tracking"
+            icon="❤️"
+            color="#ef4444"
+            gradientId="heartRateGradient"
+            unit="bpm"
+            healthVitals={healthVitals}
+          />
         </div>
 
 

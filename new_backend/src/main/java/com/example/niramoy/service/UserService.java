@@ -206,6 +206,11 @@ public class UserService implements UserDetailsService {
         return dto;
     }
 
+    private String safeGetString(Map<String, Object> formData, String key, String defaultValue) {
+        String value = (String) formData.get(key);
+        return (value == null || value.isEmpty()) ? defaultValue : value;
+    }
+
 
 
 

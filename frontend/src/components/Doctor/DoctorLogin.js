@@ -71,7 +71,7 @@ const DoctorLogin = () => {
         // Check if user has doctor role
         const userData = JSON.parse(localStorage.getItem('user'));
         if (hasRole(userData, 'DOCTOR')) {
-          redirectBasedOnRole(userData, navigate);
+          navigate('/doctor/dashboard');
         } else {
           setLocalError('Access denied: Doctor privileges required');
         }
