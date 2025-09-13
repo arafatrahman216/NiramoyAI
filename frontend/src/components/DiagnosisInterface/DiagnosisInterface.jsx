@@ -1,125 +1,281 @@
-import React, { useState, useRef, useEffect, use } from 'react';
+import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import SearchInput from './SearchInput';
 import MainLogo from './MainLogo';
 import VisitsSidebar from './VisitsSidebar';
 import ChatsSidebar from './ChatsSidebar';
 import UploadVisitModal from './UploadVisitModal';
+import ChatConversation from './ChatConversation';
 
-import api from '../../services/api';
-import { set } from 'date-fns';
+import { chatbotAPI, doctorAPI } from '../../services/api'
 
+// ==============================================
+// DIAGNOSIS INTERFACE MAIN CONTAINER
+// ==============================================
+// Combines all components and handles main search logic
+// Edit handleSearch() to add your search implementation
 const DiagnosisInterface = () => {
+  // SEARCH STATE
   const [query, setQuery] = useState('');
-  const [chatMessages, setChatMessages] = useState([]);
-  const [isLoadingResponse, setIsLoadingResponse] = useState(false);
-  const chatEndRef = useRef(null);
-  const [chatId, setChatId] = useState(1);
-
+  
+  // VISITS SIDEBAR STATE
   const [isVisitsSidebarOpen, setIsVisitsSidebarOpen] = useState(false);
+  
+  // CHATS SIDEBAR STATE
   const [isChatsSidebarOpen, setIsChatsSidebarOpen] = useState(false);
+  
+  // CHAT ID STATE - tracks selected chat
+  const [selectedChatId, setSelectedChatId] = useState(null);
+  
+  // SELECTED CHAT DATA - tracks full chat data with messages
+  const [selectedChatData, setSelectedChatData] = useState(null);
+  
+  // UPLOAD VISIT MODAL STATE
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (chatMessages.length > 0) {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // MAIN SEARCH HANDLER
+  // Handles search/message sending based on current context
+  const handleSearch = async (mode = 'explain') => {
+    if (!query.trim()) return;
+    
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to send messages.');
+      return;
     }
-  }, [chatMessages, isLoadingResponse]);
-
-  useEffect( () => {
-    refreshChat();
-  }
-  , [chatId]);
-
-
-  const refreshChat = async () => {
-    const response = await api.post('/user/message', { "chatId" : chatId});
-      const data = await response.data;
-      console.log(data);
-      const messages = data.data;
-
-      setChatMessages([]);
-
-      for (const msgPart of messages) {
-        const type = msgPart.agent === true ? 'response' : 'query';
-        setChatMessages(prev => [
-          ...prev,
-          { type, content: msgPart.content }
-        ]);
+    
+    // If we're in chat mode, send message to current chat
+    if (selectedChatId) {
+      console.log('Sending message to current chat:', selectedChatId);
+      console.log('Message content:', query);
+      console.log('Auth token exists:', !!localStorage.getItem('token'));
+      
+      // Add user message immediately to local state
+      const userMessage = {
+        messageId: Date.now(),
+        content: query.trim(),
+        isAgent: false,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Update local chat data immediately to show user message
+      if (selectedChatData) {
+        const updatedChatData = {
+          ...selectedChatData,
+          messages: [...(selectedChatData.messages || []), userMessage]
+        };
+        setSelectedChatData(updatedChatData);
+      }
+      
+      const messageToSend = query.trim();
+      setQuery(''); // Clear input immediately
+      
+      try {
+        // Send message to current chat using chatbotAPI
+        const response = await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode);
+        
+        console.log('API Response:', response);
+        
+        if (response.data.success) {
+          console.log('Message sent successfully:', response.data);
+          
+          // Add AI reply to local state
+          const aiReply = {
+            messageId: response.data.aiResponse.messageId || Date.now() + 1,
+            content: response.data.aiResponse.content,
+            isAgent: true,
+            timestamp: new Date().toISOString()
+          };
+          
+          // Update local chat data with AI reply
+          if (selectedChatData) {
+            const updatedChatData = {
+              ...selectedChatData,
+              messages: [...(selectedChatData.messages || []), userMessage, aiReply]
+            };
+            setSelectedChatData(updatedChatData);
+          }
+          
+          // Force a refresh of the chat conversation component
+          window.dispatchEvent(new CustomEvent('chatRefresh'));
+          
+        } else {
+          console.error('Failed to send message:', response.data.message);
+          alert('Failed to send message: ' + response.data.message);
+          
+          // Remove the user message from local state since sending failed
+          if (selectedChatData) {
+            setSelectedChatData({
+              ...selectedChatData,
+              messages: selectedChatData.messages.slice(0, -1)
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Full error object:', error);
+        console.error('Error response:', error.response);
+        console.error('Error status:', error.response?.status);
+        console.error('Error data:', error.response?.data);
+        
+        // Remove the user message from local state since sending failed
+        if (selectedChatData) {
+          setSelectedChatData({
+            ...selectedChatData,
+            messages: selectedChatData.messages.slice(0, -1)
+          });
+        }
+        
+        if (error.response?.status === 401) {
+          alert('Authentication failed. Please log in again.');
+        } else if (error.response?.status === 403) {
+          alert('Access denied. You don\'t have permission to send messages.');
+        } else {
+          alert('Error sending message. Please try again.');
+        }
+      }
+    } else {
+      // If not in chat mode, create new chat (default search behavior)
+      console.log('Creating new chat for search query:', query);
+      
+      try {
+        const response = await chatbotAPI.startConversation();
+        const newChatId = response.data.conversationId || response.data.chatId;
+        
+        if (newChatId) {
+          setSelectedChatId(newChatId);
+          setSelectedChatData({
+            chatId: newChatId,
+            title: 'New Chat',
+            messages: []
+          });
+          
+          // Don't clear query here - let user send it as first message
+          console.log('New chat created, user can now send their query');
+        }
+      } catch (error) {
+        console.error('Error creating new chat:', error);
+        alert('Unable to start new chat. Please try again.');
       }
     }
+  };
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
+  // UPLOAD VISIT HANDLER
+  const handleUploadVisit = () => {
+    console.log('Opening upload visit modal');
+    setIsUploadModalOpen(true);
+    // TODO: Add any pre-upload setup here
+    // - Check authentication
+    // - Validate permissions
+    // - Initialize form data
+  };
 
-    setChatMessages(prev => [...prev, { type: 'query', content: query }]);
-    setIsLoadingResponse(true);
-    
-    
+  // CHAT SELECTION HANDLER
+  const handleChatSelection = (chatId) => {
+    setSelectedChatId(chatId);
+    console.log('Selected chat ID:', chatId);
+  };
+
+  // BACK TO SEARCH HANDLER
+  const handleBackToSearch = () => {
+    setSelectedChatId(null);
+    setSelectedChatData(null);
+    console.log('Returning to search interface');
+  };
+
+  // HANDLE SELECTED CHAT DATA
+  const handleSelectedChat = (chatData) => {
+    setSelectedChatData(chatData);
+    console.log('Selected full chat data:', chatData);
+  };
+
+  // HANDLE NEW CHAT CREATION
+  const handleNewChat = async () => {
     try {
+      // Import chatbotAPI dynamically
+      const { chatbotAPI } = await import('../../services/api');
       
-      const myQuery = query;
-      setQuery('');
-      const response2 = await api.post('/user/chat', { "chatId" : chatId, "message" : myQuery});
-      console.log(response2);
-      const response = await api.post('/agent/search', { "chatId" : chatId, "message" : myQuery});
-      //! after integrating the agent in background. get the response from /user/chat endpoint instead
-      //! of using /agent/search endpoint. and the /user/chat endpoint should 
-      //! return the final response from the agent.
-
-      setChatMessages(prev => [
-        ...prev,
-        { type: 'response', content: response.data.data }
-      ]);
+      console.log('Starting new chat...');
+      const response = await chatbotAPI.startConversation();
+      const newChatId = response.data.conversationId || response.data.chatId;
+      
+      if (newChatId) {
+        // Set the new chat as selected
+        setSelectedChatId(newChatId);
+        setSelectedChatData({
+          chatId: newChatId,
+          title: 'New Chat',
+          messages: []
+        });
+        
+        // Clear any existing query
+        setQuery('');
+        
+        console.log('New chat created and selected:', newChatId);
+      }
     } catch (error) {
-      console.error('Search error:', error);
-      setChatMessages(prev => [
-        ...prev,
-        { type: 'response', content: '❌ Error fetching response. Please try again.' }
-      ]);
-    } finally {
-      setIsLoadingResponse(false);
+      console.error('Error creating new chat:', error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex relative">
-      <div style={{ position: 'fixed', zIndex: 10000, minHeight: '100vh' }} className="flex-shrink-0 border-r border-zinc-800">
+    <div className="min-h-screen bg-black text-white">
+      {/* SIDEBAR SECTION - FIXED */}
+      {/* Navigation and user controls */}
+      <Sidebar 
+        onVisitsClick={() => setIsVisitsSidebarOpen(!isVisitsSidebarOpen)}
+        isVisitsSidebarOpen={isVisitsSidebarOpen}
+        onChatsClick={() => setIsChatsSidebarOpen(!isChatsSidebarOpen)}
+        isChatsSidebarOpen={isChatsSidebarOpen}
+        onNewChat={handleNewChat}
+      />
 
-        {/* FIXED SIDE PANELS */}
-        <Sidebar 
-          onVisitsClick={() => setIsVisitsSidebarOpen(!isVisitsSidebarOpen)}
-          isVisitsSidebarOpen={isVisitsSidebarOpen}
-          onChatsClick={() => setIsChatsSidebarOpen(!isChatsSidebarOpen)}
-          isChatsSidebarOpen={isChatsSidebarOpen}
-        />
+      {/* CHATS SIDEBAR */}
+      <ChatsSidebar 
+        isOpen={isChatsSidebarOpen}
+        onClose={() => setIsChatsSidebarOpen(false)}
+        setChatid={handleChatSelection}
+        setSelectedChat={handleSelectedChat}
+      />
 
-        <ChatsSidebar 
-          isOpen={isChatsSidebarOpen}
-          setChatid={setChatId}
-          onClose={() => setIsChatsSidebarOpen(false)}
-        />
+      {/* VISITS SIDEBAR */}
+      <VisitsSidebar 
+        isOpen={isVisitsSidebarOpen}
+        onClose={() => setIsVisitsSidebarOpen(false)}
+      />
 
-        <VisitsSidebar 
-          isOpen={isVisitsSidebarOpen}
-          onClose={() => setIsVisitsSidebarOpen(false)}
-          />
-      </div>
-
-      {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col bg-zinc-950">
-        {/* FIXED TOP BAR */}
-        <div className="sticky top-0 bg-zinc-950 z-20 flex justify-between items-center px-8 pt-6 pb-4 border-b border-zinc-800">
-          {/* Logo stays fixed here */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-          <MainLogo />
+      {/* MAIN CONTENT AREA - WITH LEFT MARGIN FOR FIXED SIDEBAR */}
+      <div className={`${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'ml-96' : 'ml-16'} flex flex-col bg-zinc-950 min-h-screen transition-all duration-300`}>
+        {/* TOP BAR - UPLOAD BUTTON AND CHAT HEADER */}
+        <div className="flex justify-between items-center pt-6 pr-8 pb-4 pl-8">
+          {/* LEFT SIDE - CHAT INFO */}
+          <div className="flex items-center space-x-3">
+            {selectedChatId && (
+              <>
+                <button
+                  onClick={handleBackToSearch}
+                  className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                  title="Back to search"
+                >
+                  <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">
+                    {selectedChatData?.title || 'Chat Conversation'}
+                  </h2>
+                  <p className="text-sm text-zinc-400">
+                    {selectedChatData?.messages?.length || 0} messages
+                  </p>
+                </div>
+              </>
+            )}
           </div>
-
-          {/* Upload Visit Button */}
-          <div className="flex-1" style={{ textAlign: 'right' }} > {/* Spacer to push button to right */}
-
+          
+          {/* RIGHT SIDE - UPLOAD BUTTON */}
           <button 
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={handleUploadVisit}
             className="bg-zinc-900 border border-zinc-700 rounded-2xl px-6 py-3 hover:border-zinc-600 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all group"
           >
             <div className="flex items-center space-x-3">
@@ -129,73 +285,53 @@ const DiagnosisInterface = () => {
               <span className="text-white font-medium">Upload Visit</span>
             </div>
           </button>
-            </div>
         </div>
 
-        {/* CHAT SCROLL AREA */}
-        <div className="flex-1 overflow-y-auto px-8">
-          {chatMessages.length === 0 ? (
-            // LANDING VIEW
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="mt-8 w-full max-w-2xl">
-                <SearchInput 
-                  query={query} 
-                  setQuery={setQuery} 
-                  onSearch={handleSearch} 
+        {/* MAIN CONTENT AREA - CHATGPT STYLE */}
+        <div className="flex-1 flex flex-col relative">
+          {selectedChatId ? (
+            /* CHAT MODE - CONVERSATION + FIXED INPUT AT BOTTOM */
+            <>
+              {/* MESSAGES AREA */}
+              <div className="flex-1 overflow-y-auto pb-40 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-800 hover:scrollbar-thumb-zinc-700">
+                <ChatConversation 
+                  chatId={selectedChatId}
+                  onBack={handleBackToSearch}
+                  chatData={selectedChatData}
+                  embedded={true}
                 />
               </div>
-            </div>
-          ) : (
-            // CHAT VIEW
-            <>
-              <div className="py-6 max-w-3xl mx-auto w-full">
-                {chatMessages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex mb-3 transition-all duration-300 ease-in-out ${
-                      msg.type === 'query' ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-xl px-4 py-2 rounded-2xl animate-fadeIn ${
-                        msg.type === 'query'
-                          ? 'bg-emerald-600 text-white rounded-br-none'
-                          : 'bg-zinc-800 text-gray-200 rounded-bl-none'
-                      }`}
-                    >
-                      {msg.content}
-                    </div>
-                  </div>
-                ))}
 
-                {isLoadingResponse && (
-                  <div className="flex justify-start mb-3">
-                    <div className="bg-zinc-800 text-gray-300 px-4 py-2 rounded-2xl rounded-bl-none animate-pulse">
-                      Typing...
-                    </div>
-                  </div>
-                )}
-
-                <div ref={chatEndRef} />
+              {/* FIXED SEARCH INPUT AT BOTTOM */}
+              <div className={`fixed bottom-0 ${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'left-96' : 'left-16'} right-0 py-4 bg-gradient-to-t from-zinc-950 via-zinc-950 to-zinc-950/80 backdrop-blur-sm z-40 transition-all duration-300`}>
+                <div className="max-w-4xl mx-auto px-6">
+                  <SearchInput 
+                    query={query} 
+                    setQuery={setQuery} 
+                    onSearch={handleSearch}
+                    placeholder="Continue conversation or search..."
+                  />
+                </div>
               </div>
             </>
-          )}
-        </div>
+          ) : (
+            /* DEFAULT SEARCH VIEW - CENTERED LOGO AND SEARCH */
+            <div className="flex-1 flex flex-col items-center justify-center px-8">
+              {/* LOGO SECTION */}
+              <MainLogo />
 
-        {/* FIXED BOTTOM INPUT */}
-        {chatMessages.length > 0 && (
-          <div className="sticky bottom-0 bg-zinc-950 border-t border-zinc-800 px-8 py-4">
-            <div className="max-w-3xl mx-auto">
+              {/* SEARCH SECTION */}
               <SearchInput 
                 query={query} 
                 setQuery={setQuery} 
                 onSearch={handleSearch} 
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
+      {/* UPLOAD VISIT MODAL */}
       <UploadVisitModal 
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}

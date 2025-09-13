@@ -1,20 +1,50 @@
 import React, { useState } from 'react';
-import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe, MessageSquare, HelpCircle, UserCheck, Calendar } from 'lucide-react';
+import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, MessageSquare, HelpCircle, UserCheck, Calendar } from 'lucide-react';
 
 // ==============================================
-// SEARCH INPUT COMPONENT
+// MODE SELECTOR COMPONENT
 // ==============================================
-// Contains: Input field and all action buttons
-// Edit individual button handlers to add functionality
-const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything..." }) => {
-  const [activeMode, setActiveMode] = useState('explain');
-
+const ModeSelector = ({ activeMode, setActiveMode }) => {
   const modes = [
     { id: 'explain', label: 'Explain', icon: MessageSquare },
     { id: 'qna', label: 'Q&A', icon: HelpCircle },
     { id: 'consult', label: 'Consult', icon: UserCheck },
     { id: 'plan', label: 'Plan', icon: Calendar }
   ];
+
+  return (
+    <div className="relative">
+      <div className="flex items-center bg-zinc-800 rounded-lg p-1 border border-zinc-700">
+        {modes.map((mode) => {
+          const IconComponent = mode.icon;
+          return (
+            <button
+              key={mode.id}
+              onClick={() => setActiveMode(mode.id)}
+              className={`relative px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                activeMode === mode.id
+                  ? 'bg-emerald-500 text-white shadow-lg'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
+              }`}
+            >
+              <IconComponent size={16} />
+              <span>{mode.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ==============================================
+// SEARCH INPUT COMPONENT
+// ==============================================
+// Contains: Input field and all action buttons
+// Edit individual button handlers to add functionality
+const SearchInput = ({ query, setQuery, onSearch }) => {
+  const [activeMode, setActiveMode] = useState('explain');
+
   // TODO: Add focus functionality
   const handleFocus = () => {
     console.log('Search input focused');
@@ -25,12 +55,6 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
   const handleAttachment = () => {
     console.log('Attachment clicked');
     // Add file upload, image attachment logic here
-  };
-
-  // TODO: Add focus mode functionality
-  const handleFocusMode = () => {
-    console.log('Focus mode clicked');
-    // Add focus mode toggle (academic, web, etc.)
   };
 
   // TODO: Add voice input functionality
@@ -68,18 +92,22 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      handleModeAction(activeMode);
-      onSearch(activeMode);
+      onSearch();
     }
   };
 
   const handleSearchWithMode = () => {
     handleModeAction(activeMode);
-    onSearch(activeMode);
+    onSearch();
   };
 
   return (
-    <div className="w-full max-w-3xl">
+    <div className="w-full max-w-2xl">
+      {/* MODE SELECTOR */}
+      <div className="flex justify-center mb-4">
+        <ModeSelector activeMode={activeMode} setActiveMode={setActiveMode} />
+      </div>
+
       <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600">
         {/* MAIN INPUT FIELD */}
         {/* Edit placeholder text, styling here */}
@@ -95,42 +123,10 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
         
         {/* ACTION BUTTONS ROW */}
         <div className="flex items-center justify-between mt-4">
-          {/* LEFT SIDE - MODE SELECTOR */}
+          {/* LEFT SIDE - MODE INDICATOR */}
           <div className="flex items-center space-x-2">
-            {/* MODE SELECTOR EMBEDDED */}
-            <div className="flex items-center bg-zinc-800 rounded-lg p-1.5 border border-zinc-700">
-              {modes.map((mode, idx) => {
-                const IconComponent = mode.icon;
-                const getTooltipText = (modeId) => {
-                  switch (modeId) {
-                    case 'explain': return 'Explain - Get detailed explanations and step-by-step breakdowns';
-                    case 'qna': return 'Q&A - Structured question-answer format for quick insights';
-                    case 'consult': return 'Consult - Professional advice and expert recommendations';
-                    case 'plan': return 'Plan - Create strategies, schedules and action plans';
-                    default: return `${mode.label} mode`;
-                  }
-                };
-                
-                return (
-                  <React.Fragment key={mode.id}>
-                    <button
-                      onClick={() => setActiveMode(mode.id)}
-                      className={`relative p-2 rounded-md transition-all duration-200 flex items-center justify-center ${
-                        activeMode === mode.id
-                          ? 'bg-emerald-500 text-white shadow-lg'
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
-                      }`}
-                      title={getTooltipText(mode.id)}
-                      aria-label={getTooltipText(mode.id)}
-                    >
-                      <IconComponent size={16} />
-                    </button>
-                    {idx < modes.length - 1 && (
-                      <span className="mx-1 text-zinc-600 select-none text-lg">|</span>
-                    )}
-                  </React.Fragment>
-                );
-              })}
+            <div className="px-3 py-1 bg-zinc-800 rounded-full border border-zinc-700">
+              <span className="text-emerald-400 text-sm font-medium capitalize">{activeMode}</span>
             </div>
           </div>
           
@@ -145,18 +141,11 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
               <MoreHorizontal size={18} className="text-zinc-500 group-hover:text-zinc-300" />
             </button>
             
-            {/* Secondary Focus Button */}
-            <button 
-              onClick={handleFocusMode}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-            >
-              <Globe size={18} className="text-zinc-500 group-hover:text-zinc-300" />
-            </button>
-            
-            {/* Secondary Attachment Button */}
+            {/* Attachment Button - edit handleAttachment() */}
             <button 
               onClick={handleAttachment}
               className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+              title="Attach files"
             >
               <Paperclip size={18} className="text-zinc-500 group-hover:text-zinc-300" />
             </button>
@@ -188,9 +177,3 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
 };
 
 export default SearchInput;
-
-
-
-
-
-

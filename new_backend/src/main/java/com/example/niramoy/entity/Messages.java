@@ -21,7 +21,7 @@ public class Messages {
     @JoinColumn(name = "chat_id", nullable = false)
     private ChatSessions chatSession;
 
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "is_agent", nullable = false)
