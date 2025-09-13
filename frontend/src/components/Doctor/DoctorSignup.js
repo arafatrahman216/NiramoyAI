@@ -28,6 +28,7 @@ const DoctorSignup = () => {
     name: "",
     username: "",
     email: "",
+    phoneNumber: "",
     password: "",
     gender: "",
     dateOfBirth: null,
@@ -299,6 +300,19 @@ const DoctorSignup = () => {
                       sx={darkTextFieldStyle}
                     />
                   </Grid>
+                  <Grid item xs={12} sm={6}>
+
+                    <TextField
+                      label="Phone Number"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                      sx={darkTextFieldStyle}
+                    />
+
+                    </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       type="password"

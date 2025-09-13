@@ -31,6 +31,7 @@ import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterfa
 import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
 import Timeline from './components/Timeline/Timeline';
 import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
+import PatientProfile from './components/PatientProfile/PatientProfile';
 
 
 const theme = createTheme({
@@ -433,6 +434,17 @@ function App() {
                     </PatientRoute>
                   }
                 />
+
+                <Route
+                  path='/patient/profile'
+                  element={
+                    <PatientRoute>
+                      <PatientProfile />
+                    </PatientRoute>
+                  }
+                />
+
+                {/* Example protected route */}
                 <Route path="/test" element={
                   <PatientRoute>
                     
