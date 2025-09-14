@@ -1,6 +1,6 @@
 // src/components/PatientProfile/PatientProfile.js
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   ArrowLeft, 
   User, 
@@ -17,7 +17,7 @@ import {
   Pill,
   Clock,
   TrendingUp,
-  TestTube, Droplets
+  TestTube, Droplets, User2Icon
 } from 'lucide-react';
 
 
@@ -27,12 +27,15 @@ import Prescriptions from './Prescriptions';
 import VisitTimeline from './VisitTimeline';
 import TestReports from './TestReports';
 import axios from 'axios';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL, doctorAPI } from '../../services/api';
+import { Height } from '@mui/icons-material';
 
 const PatientProfile = () => {
-  const { id } = useParams();
+  const [sparams] = useSearchParams();
+  const [id, setId] = useState(sparams.get('id') || null);
   const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
+  const [vitals, setVitals] = useState([]);
   const [activeTab, setActiveTab] = useState('vitals');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,8 +43,7 @@ const PatientProfile = () => {
   // Fallback patient data
   const fallbackPatient = {
     id: 1,
-    firstName: "John",
-    lastName: "Doe",
+    name: "John",
     email: "john.doe@email.com",
     phone: "+1 (555) 123-4567",
     address: "123 Main St, City, State 12345",
@@ -64,6 +66,18 @@ const PatientProfile = () => {
     }
   };
 
+  const fallbackcurrentVitals = {
+    bloodPressure: "120/80",
+    heartRate: 72,
+    temperature: 98.6,
+    weight: 175,
+    height: "5'10\"",
+    lastUpdated: "2025-09-11",
+    calculateAge: "24"
+
+  };
+
+
   useEffect(() => {
     fetchPatientData();
   }, [id]);
@@ -71,10 +85,16 @@ const PatientProfile = () => {
   const fetchPatientData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/doctor/patient/${id}`);
-      setPatient(response.data.patient || fallbackPatient);
+      console.log('Fetching data for patient ID:', id);
+
+      const response = await doctorAPI.getPatientInfo(id);
+      console.log(response.data);
+      
+      setPatient(response.data.user || fallbackPatient);
+      setVitals(response.data.vitals || fallbackcurrentVitals);
     } catch (err) {
       setPatient(fallbackPatient);
+      setVitals(fallbackcurrentVitals);
       setError('Using demo data - API connection failed');
       console.error('Error fetching patient data:', err);
     } finally {
@@ -128,7 +148,7 @@ const PatientProfile = () => {
             </button>
             
             <h1 className="text-2xl font-bold text-white">
-              Patient Profile - {patient?.firstName} {patient?.lastName}
+              Patient Profile - {patient?.name}
             </h1>
             
             <div className="w-32"></div>
@@ -152,17 +172,17 @@ const PatientProfile = () => {
               <div className="flex-1">
                 <div className="flex items-start gap-4 mb-6">
                   <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center text-2xl font-bold text-white">
-                    {patient?.firstName?.charAt(0)}{patient?.lastName?.charAt(0)}
+                    {patient?.name?.charAt(0)}
                   </div>
                   
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold text-white mb-2">
-                      {patient?.firstName} {patient?.lastName}
+                      {patient?.name}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center text-gray-400">
                         <Calendar className="w-4 h-4 mr-2" />
-                        Age: {calculateAge(patient?.dateOfBirth)} years
+                        Age: {calculateAge(vitals?.dateOfBirth)} years
                       </div>
                       <div className="flex items-center text-gray-400">
                         <User className="w-4 h-4 mr-2" />
@@ -170,7 +190,7 @@ const PatientProfile = () => {
                       </div>
                       <div className="flex items-center text-gray-400">
                         <Phone className="w-4 h-4 mr-2" />
-                        {patient?.phone}
+                        {patient?.phoneNumber}
                       </div>
                       <div className="flex items-center text-gray-400">
                         <Mail className="w-4 h-4 mr-2" />
@@ -178,11 +198,11 @@ const PatientProfile = () => {
                       </div>
                       <div className="flex items-center text-gray-400">
                         <Droplets className="w-4 h-4 mr-2" />
-                        Blood Type: {patient?.bloodType}
+                        Blood Type: {vitals?.bloodType}
                       </div>
                       <div className="flex items-center text-gray-400">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        {patient?.address}
+                        <User2Icon className="w-4 h-4 mr-2" />
+                        @{patient?.username}
                       </div>
                     </div>
                     
@@ -202,27 +222,29 @@ const PatientProfile = () => {
                   <div className="bg-gray-700/50 rounded-lg p-3 text-center">
                     <Heart className="w-6 h-6 text-red-400 mx-auto mb-1" />
                     <p className="text-xs text-gray-400">Blood Pressure</p>
-                    <p className="text-sm font-semibold text-white">{patient?.currentVitals?.bloodPressure}</p>
+                    <p className="text-sm font-semibold text-white">{vitals?.bloodPressure}</p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-3 text-center">
                     <Activity className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
                     <p className="text-xs text-gray-400">Heart Rate</p>
-                    <p className="text-sm font-semibold text-white">{patient?.currentVitals?.heartRate} bpm</p>
+                    <p className="text-sm font-semibold text-white">{vitals?.heartRate} bpm</p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                    <Thermometer className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
-                    <p className="text-xs text-gray-400">Temperature</p>
-                    <p className="text-sm font-semibold text-white">{patient?.currentVitals?.temperature}°F</p>
+                    <Height className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
+                    <p className="text-xs text-gray-400">Height</p>
+                    <p className="text-sm font-semibold text-white">{vitals?.height} cm</p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-3 text-center">
                     <User className="w-6 h-6 text-blue-400 mx-auto mb-1" />
                     <p className="text-xs text-gray-400">Weight</p>
-                    <p className="text-sm font-semibold text-white">{patient?.currentVitals?.weight} lbs</p>
+                    <p className="text-sm font-semibold text-white">{vitals?.weight} kgs</p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Last updated: {new Date(patient?.currentVitals?.lastUpdated).toLocaleDateString()}
-                </p>
+                {vitals?.chronicDiseases && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Chronic Diseases: {vitals.chronicDiseases}
+                  </p>
+                )}
               </div>
             </div>
           </div>

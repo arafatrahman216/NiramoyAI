@@ -22,6 +22,4 @@ public class Tests {
     private String description;
     private String hospital;
 
-    @OneToMany(mappedBy = "test")
-    private java.util.List<GivenTests> givenTests;
 }

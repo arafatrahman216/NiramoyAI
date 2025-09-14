@@ -2,19 +2,22 @@ package com.example.niramoy.service;
 
 
 import com.example.niramoy.dto.DoctorProfileDTO;
-import com.example.niramoy.entity.Doctor;
-import com.example.niramoy.entity.DoctorProfile;
-import com.example.niramoy.entity.User;
+import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.entity.*;
 import com.example.niramoy.enumerate.DoctorSource;
 import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.UserRepository;
+import com.example.niramoy.repository.VisitsRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -25,6 +28,9 @@ public class DoctorProfileService {
     private final DoctorRepository doctorRepository;
     private final DoctorProfileRepository doctorProfileRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
+    private final ModelMapper modelMapper;
+    private final VisitsRepository visitsRepository;
 
     public DoctorProfile findDoctorByUsername(String username){
         return doctorProfileRepository.findByUsername(username);
@@ -148,16 +154,43 @@ public class DoctorProfileService {
 
     }
 
-    public Map<String, Object> getPatientData(User doctor, int patientId) {
-        //current vitals from health profile
-        //user info from user table using dto
+
+    @Transactional
+    public Map<String, Object> getPatientData(User doctor, Long patientId) {
+        //current vitals from health profile ok
+        //user info from user table using dto ok
+
         // last 10 health logs
         // prescriptions of the user for the doctor
         // visit data for the doctor visit timeline
         // test report from test report table
-        return  null;
+
+        Map<String, Object> response = new HashMap<>();
+
+        User patient = userRepository.findById(patientId).orElse(null);
+        if (patient == null) {
+            throw new RuntimeException("Patient not found with id: " + patientId);
+        }
+        HealthProfile healthProfile = patient.getHealthProfile();
+        // FIX : last 10 logs should be sent
+        List<HealthLog> healthLog = patient.getHealthLogs();
+
+        DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
+
+        List<Visits> visits = visitsRepository.findByUserAndDoctor_DoctorId(patient, doctorProfile.getDoctorId());
+        UserDTO userDTO =modelMapper.map(patient, UserDTO.class);
+
+        response.put("user", userDTO);
+        response.put("healthProfile", healthProfile);
+//        response.put("healthLogs", healthLog);
+        response.put("visits", visits);
+
+
+        return response;
 
 
 
     }
+
+
 }

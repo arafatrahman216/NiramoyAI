@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+import javax.print.Doc;
+
 @Repository
 public interface DoctorProfileRepository extends JpaRepository<DoctorProfile, Long> {
 
@@ -20,6 +22,9 @@ public interface DoctorProfileRepository extends JpaRepository<DoctorProfile, Lo
             "WHERE u.username = :username") // Filter by the User's username
     DoctorProfile findByUsername( String username);
 
+    DoctorProfile findByDoctorId(Long doctorId);
+
+    DoctorProfile findByUserId(Long userId);
 
 
 }

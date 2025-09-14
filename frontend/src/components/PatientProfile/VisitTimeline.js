@@ -144,6 +144,8 @@ const VisitTimeline = ({ patientId }) => {
 
                           {/* Vitals */}
                           <div>
+                        {(visit.vitals) &&(
+                          <>
                             <h5 className="text-sm font-medium text-gray-300 mb-2">Vitals:</h5>
                             <div className="grid grid-cols-2 gap-2">
                               <div className="bg-gray-600/30 rounded-lg p-2 text-center">
@@ -163,10 +165,13 @@ const VisitTimeline = ({ patientId }) => {
                                 <p className="text-white font-medium">{visit.vitals.weight}</p>
                               </div>
                             </div>
+                          </>
+                          )}
                           </div>
 
+
                           {/* Procedures */}
-                          {visit.procedures.length > 0 && (
+                          {visit.procedures && visit.procedures.length > 0 && (
                             <div>
                               <h5 className="text-sm font-medium text-gray-300 mb-2">Procedures:</h5>
                               <div className="space-y-1">
@@ -184,7 +189,7 @@ const VisitTimeline = ({ patientId }) => {
                         {/* Right Column */}
                         <div className="space-y-4">
                           {/* Prescriptions */}
-                          {visit.prescriptions.length > 0 && (
+                          {visit.prescriptions && visit.prescriptions.length > 0 && (
                             <div>
                               <h5 className="text-sm font-medium text-gray-300 mb-2">Prescriptions:</h5>
                               <div className="space-y-2">
@@ -202,7 +207,7 @@ const VisitTimeline = ({ patientId }) => {
                           )}
 
                           {/* Labs Ordered */}
-                          {visit.labsOrdered.length > 0 && (
+                          {visit.labsOrdered && visit.labsOrdered.length > 0 && (
                             <div>
                               <h5 className="text-sm font-medium text-gray-300 mb-2">Labs Ordered:</h5>
                               <div className="flex flex-wrap gap-2">

@@ -60,6 +60,8 @@ export const doctorAPI = {
   
   // Get doctor details
   getDoctorById: (id) => api.get(`/public/doctors/${id}`),
+
+  getPatientInfo : (id) => api.post('/doctor/patient', {"id": id}),
   
 };
 
@@ -175,6 +177,22 @@ export const patientAPI = {
 export const diagnosisAPI = { 
   uploadVisitData: (visitData) =>
     api.post('/user/upload-visit', visitData),
+
+}
+
+
+
+
+export const userInfoAPI = {
+  getUserProfile: () => api.get('/user/profile'),
+
+  updateUserProfile: (editData) => api.patch('/user/profile', editData) ,
+
+  uploadProfilePic : (formData ) => api.post('/upload/image', formData),
+
+  getDashboardData: () => api.get('/user/dashboard'),
+
+  getHealthLog : ()=> api.get('/user/health-log')
 
 }
 

@@ -4,14 +4,14 @@ import com.example.niramoy.enumerate.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchConnectionDetails;
-import org.springframework.stereotype.Component;
+import lombok.NoArgsConstructor;
+
 
 
 @Data
 @AllArgsConstructor
 @Builder
-
+@NoArgsConstructor
 public class UserDTO {
     private long id;
     private String username ;
@@ -23,6 +23,7 @@ public class UserDTO {
     private String profilePictureUrl;
     private Role role ;
     private String createdAt ;
+
 
     public UserDTO(long id, String username, String email, String name, String phoneNumber, String gender, String status, String profilePictureUrl, Role role) {
         this.id = id;
@@ -36,4 +37,6 @@ public class UserDTO {
         this.role = role;
         this.createdAt = "12-12-2002";
     }
+
+
 }

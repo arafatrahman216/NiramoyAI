@@ -419,7 +419,9 @@ export const fallbackVisits = [
     type: 'routine',
     doctor: 'Dr. Emily Rodriguez',
     department: 'Internal Medicine',
+    location: 'Room 301A',
     reason: 'Quarterly diabetes checkup',
+    chiefComplaint: 'Routine diabetes management and glucose monitoring',
     diagnosis: 'Type 2 Diabetes - Well Controlled',
     treatment: 'Continue current medication regimen',
     notes: 'Patient showing excellent glucose control. HbA1c improved from last visit.',
@@ -429,8 +431,18 @@ export const fallbackVisits = [
       temperature: 98.6,
       weight: 185
     },
+    procedures: ['Blood glucose test', 'HbA1c test'],
+    prescriptions: [
+      {
+        medication: 'Metformin 500mg',
+        instruction: 'Take twice daily with meals'
+      }
+    ],
+    labsOrdered: ['HbA1c', 'Lipid Panel', 'Kidney Function'],
+    duration: '45 minutes',
+    cost: '$150',
     status: 'completed',
-    followUp: '2025-12-10'
+    followUp: 'Schedule follow-up in 3 months (2025-12-10)'
   },
   {
     id: 2,
@@ -439,7 +451,9 @@ export const fallbackVisits = [
     type: 'routine',
     doctor: 'Dr. Michael Chen',
     department: 'Cardiology',
+    location: 'Cardiology Wing B',
     reason: 'Annual cardiac screening',
+    chiefComplaint: 'Routine cardiac health assessment and hypertension monitoring',
     diagnosis: 'Hypertension - Stable',
     treatment: 'Continue Lisinopril, lifestyle modifications',
     notes: 'Blood pressure well controlled. ECG normal. Recommend continued exercise.',
@@ -449,8 +463,18 @@ export const fallbackVisits = [
       temperature: 98.4,
       weight: 187
     },
+    procedures: ['ECG', 'Echocardiogram'],
+    prescriptions: [
+      {
+        medication: 'Lisinopril 10mg',
+        instruction: 'Take once daily in the morning'
+      }
+    ],
+    labsOrdered: ['Lipid Panel', 'BNP'],
+    duration: '60 minutes',
+    cost: '$250',
     status: 'completed',
-    followUp: '2026-02-15'
+    followUp: 'Annual follow-up scheduled for 2026-02-15'
   },
   {
     id: 3,
@@ -459,7 +483,9 @@ export const fallbackVisits = [
     type: 'urgent',
     doctor: 'Dr. Sarah Johnson',
     department: 'Emergency Medicine',
+    location: 'ER Bay 3',
     reason: 'Acute respiratory symptoms',
+    chiefComplaint: 'Cough, fever, and difficulty breathing for 3 days',
     diagnosis: 'Upper Respiratory Infection',
     treatment: 'Antibiotics prescribed, rest, fluids',
     notes: 'Chest X-ray clear. Prescribed 10-day course of Amoxicillin.',
@@ -469,17 +495,33 @@ export const fallbackVisits = [
       temperature: 100.2,
       weight: 186
     },
+    procedures: ['Chest X-ray', 'Throat culture'],
+    prescriptions: [
+      {
+        medication: 'Amoxicillin 500mg',
+        instruction: 'Take 3 times daily for 10 days'
+      },
+      {
+        medication: 'Ibuprofen 400mg',
+        instruction: 'As needed for fever and pain'
+      }
+    ],
+    labsOrdered: ['CBC', 'CRP'],
+    duration: '30 minutes',
+    cost: '$200',
     status: 'completed',
-    followUp: 'As needed'
+    followUp: 'Return if symptoms worsen or persist beyond 10 days'
   },
   {
     id: 4,
     date: '2025-06-05',
     time: '9:00 AM',
-    type: 'routine',
+    type: 'follow-up',
     doctor: 'Dr. Emily Rodriguez',
     department: 'Internal Medicine',
+    location: 'Room 301A',
     reason: 'Diabetes management follow-up',
+    chiefComplaint: 'Follow-up for diabetes management and medication adjustment',
     diagnosis: 'Type 2 Diabetes',
     treatment: 'Metformin dosage adjustment',
     notes: 'HbA1c slightly elevated. Increased Metformin to 500mg twice daily.',
@@ -489,17 +531,29 @@ export const fallbackVisits = [
       temperature: 98.5,
       weight: 188
     },
+    procedures: ['Blood glucose monitoring'],
+    prescriptions: [
+      {
+        medication: 'Metformin 500mg',
+        instruction: 'Take twice daily with meals (increased dose)'
+      }
+    ],
+    labsOrdered: ['HbA1c', 'Fasting glucose'],
+    duration: '30 minutes',
+    cost: '$125',
     status: 'completed',
-    followUp: '2025-09-05'
+    followUp: 'Follow-up in 3 months (2025-09-05)'
   },
   {
     id: 5,
     date: '2025-05-12',
     time: '3:45 PM',
-    type: 'routine',
+    type: 'specialist',
     doctor: 'Dr. Lisa Park',
     department: 'Endocrinology',
+    location: 'Specialty Clinic 2B',
     reason: 'Diabetes specialist consultation',
+    chiefComplaint: 'Comprehensive diabetes evaluation and management optimization',
     diagnosis: 'Type 2 Diabetes - Needs Optimization',
     treatment: 'Comprehensive diabetes education, meal planning',
     notes: 'Extensive review of diabetes management. Patient enrolled in diabetes education program.',
@@ -509,8 +563,22 @@ export const fallbackVisits = [
       temperature: 98.3,
       weight: 190
     },
+    procedures: ['Comprehensive metabolic panel', 'Diabetic foot exam'],
+    prescriptions: [
+      {
+        medication: 'Metformin 500mg',
+        instruction: 'Continue twice daily with meals'
+      },
+      {
+        medication: 'Glipizide 5mg',
+        instruction: 'Take once daily before breakfast'
+      }
+    ],
+    labsOrdered: ['HbA1c', 'Microalbumin', 'Lipid Panel'],
+    duration: '90 minutes',
+    cost: '$300',
     status: 'completed',
-    followUp: '2025-08-12'
+    followUp: 'Return in 3 months for comprehensive review (2025-08-12)'
   }
 ];
 

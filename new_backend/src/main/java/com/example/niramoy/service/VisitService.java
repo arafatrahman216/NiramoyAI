@@ -1,8 +1,10 @@
 package com.example.niramoy.service;
 
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
+import com.example.niramoy.entity.Doctor;
 import com.example.niramoy.entity.Visits;
 import com.example.niramoy.entity.User;
+import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.VisitsRepository;
 import com.example.niramoy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ public class VisitService {
 
     private final VisitsRepository visitsRepository;
     private final UserRepository userRepository;
+    private final DoctorRepository doctorRepository;
 
     public UploadVisitReqDTO saveVisitData(
             Long userId,
@@ -39,11 +42,12 @@ public class VisitService {
             // Parse appointment date (HTML date input sends yyyy-MM-dd format)
             LocalDate parsedAppointmentDate = LocalDate.parse(appointmentDate);
 
+            Doctor doctor = doctorRepository.findByDoctorId(1L).get();
             // Create and save visit entity
             Visits visit = Visits.builder()
                     .appointmentDate(parsedAppointmentDate)
                     .doctorName(doctorName)
-                    .doctorId(1L) // Temporary fix: use doctor ID 1 as default (TODO: implement doctor lookup by name)
+                    .doctor(doctor) // Temporary fix: use doctor ID 1 as default (TODO: implement doctor lookup by name)
                     .symptoms(symptoms)
                     .prescription(prescription)
                     .prescriptionFileUrl(prescriptionFileUrl)

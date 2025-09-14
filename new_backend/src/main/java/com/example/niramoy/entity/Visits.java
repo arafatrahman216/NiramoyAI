@@ -1,5 +1,6 @@
 package com.example.niramoy.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,12 +30,13 @@ public class Visits {
     private String doctorName;
     
     // Add doctor_id to satisfy database constraint (nullable for now since we only have doctor name)
-    @Column(name = "doctor_id", nullable = true)
-    private Long doctorId;
+    @ManyToOne
+    @JoinColumn(name = "doctor_id", nullable = true)
+    private Doctor doctor;
     
     @Column(name = "symptoms")
     private String symptoms;
-    
+
     @Column(name = "prescription")
     private String prescription;
     
@@ -47,12 +49,17 @@ public class Visits {
     @Column(name = "test_report_url")
     private List<String> testReportUrls;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "health_log_id", unique = true)  // FK column in visit table
+    private HealthLog healthLog;
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
