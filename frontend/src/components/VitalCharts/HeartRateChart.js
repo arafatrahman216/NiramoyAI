@@ -6,7 +6,7 @@ const HeartRateChart = ({ data, height = 300 }) => {
   return (
     <BaseVitalChart
       data={data}
-      dataKey="rate"
+      dataKey="bpm"
       color="#22c55e"
       unit="bpm"
       label="Heart Rate"

@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Heart, Thermometer, Activity, Droplet, Eye, Clipboard, Search, Filter, Zap } from 'lucide-react';
 import { fallbackHealthLogs } from '../../utils/dummyData';
 
-const HealthLogs = ({ patientId }) => {
-  const [healthLogs, setHealthLogs] = useState([]);
-  const [filteredLogs, setFilteredLogs] = useState([]);
+const HealthLogs = ({ patientId ,healthLog}) => {
+  const [healthLogs, setHealthLogs] = useState(healthLog || []);
+  const [filteredLogs, setFilteredLogs] = useState(healthLog || []);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    setHealthLogs(fallbackHealthLogs);
-    setFilteredLogs(fallbackHealthLogs);
+    setHealthLogs(healthLog || fallbackHealthLogs);
+    setFilteredLogs(healthLog || fallbackHealthLogs);
   }, [patientId]);
 
   useEffect(() => {

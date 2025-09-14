@@ -10,12 +10,14 @@ import {
 } from '../VitalCharts';
 import { fallbackVitals } from '../../utils/dummyData';
 
-const VitalsChart = ({ patientId }) => {
+const VitalsChart = ({ patientId, charts }) => {
   const [vitalsData, setVitalsData] = useState([]);
   const [selectedVital, setSelectedVital] = useState('bloodPressure');
 
   useEffect(() => {
     setVitalsData(fallbackVitals);
+    console.log('Health Log Data:', charts);
+    console.log('Patient ID:', fallbackVitals);
   }, [patientId]);
 
   const vitalTypes = [
@@ -41,7 +43,7 @@ const VitalsChart = ({ patientId }) => {
       unit: '°F'
     },
     { 
-      id: 'bloodSugar', 
+      id: 'diabetes', 
       label: 'Blood Sugar', 
       icon: Droplet, 
       color: '#3b82f6',
@@ -61,15 +63,15 @@ const VitalsChart = ({ patientId }) => {
 
     switch (selectedVital) {
       case 'bloodPressure':
-        return <BloodPressureChart data={data} height={400} />;
+        return <BloodPressureChart data={charts.bloodPressure} height={400} />;
       case 'heartRate':
-        return <HeartRateChart data={data} height={400} />;
+        return <HeartRateChart data={charts.heartRate} height={400} />;
       case 'temperature':
-        return <TemperatureChart data={data} height={400} />;
-      case 'bloodSugar':
-        return <BloodSugarChart data={data} height={400} />;
+        return <TemperatureChart data={charts.temperature} height={400} />;
+      case 'diabetes':
+        return <BloodSugarChart data={charts.diabetes} height={400} />;
       case 'stressLevel':
-        return <StressLevelChart data={data} height={400} />;
+        return <StressLevelChart data={charts.stressLevel} height={400} />;
       default:
         return <div className="text-gray-400 text-center py-8">No chart available</div>;
     }
@@ -106,58 +108,6 @@ const VitalsChart = ({ patientId }) => {
       {/* Chart */}
       <div className="bg-gray-700/30 rounded-xl p-4">
         {renderChart()}
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        {vitalsData[selectedVital] && vitalsData[selectedVital].length > 0 && (
-          <>
-            <div className="bg-gray-700/50 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-400 mb-1">Latest Reading</h4>
-              <p className="text-lg font-semibold text-white">
-                {selectedVital === 'bloodPressure' 
-                  ? `${vitalsData[selectedVital][vitalsData[selectedVital].length - 1].systolic}/${vitalsData[selectedVital][vitalsData[selectedVital].length - 1].diastolic}`
-                  : selectedVital === 'heartRate'
-                  ? vitalsData[selectedVital][vitalsData[selectedVital].length - 1].rate
-                  : selectedVital === 'temperature'
-                  ? vitalsData[selectedVital][vitalsData[selectedVital].length - 1].temp
-                  : vitalsData[selectedVital][vitalsData[selectedVital].length - 1].level
-                }
-                {selectedVital !== 'bloodPressure' && (
-                  <span className="text-sm text-gray-400 ml-1">
-                    {vitalTypes.find(v => v.id === selectedVital)?.unit}
-                  </span>
-                )}
-              </p>
-            </div>
-            
-            <div className="bg-gray-700/50 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-400 mb-1">Average</h4>
-              <p className="text-lg font-semibold text-white">
-                {selectedVital === 'bloodPressure' 
-                  ? `${Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.systolic, 0) / vitalsData[selectedVital].length)}/${Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.diastolic, 0) / vitalsData[selectedVital].length)}`
-                  : selectedVital === 'heartRate'
-                  ? Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.rate, 0) / vitalsData[selectedVital].length)
-                  : selectedVital === 'temperature'
-                  ? Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.temp, 0) / vitalsData[selectedVital].length * 10) / 10
-                  : selectedVital === 'stressLevel'
-                  ? Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.level, 0) / vitalsData[selectedVital].length * 10) / 10
-                  : Math.round(vitalsData[selectedVital].reduce((acc, curr) => acc + curr.level, 0) / vitalsData[selectedVital].length)
-                }
-                {selectedVital !== 'bloodPressure' && (
-                  <span className="text-sm text-gray-400 ml-1">
-                    {vitalTypes.find(v => v.id === selectedVital)?.unit}
-                  </span>
-                )}
-              </p>
-            </div>
-            
-            <div className="bg-gray-700/50 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-400 mb-1">Total Readings</h4>
-              <p className="text-lg font-semibold text-white">{vitalsData[selectedVital].length}</p>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );

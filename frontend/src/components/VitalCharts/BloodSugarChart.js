@@ -6,7 +6,7 @@ const BloodSugarChart = ({ data, height = 300 }) => {
   return (
     <BaseVitalChart
       data={data}
-      dataKey="level"
+      dataKey="sugar"
       color="#3b82f6"
       unit="mg/dL"
       label="Blood Sugar"

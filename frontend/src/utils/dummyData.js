@@ -80,12 +80,12 @@ export const fallbackVitals = {
     { healthLogId: 6, date: '2025-09-11', time: '08:30', temp: 98.6 }
   ],
   bloodSugar: [
-    { healthLogId: 1, date: '2025-09-01', time: '09:00', level: 105 },
-    { healthLogId: 2, date: '2025-09-03', time: '14:30', level: 112 },
-    { healthLogId: 3, date: '2025-09-05', time: '11:15', level: 98 },
-    { healthLogId: 4, date: '2025-09-07', time: '16:45', level: 108 },
-    { healthLogId: 5, date: '2025-09-09', time: '10:20', level: 102 },
-    { healthLogId: 6, date: '2025-09-11', time: '08:30', level: 95 }
+    { healthLogId: 1, date: '2025-09-01', time: '09:00', sugar: 105 },
+    { healthLogId: 2, date: '2025-09-03', time: '14:30', sugar: 112 },
+    { healthLogId: 3, date: '2025-09-05', time: '11:15', sugar: 98 },
+    { healthLogId: 4, date: '2025-09-07', time: '16:45', sugar: 108 },
+    { healthLogId: 5, date: '2025-09-09', time: '10:20', sugar: 102 },
+    { healthLogId: 6, date: '2025-09-11', time: '08:30', sugar: 95 }
   ],
   stressLevel: [
     { healthLogId: 1, date: '2025-09-01', time: '09:00', level: 3 },
@@ -96,12 +96,12 @@ export const fallbackVitals = {
     { healthLogId: 6, date: '2025-09-11', time: '08:30', level: 2 }
   ],
   diabetes: [
-    { healthLogId: 1, date: '2025-09-01', time: '09:00', level: 105 },
-    { healthLogId: 2, date: '2025-09-03', time: '14:30', level: 112 },
-    { healthLogId: 3, date: '2025-09-05', time: '11:15', level: 98 },
-    { healthLogId: 4, date: '2025-09-07', time: '16:45', level: 108 },
-    { healthLogId: 5, date: '2025-09-09', time: '10:20', level: 102 },
-    { healthLogId: 6, date: '2025-09-11', time: '08:30', level: 95 }
+    { healthLogId: 1, date: '2025-09-01', time: '09:00', sugar: 105 },
+    { healthLogId: 2, date: '2025-09-03', time: '14:30', sugar: 112 },
+    { healthLogId: 3, date: '2025-09-05', time: '11:15', sugar: 98 },
+    { healthLogId: 4, date: '2025-09-07', time: '16:45', sugar: 108 },
+    { healthLogId: 5, date: '2025-09-09', time: '10:20', sugar: 102 },
+    { healthLogId: 6, date: '2025-09-11', time: '08:30', sugar: 95 }
   ]
 };
 

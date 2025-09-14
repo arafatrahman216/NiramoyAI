@@ -31,6 +31,7 @@ public class DoctorProfileService {
     private final UserService userService;
     private final ModelMapper modelMapper;
     private final VisitsRepository visitsRepository;
+    private final HealthService healthService;
 
     public DoctorProfile findDoctorByUsername(String username){
         return doctorProfileRepository.findByUsername(username);
@@ -182,8 +183,10 @@ public class DoctorProfileService {
 
         response.put("user", userDTO);
         response.put("healthProfile", healthProfile);
-//        response.put("healthLogs", healthLog);
+        response.put("healthLogs", healthLog);
+        response.put("charts",healthService.transformToVitals(healthLog));
         response.put("visits", visits);
+
 
 
         return response;

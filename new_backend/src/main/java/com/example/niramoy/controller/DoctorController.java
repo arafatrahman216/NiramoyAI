@@ -84,6 +84,7 @@ public class DoctorController {
         response.put("user", patientsData.get("user"));
         response.put("healthLogs", patientsData.get("healthLogs"));
         response.put("visits", patientsData.get("visits"));
+        response.put("charts", patientsData.get("charts"));
         return ResponseEntity.ok(response);
     }
 
