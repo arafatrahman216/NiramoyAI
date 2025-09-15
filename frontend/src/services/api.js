@@ -18,8 +18,8 @@ api.interceptors.request.use((config) => {
   
   // Debug logging for all API requests
   console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-  console.log(`📤 Request data:`, config.data);
-  console.log(`📋 Request headers:`, config.headers);
+  // console.log(`📤 Request data:`, config.data);
+  // console.log(`📋 Request headers:`, config.headers);
   
   return config;
 });

@@ -10,11 +10,7 @@ import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Messages;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.dto.HealthProfileDTO;
-import com.example.niramoy.service.HealthService;
-import com.example.niramoy.service.ImageService;
-import com.example.niramoy.service.MessageService;
-import com.example.niramoy.service.UserService;
-import com.example.niramoy.service.VisitService;
+import com.example.niramoy.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +41,7 @@ public class UserController {
     private final VisitService visitService;
     private final MessageService messageService;
     private final HealthService healthService;
+    private final ElevenLabService elevenLabService;
 
 
     @GetMapping("/profile")
@@ -461,6 +458,25 @@ public class UserController {
             log.error("Error in upload-visit endpoint: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error processing visit data: " + e.getMessage());
+        }
+    }
+
+
+    @PostMapping("/audio")
+    public ResponseEntity<Map<String, Object>> uploadAudio(@ModelAttribute MultipartFile audio) {
+        try {
+            String transcription = elevenLabService.transcribeAudio(audio);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("text", transcription);
+            System.out.println(transcription);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

@@ -11,6 +11,8 @@ import NotesLogStep from './NotesLogStep';
 import ProgressBar from './ProgressBar';
 import NavigationButtons from './NavigationButtons';
 import CompleteLogStep from './CompleteLogStep';
+import api, { API_BASE_URL } from '../../services/api';
+import AudioButton from './AudioButton';
 
 const HealthLogForm = ({ isModal = false, onClose = null }) => {
   const navigate = useNavigate();
@@ -191,6 +193,9 @@ const HealthLogForm = ({ isModal = false, onClose = null }) => {
   };
 
   // ==============================================
+  // Audio recording handled by AudioButton component now.
+
+  // ==============================================
   // STEP RENDERER
   // ==============================================
   const renderStep = () => {
@@ -311,6 +316,11 @@ const HealthLogForm = ({ isModal = false, onClose = null }) => {
           )}
 
           {renderStep()}
+
+          {/* Audio Recording */}
+          <div className="mt-10">
+            <AudioButton onUploadSuccess={(res)=>console.log('Audio uploaded', res)} />
+          </div>
 
           {/* Navigation Buttons */}
           {currentStep < steps.length - 1 && (
