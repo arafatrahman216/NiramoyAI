@@ -4,6 +4,8 @@ package com.example.niramoy.service;
 import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.HealthLogRepository;
+import com.example.niramoy.utils.HealthLogRecord;
+import com.example.niramoy.utils.JsonParser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +25,8 @@ import static java.lang.Integer.parseInt;
 public class HealthService {
 
     private final HealthLogRepository healthLogRepository;
+    private final GoogleAIService googleAIService;
+
 
     public Page<HealthLog> findByUser(User user, Pageable pageable) {
         return healthLogRepository.findByUser(user, pageable);
@@ -219,6 +223,21 @@ public class HealthService {
     }
 
 
+    public HealthLogRecord getLogFromTranscription(String transcription) {
+        String prompt = """
+        Extract health information from the following text.
+        Return strictly as JSON with numeric keys:
+        systolicBloodPressure, diastolicBloodPressure, weight, heartRate, stressLevel, bloodSugar, temperature, oxygenSaturation.
+        - the higher pressure value is systolicBloodPressure and the lower one is diastolicBloodPressure.
+        - donot write any text other than the JSON, not even a delimeter or quotation. ex- { "weight": "70", "heartRate": "80" ....}
+        - if you are unsure about any value, make a guess based on average human values.
+        - pressure= 120/80, heartRate=72, bloodSugar=7, temperature=98.6, oxygenSaturation=100, weight=0, stressLevel=0
 
+        Text: %s
+        """.formatted(transcription) ;
+        String rawResponse = googleAIService.generateContent(prompt);
+        System.out.println(rawResponse);
+        return JsonParser.parseHealthLog(rawResponse);
 
+    }
 }

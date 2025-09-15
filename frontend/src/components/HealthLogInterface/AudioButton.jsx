@@ -112,7 +112,7 @@ const AudioButton = ({ onUploadSuccess, autoStopMs = 0, enableUpload = true }) =
       if (enableUpload) {
         const fd = new FormData(); fd.append('audio', blob, 'recording.webm');
         try {
-          const res = await api.post('/user/audio', fd);
+          const res = await api.post('/user/audio-log', fd);
           if (onUploadSuccess) onUploadSuccess(res.data);
         } catch (uploadErr) {
           console.error('Upload failed:', uploadErr);

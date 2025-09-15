@@ -45,4 +45,7 @@ public class GoogleAIService {
     public boolean isConfigured() {
         return googleApiKey != null && !googleApiKey.trim().isEmpty() && chatModel != null;
     }
+
+
+
 }

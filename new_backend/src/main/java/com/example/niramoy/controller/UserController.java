@@ -11,6 +11,8 @@ import com.example.niramoy.entity.Messages;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.service.*;
+import com.example.niramoy.utils.HealthLogRecord;
+import com.example.niramoy.utils.JsonParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +44,7 @@ public class UserController {
     private final MessageService messageService;
     private final HealthService healthService;
     private final ElevenLabService elevenLabService;
+    private final GoogleAIService googleAIService;
 
 
     @GetMapping("/profile")
@@ -386,7 +389,7 @@ public class UserController {
 
     @GetMapping("/test")
     public ResponseEntity<String> testEndpoint() {
-        return ResponseEntity.ok("Test endpoint is working!");
+        return ResponseEntity.ok("healthLogRecord");
     }
 
     @PostMapping("/upload-visit")
@@ -462,7 +465,7 @@ public class UserController {
     }
 
 
-    @PostMapping("/audio")
+    @PostMapping("/audio-log")
     public ResponseEntity<Map<String, Object>> uploadAudio(@ModelAttribute MultipartFile audio) {
         try {
             String transcription = elevenLabService.transcribeAudio(audio);
@@ -471,6 +474,8 @@ public class UserController {
             response.put("success", true);
             response.put("text", transcription);
             System.out.println(transcription);
+            HealthLogRecord healthLogRecord = healthService.getLogFromTranscription(transcription);
+            response.put("healthLogRecord", healthLogRecord);
 
             return ResponseEntity.ok(response);
 
