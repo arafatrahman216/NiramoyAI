@@ -175,6 +175,7 @@ public class DoctorProfileService {
         HealthProfile healthProfile = patient.getHealthProfile();
         // FIX : last 10 logs should be sent
         List<HealthLog> healthLog = patient.getHealthLogs();
+        healthLog.sort((o1, o2) -> o2.getLogDatetime().compareTo(o1.getLogDatetime()));
 
         DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
 

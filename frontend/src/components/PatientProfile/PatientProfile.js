@@ -87,7 +87,7 @@ const PatientProfile = () => {
   const fetchPatientData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching data for patient ID:', id);
+      // console.log('Fetching data for patient ID:', id);
 
       const response = await doctorAPI.getPatientInfo(id);
       // console.log(response.data);
@@ -95,7 +95,7 @@ const PatientProfile = () => {
       setPatient(response.data.user || fallbackPatient);
       setVitals(response.data.vitals || fallbackcurrentVitals);
       setCharts(response.data.charts || []);
-      setHealthLog(response.data.healthLogs || []);
+      setHealthLog(response.data.healthLogs );
     } catch (err) {
       setPatient(fallbackPatient);
       setVitals(fallbackcurrentVitals);
@@ -279,7 +279,7 @@ const PatientProfile = () => {
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'vitals' && <VitalsChart patientId={id} charts={charts} />}
-            {activeTab === 'healthlogs' && <HealthLogs patientId={id} healthLogs= {healthLog} />}
+            {activeTab === 'healthlogs' && <HealthLogs patientId={id} healthLog= {healthLog} />}
             {activeTab === 'prescriptions' && <Prescriptions patientId={id} />}
             {activeTab === 'visits' && <VisitTimeline patientId={id} />}
             {activeTab === 'tests' && <TestReports patientId={id} />}

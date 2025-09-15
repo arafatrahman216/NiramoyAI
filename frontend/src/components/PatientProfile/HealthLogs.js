@@ -11,6 +11,8 @@ const HealthLogs = ({ patientId ,healthLog}) => {
   useEffect(() => {
     setHealthLogs(healthLog || fallbackHealthLogs);
     setFilteredLogs(healthLog || fallbackHealthLogs);
+    console.log("Health Logs:", healthLog);
+    console.log("Fallback Logs:", fallbackHealthLogs);
   }, [patientId]);
 
   useEffect(() => {
@@ -68,7 +70,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
           </div>
         ) : (
           filteredLogs.map((log) => (
-            <div key={log.id} className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/50">
+            <div key={log.healthLogId} className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/50">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 rounded-lg bg-emerald-500/20">
@@ -80,7 +82,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                     <div className="flex items-center space-x-4 text-sm text-gray-400">
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(log.date).toLocaleDateString('en-US', { 
+                        {new Date(log.logDatetime).toLocaleDateString('en-US', { 
                           weekday: 'short', 
                           year: 'numeric', 
                           month: 'short', 
@@ -94,9 +96,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                     </div>
                   </div>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${getSeverityColor(log.severity)} bg-gray-600/50`}>
-                  {log.severity.toUpperCase()}
-                </div>
+                
               </div>
 
               {/* Vitals */}
@@ -107,7 +107,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                     <span className="text-xs text-gray-400">Blood Pressure</span>
                   </div>
                   <p className="text-sm font-semibold text-white">
-                    {log.vitals.bloodPressure.systolic}/{log.vitals.bloodPressure.diastolic}
+                    {log.bloodPressure}
                   </p>
                 </div>
                 
@@ -116,7 +116,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                     <Activity className="w-4 h-4 text-green-400 mr-2" />
                     <span className="text-xs text-gray-400">Heart Rate</span>
                   </div>
-                  <p className="text-sm font-semibold text-white">{log.vitals.heartRate} bpm</p>
+                  <p className="text-sm font-semibold text-white">{log.heartRate} bpm</p>
                 </div>
                 
                 <div className="bg-gray-600/30 rounded-lg p-3">
@@ -124,7 +124,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                     <Thermometer className="w-4 h-4 text-orange-400 mr-2" />
                     <span className="text-xs text-gray-400">Temperature</span>
                   </div>
-                  <p className="text-sm font-semibold text-white">{log.vitals.temperature}°F</p>
+                  <p className="text-sm font-semibold text-white">{log.temperature}°F</p>
                 </div>
                 
                 <div className="bg-gray-600/30 rounded-lg p-3">
@@ -132,7 +132,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                     <span className="w-4 h-4 text-purple-400 mr-2 text-xs font-bold">W</span>
                     <span className="text-xs text-gray-400">Weight</span>
                   </div>
-                  <p className="text-sm font-semibold text-white">{log.vitals.weight} lbs</p>
+                  <p className="text-sm font-semibold text-white">{log.weight} lbs</p>
                 </div>
                 
                 <div className="bg-gray-600/30 rounded-lg p-3">
@@ -140,7 +140,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                     <Droplet className="w-4 h-4 text-blue-400 mr-2" />
                     <span className="text-xs text-gray-400">Blood Sugar</span>
                   </div>
-                  <p className="text-sm font-semibold text-white">{log.vitals.bloodSugar} mg/dL</p>
+                  <p className="text-sm font-semibold text-white">{log.bloodSugar} mg/dL</p>
                 </div>
 
                 <div className="bg-gray-600/30 rounded-lg p-3">
@@ -148,7 +148,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                     <Eye className="w-4 h-4 text-cyan-400 mr-2" />
                     <span className="text-xs text-gray-400">Oxygen</span>
                   </div>
-                  <p className="text-sm font-semibold text-white">{log.vitals.oxygenSaturation}%</p>
+                  <p className="text-sm font-semibold text-white">{log.oxygenSaturation}%</p>
                 </div>
               </div>
 
@@ -160,36 +160,29 @@ const HealthLogs = ({ patientId ,healthLog}) => {
                       <Zap className="w-4 h-4 text-yellow-400 mr-2" />
                       <span className="text-sm text-gray-400">Stress Level</span>
                     </div>
-                    <span className={`text-sm font-semibold ${getStressLevelColor(log.vitals.stressLevel)}`}>
-                      {log.vitals.stressLevel}/10
+                    <span className={`text-sm font-semibold ${getStressLevelColor(log.stressLevel)}`}>
+                      {log.stressLevel}/10
                     </span>
                   </div>
                   <div className="w-full bg-gray-600 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full ${
-                        log.vitals.stressLevel <= 3 ? 'bg-green-500' :
-                        log.vitals.stressLevel <= 6 ? 'bg-yellow-500' : 'bg-red-500'
+                        log.stressLevel <= 3 ? 'bg-green-500' :
+                        log.stressLevel <= 6 ? 'bg-yellow-500' : 'bg-red-500'
                       }`}
-                      style={{ width: `${log.vitals.stressLevel * 10}%` }}
+                      style={{ width: `${log.stressLevel * 10}%` }}
                     ></div>
                   </div>
                 </div>
               </div>
 
               {/* Symptoms */}
-              {log.symptoms.length > 0 && (
+              { log.otherSymptoms && log.otherSymptoms.length > 0 && (
                 <div className="mb-4">
                   <h5 className="text-sm font-medium text-gray-300 mb-2">Symptoms:</h5>
                   <div className="flex flex-wrap gap-2">
-                    {log.symptoms.map((symptom, index) => (
-                      <span
-                        key={index}
-                        className={`px-3 py-1 rounded-full text-xs ${
-                          symptom === 'None' 
-                            ? 'bg-green-500/20 text-green-400' 
-                            : 'bg-yellow-500/20 text-yellow-400'
-                        }`}
-                      >
+                    {log.otherSymptoms.map((symptom, index) => (
+                      <span key={index} className="bg-gray-600/30 rounded-lg px-3 py-1 text-xs font-semibold text-gray-300">
                         {symptom}
                       </span>
                     ))}
@@ -200,7 +193,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
               {/* Notes */}
               <div>
                 <h5 className="text-sm font-medium text-gray-300 mb-2">Notes:</h5>
-                <p className="text-gray-300 text-sm leading-relaxed">{log.notes}</p>
+                <p className="text-gray-300 text-sm leading-relaxed">{log.note}</p>
               </div>
             </div>
           ))
@@ -217,7 +210,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
           <h4 className="text-sm font-medium text-gray-400 mb-1">Avg Blood Sugar</h4>
           <p className="text-2xl font-bold text-blue-400">
             {healthLogs.length > 0 
-              ? Math.round(healthLogs.reduce((sum, log) => sum + log.vitals.bloodSugar, 0) / healthLogs.length)
+              ? Math.round(healthLogs.reduce((sum, log) => sum + log.bloodSugar, 0) / healthLogs.length)
               : 0
             } mg/dL
           </p>
@@ -226,7 +219,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
           <h4 className="text-sm font-medium text-gray-400 mb-1">Avg Stress Level</h4>
           <p className="text-2xl font-bold text-yellow-400">
             {healthLogs.length > 0 
-              ? (healthLogs.reduce((sum, log) => sum + log.vitals.stressLevel, 0) / healthLogs.length).toFixed(1)
+              ? (healthLogs.reduce((sum, log) => sum + log.stressLevel, 0) / healthLogs.length).toFixed(1)
               : 0
             }/10
           </p>
@@ -235,7 +228,7 @@ const HealthLogs = ({ patientId ,healthLog}) => {
           <h4 className="text-sm font-medium text-gray-400 mb-1">Last Log</h4>
           <p className="text-lg font-semibold text-white">
             {healthLogs.length > 0 
-              ? new Date(healthLogs[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              ? new Date(healthLogs[0].logDatetime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
               : 'N/A'
             }
           </p>
