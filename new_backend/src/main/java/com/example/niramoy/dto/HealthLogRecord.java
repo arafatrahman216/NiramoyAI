@@ -1,6 +1,8 @@
-package com.example.niramoy.utils;
+package com.example.niramoy.dto;
 
 import lombok.Builder;
+
+import java.util.List;
 
 
 @Builder
@@ -12,5 +14,8 @@ public record HealthLogRecord(
     String stressLevel,
     String bloodSugar,
     String temperature,
-    String oxygenSaturation
+    String oxygenSaturation,
+    String note,
+    List<String> otherSymptoms
+
 ) {}

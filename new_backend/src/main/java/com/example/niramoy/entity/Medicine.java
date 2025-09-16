@@ -18,9 +18,9 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long medicineId;
 
-    @ManyToOne
-    @JoinColumn(name = "prescription_id", nullable = false)
-    private Prescription prescription;
+//    @ManyToOne
+//    @JoinColumn(name = "prescription_id", nullable = false)
+//    private Prescription prescription;
 
     private String medicineName;
     private List<String> frequency= new ArrayList<>();

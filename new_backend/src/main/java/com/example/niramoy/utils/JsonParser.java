@@ -1,8 +1,11 @@
 package com.example.niramoy.utils;
 
+import com.example.niramoy.dto.HealthLogRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 @RequiredArgsConstructor
 public class JsonParser {
@@ -110,7 +113,8 @@ public class JsonParser {
         }
         catch (Exception e) {
             return HealthLogRecord.builder().temperature("98.6").bloodSugar("6").diastolicBloodPressure("80")
-                    .systolicBloodPressure("120").stressLevel("0").heartRate("72").oxygenSaturation("100")
+                    .systolicBloodPressure("120").stressLevel("0").heartRate("72").oxygenSaturation("100").
+                    otherSymptoms(new ArrayList<>()).note("")
                     .weight("").build();
         }
     }

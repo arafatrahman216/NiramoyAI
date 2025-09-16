@@ -20,6 +20,7 @@ const HealthLogForm = ({ isModal = false, onClose = null }) => {
   // ==============================================
   // STATE MANAGEMENT
   // ==============================================
+  const [audioResponse, setAudioResponse] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     // Vitals
@@ -318,9 +319,32 @@ const HealthLogForm = ({ isModal = false, onClose = null }) => {
           {renderStep()}
 
           {/* Audio Recording */}
-          <div className="mt-10">
-            <AudioButton onUploadSuccess={(res)=>console.log('Audio uploaded', res)} />
+          { currentStep < steps.length - 1 && <div className="mt-10">
+            <AudioButton onUploadSuccess={(res)=>
+              {
+                setAudioResponse(res.healthLogRecord);
+                console.log('Audio uploaded', res.healthLogRecord);
+
+                console.log('formData before update:', formData); 
+                setFormData(prev => ({
+                  ...prev,
+                  blood_pressure_systolic : (res.healthLogRecord.systolicBloodPressure!== "" )? res.healthLogRecord.systolicBloodPressure : prev.blood_pressure_systolic,
+                  blood_pressure_diastolic : (res.healthLogRecord.diastolicBloodPressure!== "" )? res.healthLogRecord.diastolicBloodPressure : prev.blood_pressure_diastolic,
+                  blood_sugar : (res.healthLogRecord.bloodSugar!== "" )? res.healthLogRecord.bloodSugar : prev.blood_sugar,
+                  heart_rate : (res.healthLogRecord.heartRate!== "" )? res.healthLogRecord.heartRate : prev.heart_rate,
+                  oxygen_saturation : (res.healthLogRecord.oxygenSaturation!== "" )? res.healthLogRecord.oxygenSaturation : prev.oxygen_saturation,
+                  temperature : (res.healthLogRecord.temperature!== "" )? res.healthLogRecord.temperature : prev.temperature,
+                  weight : (res.healthLogRecord.weight!== "" )? res.healthLogRecord.weight : prev.weight,
+                  stress_level : (res.healthLogRecord.stressLevel!== "" )? res.healthLogRecord.stressLevel : prev.stress_level,
+                  symptoms: (res.healthLogRecord.otherSymptoms && res.healthLogRecord.otherSymptoms.length > 0) ? Array.from(new Set([...prev.symptoms, ...res.healthLogRecord.otherSymptoms])) : prev.symptoms,
+
+                  notes: (res.healthLogRecord.note) ? prev.notes + res.healthLogRecord.note : prev.notes
+
+              }));
+              console.log("after update : ", formData);
+            }} />
           </div>
+          }
 
           {/* Navigation Buttons */}
           {currentStep < steps.length - 1 && (

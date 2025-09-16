@@ -27,8 +27,8 @@ public class Prescription {
     private String diagnosis;
     private String symptoms;
 
-    @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Medicine> medicines;
+//    @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Medicine> medicines;
 
 //    @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<GivenTests> givenTests;

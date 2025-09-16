@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:8000/api';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000,
 });
 
 // Add request interceptor to include auth token and debug logging

@@ -4,7 +4,7 @@ package com.example.niramoy.service;
 import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.HealthLogRepository;
-import com.example.niramoy.utils.HealthLogRecord;
+import com.example.niramoy.dto.HealthLogRecord;
 import com.example.niramoy.utils.JsonParser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -227,11 +227,13 @@ public class HealthService {
         String prompt = """
         Extract health information from the following text.
         Return strictly as JSON with numeric keys:
-        systolicBloodPressure, diastolicBloodPressure, weight, heartRate, stressLevel, bloodSugar, temperature, oxygenSaturation.
+        systolicBloodPressure, diastolicBloodPressure, weight, heartRate, stressLevel, bloodSugar, temperature, oxygenSaturation, otherSymptoms, note.
         - the higher pressure value is systolicBloodPressure and the lower one is diastolicBloodPressure.
-        - donot write any text other than the JSON, not even a delimeter or quotation. ex- { "weight": "70", "heartRate": "80" ....}
+        - donot write any text other than the JSON, not even a delimeter or quotation. 
+        - ex- { "weight": "70", "heartRate": "80" , "otherSymptoms" : ["cough", "fever"] , "note" : "bad sleep and less energy"....}
         - if you are unsure about any value, make a guess based on average human values.
-        - pressure= 120/80, heartRate=72, bloodSugar=7, temperature=98.6, oxygenSaturation=100, weight=0, stressLevel=0
+        - default : pressure= 120/80, heartRate=72, bloodSugar=7, temperature=98.6, oxygenSaturation=100, weight=0, stressLevel=0,
+                otherSymptoms = [] , note = ""
 
         Text: %s
         """.formatted(transcription) ;
