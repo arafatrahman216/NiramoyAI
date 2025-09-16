@@ -1,5 +1,6 @@
 package com.example.niramoy.service;
 
+import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
 import com.example.niramoy.entity.Doctor;
 import com.example.niramoy.entity.Visits;
@@ -78,5 +79,24 @@ public class VisitService {
 
     public List<Visits> getAllVisitsByUser(User user) {
         return visitsRepository.findByUserOrderByAppointmentDateDesc(user);
+    }
+
+    public List<VisitDTO> getRecentVisits(User user, int i) {
+        
+        List<Visits> visits = visitsRepository.findByUserOrderByAppointmentDateDesc(user);
+        return visits.stream().limit(i).map(v -> {
+            VisitDTO dto = new VisitDTO();
+            dto.setVisitId(v.getVisitId());
+            dto.setAppointmentDate(v.getAppointmentDate().toString());
+            dto.setDoctorName(v.getDoctorName());
+            dto.setPatientName(user.getName());
+            dto.setUserId(user.getId());
+            dto.setDoctorId(v.getDoctor().getDoctorId());
+            dto.setSymptoms(v.getSymptoms());
+            dto.setPrescription(v.getPrescription());
+            dto.setPrescriptionFileUrl(v.getPrescriptionFileUrl());
+            return dto;
+        }).toList();
+
     }
 }

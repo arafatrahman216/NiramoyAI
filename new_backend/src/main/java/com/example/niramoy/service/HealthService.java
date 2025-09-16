@@ -2,6 +2,7 @@ package com.example.niramoy.service;
 
 
 import com.example.niramoy.entity.HealthLog;
+import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.HealthLogRepository;
 import com.example.niramoy.dto.HealthLogRecord;
@@ -9,6 +10,7 @@ import com.example.niramoy.utils.JsonParser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -137,7 +139,6 @@ public class HealthService {
                     Long healthLogId = log.getHealthLogId();
                     Map<String, Object> map = new HashMap<>();
                     map.put("date", log.getLogDatetime().format(formatter));
-                    System.out.println(log.getLogDatetime().format(formatter));
                     map.put("systolic", parseInt(parts[0]));
                     map.put("diastolic", parseInt(parts[1]));
                     map.put("healthLogId", healthLogId);
@@ -240,6 +241,23 @@ public class HealthService {
         String rawResponse = googleAIService.generateContent(prompt);
         System.out.println(rawResponse);
         return JsonParser.parseHealthLog(rawResponse);
+
+    }
+
+
+    public HashMap<String, Object> getHealthDashboardByUser(User user) {
+        HealthProfile healthProfile = user.getHealthProfile();
+        Page<HealthLog> healthLogs = findByUserOrderByDateDesc(user, PageRequest.of(0, 10));
+        Map<String, List<Map<String, Object>>> vitals = transformToVitals(healthLogs.getContent());
+        String systolicPressure = healthProfile.getBloodPressure().split("/")[0];
+        String diastolicPressure = healthProfile.getBloodPressure().split("/")[1];
+        HashMap<String, Object> response = new HashMap<>();
+        response.put("systolicPressure", systolicPressure);
+        response.put("diastolicPressure", diastolicPressure);
+        response.put("healthLogs", healthLogs.getContent());
+        response.put("vitals", vitals);
+        response.put("healthProfile", healthProfile);
+        return response;
 
     }
 }

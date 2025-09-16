@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:8000/api';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 20000, // 20 seconds timeout
 });
 
 // Add request interceptor to include auth token and debug logging
@@ -192,8 +192,10 @@ export const userInfoAPI = {
 
   getDashboardData: () => api.get('/user/dashboard'),
 
-  getHealthLog : ()=> api.get('/user/health-log')
+  getHealthLog : ()=> api.get('/user/health-log'),
 
-}
+  getRecentVisits : () => api.get('/user/recent-visits')
+
+};
 
 export default api;

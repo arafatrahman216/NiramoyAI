@@ -18,6 +18,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../../services/api';
+import RecentVisits from '../RecentVisits';
+import { 
+  fallbackDoctorAppointments,
+  fallbackDoctorRecentVisits,
+  fallbackDoctorStats,
+  fallbackDoctorDashboardProfile
+} from '../../utils/dummyData';
 
 const DoctorDashboard = () => {
   const { user, logout } = useAuth();
@@ -28,164 +35,6 @@ const DoctorDashboard = () => {
   const [recentVisits, setRecentVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // Fallback dummy data for appointments
-  const fallbackAppointments = [
-    {
-      id: 1,
-      appointmentTime: "09:00:00",
-      patient: {
-        firstName: "John",
-        lastName: "Doe"
-      },
-      consultationType: "REGULAR",
-      status: "SCHEDULED",
-      symptoms: "Chest pain and shortness of breath during physical activity"
-    },
-    {
-      id: 2,
-      appointmentTime: "10:30:00",
-      patient: {
-        firstName: "Sarah",
-        lastName: "Johnson"
-      },
-      consultationType: "FOLLOW_UP",
-      status: "SCHEDULED",
-      symptoms: "Follow-up for diabetes management and blood sugar monitoring"
-    },
-    {
-      id: 3,
-      appointmentTime: "14:15:00",
-      patient: {
-        firstName: "Michael",
-        lastName: "Brown"
-      },
-      consultationType: "EMERGENCY",
-      status: "COMPLETED",
-      symptoms: "Severe headache with nausea and dizziness"
-    },
-    {
-      id: 4,
-      appointmentTime: "16:00:00",
-      patient: {
-        firstName: "Emily",
-        lastName: "Davis"
-      },
-      consultationType: "REGULAR",
-      status: "CANCELLED",
-      symptoms: "Regular checkup and blood pressure monitoring"
-    },
-    {
-      id: 5,
-      appointmentTime: "11:45:00",
-      patient: {
-        firstName: "James",
-        lastName: "Wilson"
-      },
-      consultationType: "REGULAR",
-      status: "SCHEDULED",
-      symptoms: "Persistent cough and fever for the past week"
-    },
-    {
-      id: 6,
-      appointmentTime: "15:30:00",
-      patient: {
-        firstName: "Maria",
-        lastName: "Garcia"
-      },
-      consultationType: "FOLLOW_UP",
-      status: "SCHEDULED",
-      symptoms: "Post-surgery follow-up and wound inspection"
-    }
-  ];
-
-  // Fallback dummy data for recent visits
-  const fallbackRecentVisits = [
-    {
-      id: 1,
-      patientName: "Robert Wilson",
-      visitDate: "2025-09-10",
-      diagnosis: "Hypertension Stage 1",
-      treatment: "Lisinopril 10mg daily, lifestyle modifications",
-      notes: "Patient responded well to initial treatment. Blood pressure improved from 150/95 to 135/85."
-    },
-    {
-      id: 2,
-      patientName: "Lisa Anderson",
-      visitDate: "2025-09-09",
-      diagnosis: "Type 2 Diabetes Mellitus",
-      treatment: "Metformin 500mg twice daily, dietary counseling",
-      notes: "HbA1c levels decreased from 8.2% to 7.1%. Continue current medication."
-    },
-    {
-      id: 3,
-      patientName: "David Martinez",
-      visitDate: "2025-09-08",
-      diagnosis: "Acute Bronchitis",
-      treatment: "Amoxicillin 500mg TID x 7 days, rest",
-      notes: "Symptoms improving with antibiotic therapy. Follow up if no improvement in 3-4 days."
-    },
-    {
-      id: 4,
-      patientName: "Jennifer Taylor",
-      visitDate: "2025-09-07",
-      diagnosis: "Migraine with Aura",
-      treatment: "Sumatriptan 50mg PRN, lifestyle modifications",
-      notes: "Patient reports 70% reduction in migraine frequency with new medication regimen."
-    },
-    {
-      id: 5,
-      patientName: "Thomas Garcia",
-      visitDate: "2025-09-06",
-      diagnosis: "Gastroesophageal Reflux Disease",
-      treatment: "Omeprazole 20mg daily, dietary changes",
-      notes: "GERD symptoms well controlled. Patient educated on trigger foods to avoid."
-    },
-    {
-      id: 6,
-      patientName: "Amanda Rodriguez",
-      visitDate: "2025-09-05",
-      diagnosis: "Allergic Rhinitis",
-      treatment: "Cetirizine 10mg daily, nasal spray",
-      notes: "Seasonal allergies managed effectively. Patient advised to continue current regimen."
-    },
-    {
-      id: 7,
-      patientName: "Christopher Lee",
-      visitDate: "2025-09-04",
-      diagnosis: "Lower Back Pain",
-      treatment: "Physical therapy, NSAIDs as needed",
-      notes: "MRI shows no structural abnormalities. Patient responding well to conservative treatment."
-    },
-    {
-      id: 8,
-      patientName: "Patricia Moore",
-      visitDate: "2025-09-03",
-      diagnosis: "Anxiety Disorder",
-      treatment: "Sertraline 25mg daily, therapy referral",
-      notes: "Patient showing improvement with medication and counseling. Follow-up in 6 weeks."
-    }
-  ];
-
-  // Fallback stats data
-  const fallbackStats = {
-    todayAppointments: 4,
-    upcomingAppointments: 12,
-    totalCompletedAppointments: 248,
-    weeklyAppointments: 28
-  };
-
-  // Fallback doctor profile data
-  const fallbackDoctorProfile = {
-    specialization: "Internal Medicine",
-    degree: "MD, MBBS",
-    hospitalName: "City General Hospital",
-    available: true,
-    rating: 4.8,
-    totalReviews: 156,
-    experience: 12,
-    licenseNumber: "MD12345"
-  };
 
   useEffect(() => {
     fetchDoctorData();
@@ -199,35 +48,35 @@ const DoctorDashboard = () => {
       try{
           const profileResponse = await axios.get(`${API_BASE_URL}/doctor/profile`);
         console.log('Doctor Profile:', profileResponse.data.doctor);
-        console.log('Doctor Profile:', fallbackDoctorProfile);
+        console.log('Doctor Profile:', fallbackDoctorDashboardProfile);
         setDoctorProfile(profileResponse.data.doctor );
         console.log(doctorProfile); 
       }
-      catch(err) { console.error('Error fetching doctor profile:', err); setDoctorProfile(fallbackDoctorProfile); }
+      catch(err) { console.error('Error fetching doctor profile:', err); setDoctorProfile(fallbackDoctorDashboardProfile); }
       // Fetch dashboard stats
 
       try{
           const statsResponse = await axios.get(`${API_BASE_URL}/doctor/dashboard/stats`);
           console.log('Dashboard Stats:', statsResponse.data.stats);
-          setStats(statsResponse.data.stats || fallbackStats);
+          setStats(statsResponse.data.stats || fallbackDoctorStats);
       }
-      catch(err) { console.error('Error fetching dashboard stats:', err); setStats(fallbackStats); }
+      catch(err) { console.error('Error fetching dashboard stats:', err); setStats(fallbackDoctorStats); }
       // Fetch today's appointments
       const today = new Date().toISOString().split('T')[0];
       const appointmentsResponse = await axios.get(`${API_BASE_URL}/doctor/appointments?startDate=${today}&endDate=${today}`);
-      setAppointments(appointmentsResponse.data.appointments || fallbackAppointments);
+      setAppointments(appointmentsResponse.data.appointments || fallbackDoctorAppointments);
 
       // Fetch recent visits (last 7 days)
       const lastWeek = new Date();
       lastWeek.setDate(lastWeek.getDate() - 7);
       const recentVisitsResponse = await axios.get(`${API_BASE_URL}/doctor/visits/recent?limit=10`);
-      setRecentVisits(recentVisitsResponse.data.visits || fallbackRecentVisits);
+      setRecentVisits(recentVisitsResponse.data.visits || fallbackDoctorRecentVisits);
 
     } catch (err) {
       // Use fallback data when API calls fail
       
-      setAppointments(fallbackAppointments);
-      setRecentVisits(fallbackRecentVisits);
+      setAppointments(fallbackDoctorAppointments);
+      setRecentVisits(fallbackDoctorRecentVisits);
       
       setError('Using demo data - API connection failed');
       console.error('Error fetching doctor data:', err);
@@ -444,60 +293,14 @@ const DoctorDashboard = () => {
           </div>
 
           {/* Recent Visits */}
-          <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl">
-            <div className="p-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Recent Patient Visits</h3>
-              {recentVisits.length > 0 ? (
-                <div className="max-h-96 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
-                  {recentVisits.slice(0, 10).map((visit, index) => (
-                    <div key={index} className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h4 className="font-semibold text-white">
-                            {visit.patientName || `${visit.patient?.firstName} ${visit.patient?.lastName}`}
-                          </h4>
-                          <p className="text-gray-400 text-sm">
-                            {new Date(visit.visitDate || visit.appointmentDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span className="px-2 py-1 text-xs bg-emerald-500/20 text-emerald-400 rounded-full">
-                          Completed
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
-                        {visit.diagnosis && (
-                          <div>
-                            <span className="font-medium text-gray-300">Diagnosis:</span>
-                            <p>{visit.diagnosis}</p>
-                          </div>
-                        )}
-                        {visit.treatment && (
-                          <div>
-                            <span className="font-medium text-gray-300">Treatment:</span>
-                            <p>{visit.treatment}</p>
-                          </div>
-                        )}
-                      </div>
-                      {visit.notes && (
-                        <p className="text-gray-400 text-sm mt-2">
-                          <span className="font-medium text-gray-300">Notes:</span> {
-                            visit.notes.length > 60 ? 
-                            visit.notes.substring(0, 60) + '...' : 
-                            visit.notes
-                          }
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <FileText className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">No recent visits to display</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <RecentVisits 
+            visits={recentVisits}
+            title="Recent Patient Visits"
+            viewerType="doctor"
+            showPrescriptionImage={false}
+            height="500px"
+            className="border border-gray-700 shadow-xl"
+          />
         </div>
 
         {/* Quick Actions */}

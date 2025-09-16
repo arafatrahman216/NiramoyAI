@@ -1,5 +1,16 @@
 // src/utils/dummyData.js
 // Centralized dummy/fallback data for the entire application
+//
+// CURRENT ACTIVE EXPORTS (use these for new components):
+// - Dashboard Fallback Data:
+//   * fallbackDashboardUser, fallbackDashboardVitals, fallbackDashboardVisits, fallbackDashboardProfile (Patient)
+//   * fallbackDoctorAppointments, fallbackDoctorRecentVisits, fallbackDoctorStats, fallbackDoctorDashboardProfile (Doctor)
+//
+// DEPRECATED EXPORTS (kept for backward compatibility):
+//   * fallbackRecentUserVisits, fallbackRecentDoctorVisits, fallbackStats
+//
+// COMPREHENSIVE DATA (organized by feature):
+//   * User Profile, Health Vitals, Health Logs, Prescriptions, Test Reports, Visit Timeline, etc.
 
 // User Profile Data
 export const fallbackUser = {
@@ -631,48 +642,271 @@ export const fallbackAppointments = [
   }
 ];
 
-// Recent Visits Data (for User Dashboard)
+// Recent Visits Data (for User Dashboard) - DEPRECATED - Use fallbackDashboardVisits instead
 export const fallbackRecentUserVisits = [
-  { date: '2025-09-10', doctor: 'Dr. Emily Rodriguez', reason: 'Diabetes checkup' },
-  { date: '2025-08-15', doctor: 'Dr. Michael Chen', reason: 'Cardiac screening' }
+  { 
+    appointmentDate: "2025-09-10", 
+    doctorName: "Dr. Emily Rodriguez", 
+    symptoms: "Diabetes checkup",
+    prescription: "Continue current medications",
+    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Prescription+Image"
+  },
+  { 
+    appointmentDate: "2025-08-15", 
+    doctorName: "Dr. Michael Chen", 
+    symptoms: "Cardiac screening",
+    prescription: "Annual follow-up scheduled for 2026-02-15",
+    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Lab+Results"
+  }
 ];
 
-// Recent Visits Data (for Doctor Dashboard)
+// Recent Visits Data (for Doctor Dashboard) - DEPRECATED - Use fallbackDoctorRecentVisits instead
 export const fallbackRecentDoctorVisits = [
   {
     id: 1,
     patientName: 'Alice Johnson',
-    date: '2025-09-11',
+    visitDate: '2025-09-11',
     diagnosis: 'Hypertension follow-up',
+    treatment: 'Continue current medication regimen',
+    notes: 'Patient showing excellent blood pressure control. Continue lifestyle modifications.',
     status: 'completed'
   },
   {
     id: 2,
     patientName: 'Bob Smith',
-    date: '2025-09-11',
+    visitDate: '2025-09-11',
     diagnosis: 'Type 2 Diabetes monitoring',
+    treatment: 'Metformin dosage adjustment',
+    notes: 'HbA1c improved from last visit. Patient adhering well to diet plan.',
     status: 'completed'
   },
   {
     id: 3,
     patientName: 'Carol Davis',
-    date: '2025-09-10',
+    visitDate: '2025-09-10',
     diagnosis: 'Annual physical examination',
+    treatment: 'Preventive care recommendations',
+    notes: 'Overall health excellent. Recommended routine screenings.',
     status: 'completed'
   },
   {
     id: 4,
     patientName: 'David Wilson',
-    date: '2025-09-10',
+    visitDate: '2025-09-10',
     diagnosis: 'Chest pain evaluation',
+    treatment: 'Further cardiac assessment recommended',
+    notes: 'ECG normal, referred to cardiologist for stress test.',
     status: 'completed'
   }
 ];
 
-// Doctor Dashboard Stats
+// Doctor Dashboard Stats - DEPRECATED - Use fallbackDoctorStats instead
 export const fallbackStats = {
   todayAppointments: 8,
   totalPatients: 156,
   completedToday: 3,
   pendingReports: 12
+};
+
+// Dashboard Fallback Data - Patient Dashboard
+export const fallbackDashboardUser = {
+  name: "John Doe",
+  lastName: "Doe",
+  username: "johndoe",
+  email: "john@example.com",
+  phoneNumber: "0123456789",
+  role: "PATIENT",
+  status: "Active",
+};
+
+export const fallbackDashboardVitals = {
+  bloodPressure: [],
+  diabetes: [],
+  heartRate: [],
+};
+
+export const fallbackDashboardVisits = [
+  { 
+    appointmentDate: "2025-08-20", 
+    doctorName: "Dr. Smith", 
+    symptoms: "General Checkup",
+    prescription: "Continue current medications",
+    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Prescription+Image"
+  },
+  { 
+    appointmentDate: "2025-09-01", 
+    doctorName: "Dr. Brown", 
+    symptoms: "Blood Test Follow-up",
+    prescription: "Review lab results next visit",
+    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Lab+Results"
+  },
+];
+
+export const fallbackDashboardProfile = {
+  allergies: "...",
+  bloodGroup: "...",
+  height: "...",
+  weight: "...",
+  chronicDiseases: "...",
+  systolic: "...",
+  diastolic: "...",
+  heartRate: "...",
+  majorEvents : "...",
+  majorHealthEvents: "...",
+  lifestyle: "...",
+};
+
+// Dashboard Fallback Data - Doctor Dashboard
+export const fallbackDoctorAppointments = [
+  {
+    id: 1,
+    appointmentTime: "09:00:00",
+    patient: {
+      firstName: "John",
+      lastName: "Doe"
+    },
+    consultationType: "REGULAR",
+    status: "SCHEDULED",
+    symptoms: "Chest pain and shortness of breath during physical activity"
+  },
+  {
+    id: 2,
+    appointmentTime: "10:30:00",
+    patient: {
+      firstName: "Sarah",
+      lastName: "Johnson"
+    },
+    consultationType: "FOLLOW_UP",
+    status: "SCHEDULED",
+    symptoms: "Follow-up for diabetes management and blood sugar monitoring"
+  },
+  {
+    id: 3,
+    appointmentTime: "14:15:00",
+    patient: {
+      firstName: "Michael",
+      lastName: "Brown"
+    },
+    consultationType: "EMERGENCY",
+    status: "COMPLETED",
+    symptoms: "Severe headache with nausea and dizziness"
+  },
+  {
+    id: 4,
+    appointmentTime: "16:00:00",
+    patient: {
+      firstName: "Emily",
+      lastName: "Davis"
+    },
+    consultationType: "REGULAR",
+    status: "CANCELLED",
+    symptoms: "Regular checkup and blood pressure monitoring"
+  },
+  {
+    id: 5,
+    appointmentTime: "11:45:00",
+    patient: {
+      firstName: "James",
+      lastName: "Wilson"
+    },
+    consultationType: "REGULAR",
+    status: "SCHEDULED",
+    symptoms: "Persistent cough and fever for the past week"
+  },
+  {
+    id: 6,
+    appointmentTime: "15:30:00",
+    patient: {
+      firstName: "Maria",
+      lastName: "Garcia"
+    },
+    consultationType: "FOLLOW_UP",
+    status: "SCHEDULED",
+    symptoms: "Post-surgery follow-up and wound inspection"
+  }
+];
+
+export const fallbackDoctorRecentVisits = [
+  {
+    id: 1,
+    patientName: "Robert Wilson",
+    visitDate: "2025-09-10",
+    diagnosis: "Hypertension Stage 1",
+    treatment: "Lisinopril 10mg daily, lifestyle modifications",
+    notes: "Patient responded well to initial treatment. Blood pressure improved from 150/95 to 135/85."
+  },
+  {
+    id: 2,
+    patientName: "Lisa Anderson",
+    visitDate: "2025-09-09",
+    diagnosis: "Type 2 Diabetes Mellitus",
+    treatment: "Metformin 500mg twice daily, dietary counseling",
+    notes: "HbA1c levels decreased from 8.2% to 7.1%. Continue current medication."
+  },
+  {
+    id: 3,
+    patientName: "David Martinez",
+    visitDate: "2025-09-08",
+    diagnosis: "Acute Bronchitis",
+    treatment: "Amoxicillin 500mg TID x 7 days, rest",
+    notes: "Symptoms improving with antibiotic therapy. Follow up if no improvement in 3-4 days."
+  },
+  {
+    id: 4,
+    patientName: "Jennifer Taylor",
+    visitDate: "2025-09-07",
+    diagnosis: "Migraine with Aura",
+    treatment: "Sumatriptan 50mg PRN, lifestyle modifications",
+    notes: "Patient reports 70% reduction in migraine frequency with new medication regimen."
+  },
+  {
+    id: 5,
+    patientName: "Thomas Garcia",
+    visitDate: "2025-09-06",
+    diagnosis: "Gastroesophageal Reflux Disease",
+    treatment: "Omeprazole 20mg daily, dietary changes",
+    notes: "GERD symptoms well controlled. Patient educated on trigger foods to avoid."
+  },
+  {
+    id: 6,
+    patientName: "Amanda Rodriguez",
+    visitDate: "2025-09-05",
+    diagnosis: "Allergic Rhinitis",
+    treatment: "Cetirizine 10mg daily, nasal spray",
+    notes: "Seasonal allergies managed effectively. Patient advised to continue current regimen."
+  },
+  {
+    id: 7,
+    patientName: "Christopher Lee",
+    visitDate: "2025-09-04",
+    diagnosis: "Lower Back Pain",
+    treatment: "Physical therapy, NSAIDs as needed",
+    notes: "MRI shows no structural abnormalities. Patient responding well to conservative treatment."
+  },
+  {
+    id: 8,
+    patientName: "Patricia Moore",
+    visitDate: "2025-09-03",
+    diagnosis: "Anxiety Disorder",
+    treatment: "Sertraline 25mg daily, therapy referral",
+    notes: "Patient showing improvement with medication and counseling. Follow-up in 6 weeks."
+  }
+];
+
+export const fallbackDoctorStats = {
+  todayAppointments: 4,
+  upcomingAppointments: 12,
+  totalCompletedAppointments: 248,
+  weeklyAppointments: 28
+};
+
+export const fallbackDoctorDashboardProfile = {
+  specialization: "Internal Medicine",
+  degree: "MD, MBBS",
+  hospitalName: "City General Hospital",
+  available: true,
+  rating: 4.8,
+  totalReviews: 156,
+  experience: 12,
+  licenseNumber: "MD12345"
 };

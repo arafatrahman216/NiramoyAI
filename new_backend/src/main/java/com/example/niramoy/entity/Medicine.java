@@ -22,6 +22,10 @@ public class Medicine {
 //    @JoinColumn(name = "prescription_id", nullable = false)
 //    private Prescription prescription;
 
+    @ManyToOne
+    @JoinColumn(name = "visit_id", nullable = true)
+    private Visits visit;
+
     private String medicineName;
     private List<String> frequency= new ArrayList<>();
     private String doses;

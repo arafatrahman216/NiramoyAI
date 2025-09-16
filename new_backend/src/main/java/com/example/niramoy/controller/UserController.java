@@ -3,6 +3,7 @@ package com.example.niramoy.controller;
 import com.example.niramoy.customExceptions.AgentProcessingException;
 import com.example.niramoy.dto.UserDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
+import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.HealthProfile;
@@ -317,27 +318,17 @@ public class UserController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<HashMap<String,Object>> getDashboardStats(){
-        HashMap<String,Object> response = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
+            HashMap<String,Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Authentication token is null. Please login to upload profile image");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         User user = (User) authentication.getPrincipal();
+        HashMap<String,Object> response = userService.createUserDashboardMap(user );
         response.put("success", true);
-        HealthProfile healthProfile = user.getHealthProfile();
-        Page<HealthLog> healthLogs = healthService.findByUserOrderByDateDesc(user, PageRequest.of(0, 10));
-        response.put("healthProfile", healthProfile);
-        String systolicPressure = healthProfile.getBloodPressure().split("/")[0];
-        String diastolicPressure = healthProfile.getBloodPressure().split("/")[1];
-        response.put("systolicPressure", systolicPressure);
-        response.put("diastolicPressure", diastolicPressure);
-        response.put("healthLogs", healthLogs.getContent());
-        Map<String, List<Map<String, Object>>> vitals = healthService.transformToVitals(healthLogs.getContent());
-        response.put("vitals", vitals);
         return ResponseEntity.ok(response);
-
     }
 
     @GetMapping("/health-log")
@@ -479,6 +470,24 @@ public class UserController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/recent-visits")
+    public ResponseEntity<Map<String, Object>> getRecentVisits(){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+
+        }
+        User user = (User) authentication.getPrincipal();
+        List<VisitDTO> recentVisits = visitService.getRecentVisits(user, 10);
+        response.put("success", true);
+        response.put("recentVisits", recentVisits);
+        return ResponseEntity.ok(response);
+        
     }
 
 
