@@ -18,8 +18,6 @@ public interface VisitsRepository extends JpaRepository<Visits, Long> {
 
     List<Visits> findByUserAndDoctor_DoctorId(User user, Long doctorDoctorId);
 
-
-//
     // Find all visits by user ID
     List<Visits> findByUserId(Long userId);
     
@@ -28,4 +26,7 @@ public interface VisitsRepository extends JpaRepository<Visits, Long> {
     
     // Find visits by user ID and order by appointment date descending
     List<Visits> findByUserIdOrderByAppointmentDateDesc(Long userId);
+
+    // Find visits by doctor ID and order by appointment date descending
+    List<Visits> findByDoctor_DoctorIdOrderByAppointmentDateDesc(Long doctorId);
 }

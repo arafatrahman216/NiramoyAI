@@ -3,8 +3,10 @@ package com.example.niramoy.service;
 import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
 import com.example.niramoy.entity.Doctor;
+import com.example.niramoy.entity.DoctorProfile;
 import com.example.niramoy.entity.Visits;
 import com.example.niramoy.entity.User;
+import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.VisitsRepository;
 import com.example.niramoy.repository.UserRepository;
@@ -23,6 +25,7 @@ public class VisitService {
     private final VisitsRepository visitsRepository;
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
+    private final DoctorProfileRepository doctorProfileRepository;
 
     public UploadVisitReqDTO saveVisitData(
             Long userId,
@@ -98,5 +101,24 @@ public class VisitService {
             return dto;
         }).toList();
 
+    }
+
+    public List<VisitDTO> getRecentVisitsByDoctor(User doctor, int i) {
+        DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
+        List<Visits> visits = visitsRepository.findByDoctor_DoctorIdOrderByAppointmentDateDesc(doctorProfile.getDoctorId());
+        List<VisitDTO> recentVisits = visits.stream().limit(10).map(v -> {
+            VisitDTO dto = new VisitDTO();
+            dto.setVisitId(v.getVisitId());
+            dto.setAppointmentDate(v.getAppointmentDate().toString());
+            dto.setDoctorName(v.getDoctorName());
+            dto.setPatientName(v.getUser().getName());
+            dto.setUserId(v.getUser().getId());
+            dto.setDoctorId(v.getDoctor().getDoctorId());
+            dto.setSymptoms(v.getSymptoms());
+            dto.setPrescription(v.getPrescription());
+            dto.setPrescriptionFileUrl(v.getPrescriptionFileUrl());
+            return dto;
+        }).toList();
+        return recentVisits;
     }
 }

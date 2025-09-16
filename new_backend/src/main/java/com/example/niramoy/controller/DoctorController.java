@@ -2,12 +2,14 @@ package com.example.niramoy.controller;
 
 import com.example.niramoy.dto.DoctorProfileDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
+import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.entity.Doctor;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Visits;
 import com.example.niramoy.service.DoctorProfileService;
 import com.example.niramoy.service.VisitService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -94,6 +96,27 @@ public class DoctorController {
         response.put("success", true);
         response.put("message", "Test endpoint is working!");
         List<Visits> visits = visitService.getAllVisitsByUser(2L);
+        response.put("visits", visits);
+        return ResponseEntity.ok(response);
+
+    }
+
+
+    @GetMapping("/recent-visits")
+    public ResponseEntity<Map<String, Object>> getRecentVisits(){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        System.out.println(authentication.getAuthorities());
+        System.out.println(authentication.getCredentials());
+        User doctor = (User) authentication.getPrincipal();
+        List<VisitDTO> visits = visitService.getRecentVisitsByDoctor(doctor, 10);
+        response.put("success", true);
         response.put("visits", visits);
         return ResponseEntity.ok(response);
 

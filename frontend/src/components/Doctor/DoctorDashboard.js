@@ -62,14 +62,17 @@ const DoctorDashboard = () => {
       }
       catch(err) { console.error('Error fetching dashboard stats:', err); setStats(fallbackDoctorStats); }
       // Fetch today's appointments
-      const today = new Date().toISOString().split('T')[0];
+      try
+      {
+        const today = new Date().toISOString().split('T')[0];
       const appointmentsResponse = await axios.get(`${API_BASE_URL}/doctor/appointments?startDate=${today}&endDate=${today}`);
       setAppointments(appointmentsResponse.data.appointments || fallbackDoctorAppointments);
 
+      }catch(err) { console.error('Error fetching today\'s appointments:', err); setAppointments(fallbackDoctorAppointments); }
       // Fetch recent visits (last 7 days)
       const lastWeek = new Date();
       lastWeek.setDate(lastWeek.getDate() - 7);
-      const recentVisitsResponse = await axios.get(`${API_BASE_URL}/doctor/visits/recent?limit=10`);
+      const recentVisitsResponse = await axios.get(`${API_BASE_URL}/doctor/recent-visits`);
       setRecentVisits(recentVisitsResponse.data.visits || fallbackDoctorRecentVisits);
 
     } catch (err) {
@@ -160,7 +163,7 @@ const DoctorDashboard = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Dr. {user?.firstName}!</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Dr. {user?.name}</h1>
           <p className="text-gray-400">Here's your medical practice overview for today</p>
         </div>
 
@@ -297,7 +300,7 @@ const DoctorDashboard = () => {
             visits={recentVisits}
             title="Recent Patient Visits"
             viewerType="doctor"
-            showPrescriptionImage={false}
+            showPrescriptionImage={true}
             height="500px"
             className="border border-gray-700 shadow-xl"
           />

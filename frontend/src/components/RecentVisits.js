@@ -1,5 +1,6 @@
 // src/components/RecentVisits.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Image } from 'lucide-react';
 
 const RecentVisits = ({ 
@@ -11,6 +12,7 @@ const RecentVisits = ({
   showPrescriptionImage = true,
   className = ""
 }) => {
+    const navigate = useNavigate();
   const [expandedVisit, setExpandedVisit] = useState(null);
 
   const getPersonName = (visit) => {
@@ -23,6 +25,10 @@ const RecentVisits = ({
 
   const getPersonIcon = () => {
     return viewerType === "patient" ? "👨‍⚕️" : "🧑‍🤝‍🧑";
+  };
+
+  const onclick = (userid) => {
+    navigate('/patient/profile?id=' + userid);
   };
 
   const formatDate = (dateString) => {
@@ -86,7 +92,7 @@ const RecentVisits = ({
           const displayData = getVisitDisplayData(visit);
           
           return (
-            <div 
+            <div  
               key={visit.id || index} 
               className="bg-gradient-to-br from-gray-700 to-gray-750 border border-gray-600 rounded-xl p-4 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200"
             >
@@ -95,7 +101,9 @@ const RecentVisits = ({
                   <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
                     <span className="text-emerald-400 text-lg">{getPersonIcon()}</span>
                   </div>
-                  <div>
+                  <div
+                    onClick={() => onclick( visit.userId)}
+                  >
                     <h3 className="text-white font-semibold text-sm">{displayData.personName}</h3>
                     <p className="text-gray-400 text-xs">{formatDate(displayData.date)}</p>
                   </div>
