@@ -10,6 +10,7 @@ import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.VisitsRepository;
 import com.example.niramoy.repository.UserRepository;
+import com.example.niramoy.service.AIServices.AIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

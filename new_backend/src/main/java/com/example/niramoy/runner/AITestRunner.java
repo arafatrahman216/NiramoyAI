@@ -13,36 +13,37 @@
 // import java.nio.file.Files;
 
 
+
 // @Component
 // @Order(2) // Run after Neo4j test
 // public class AITestRunner implements CommandLineRunner {
-
+//
 //     private final AIAgentService aiAgentService;
-//     private final GoogleAIService googleAIService;
+//     private final AIService googleAIService;
 //     private final SerpApiService serpApiService;
 //     private final LangChain4jAgentService langChain4jAgentService;
-
-//     public AITestRunner(AIAgentService aiAgentService, 
-//                        GoogleAIService googleAIService, 
-//                        SerpApiService serpApiService,
-//                        LangChain4jAgentService langChain4jAgentService) {
+//
+//     public AITestRunner(AIAgentService aiAgentService,
+//                         AIService googleAIService,
+//                         SerpApiService serpApiService,
+//                         LangChain4jAgentService langChain4jAgentService) {
 //         this.aiAgentService = aiAgentService;
 //         this.googleAIService = googleAIService;
 //         this.serpApiService = serpApiService;
 //         this.langChain4jAgentService = langChain4jAgentService;
 //     }
-
+//
 //     @Override
 //     public void run(String... args) throws Exception {
 //         System.out.println("=== AI Services Test ===");
-        
+//
 //         try {
 //             // Check configuration
 //             var configStatus = aiAgentService.getConfigurationStatus();
 //             System.out.println("Configuration Status:");
 //             System.out.println("- Google AI: " + (configStatus.get("googleAI") ? "✅ Configured" : "❌ Not configured"));
 //             System.out.println("- SerpAPI: " + (configStatus.get("serpAPI") ? "✅ Configured" : "❌ Not configured"));
-            
+
 //             if (!aiAgentService.isFullyConfigured()) {
 //                 System.out.println("❌ AI services not fully configured. Check your API keys.");
 //                 return;
@@ -51,6 +52,7 @@
 //             // Test 1: Image Analysis with our new functionality
 //             System.out.println("\n--- Test 1: Image Analysis with Custom Prompt ---");
 //             try {
+
 
 //                 // Also test local file if it exists (fallback)
 //                 String imagePath = "src/main/java/com/example/niramoy/runner/test.png";
@@ -64,6 +66,7 @@
 //                         "test.png", 
 //                         "image/png", 
 //                         imageBytes
+
 //                     );
 //                     String prompt = "Extract all visible text from this image. " +
 //                             "Maintain the original structure and formatting as much as possible. " +
@@ -81,6 +84,7 @@
 //                 System.out.println("❌ Image analysis test failed: " + e.getMessage());
 //                 e.printStackTrace();
                 
+
 //                 // Fallback to simple text generation
 //                 String aiResponse = googleAIService.generateContent("What are the benefits of AI in medical diagnosis?");
 //                 System.out.println("Fallback Response: " + aiResponse);
@@ -174,4 +178,3 @@
 //         }
 //     }
 // }
-
