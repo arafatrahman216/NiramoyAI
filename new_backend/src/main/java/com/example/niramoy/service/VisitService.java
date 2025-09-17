@@ -95,8 +95,15 @@ public class VisitService {
     }
 
     public boolean saveVisitDataToKG(Visits visit) {
+        // BUG : shokal e korbo
         String extractedPrescriptionText = AiService.getTextFromImageUrl(visit.getPrescriptionFileUrl());
+        List<String> extractedTestReportTexts = visit.getTestReportUrls().stream()
+                                    .map(url -> AiService.getTextFromImageUrl(url))
+                                    .toList();
+        
+        
         log.info("Extracted Prescription Text: " + extractedPrescriptionText);
+        log.info("Extracted Test Report Texts: " + extractedTestReportTexts);   
         return true;
     }
 
