@@ -5,59 +5,28 @@ import { useNavigate } from "react-router-dom";
 import { MiniSpeedometer} from "./MiniSpeedoMeter"
 import MedicationTimeline from "./MedicationTimeline";
 import Chart from "./Chart";
+import RecentVisits from "../RecentVisits";
 import { Home, User, Activity, LogOut } from "lucide-react";
 
 import axios from "axios";
-import { API_BASE_URL } from "../../services/api";
+import { API_BASE_URL , patientAPI, userInfoAPI} from "../../services/api";
+import { 
+  fallbackDashboardUser,
+  fallbackDashboardVitals,
+  fallbackDashboardVisits,
+  fallbackDashboardProfile
+} from "../../utils/dummyData";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  
+  const [healthVitals, setHealthVitals] = useState(fallbackDashboardVitals);
+  const [recentVisits, setRecentVisits] = useState(fallbackDashboardVisits);
+  const [healthProfile, setHealthProfile] = useState(fallbackDashboardProfile);
+  const [medications, setMedications] = useState([]);
 
-  // Dummy fallback data
-  const fallbackUser = {
-    name: "John Doe",
-    lastName: "Doe",
-    username: "johndoe",
-    email: "john@example.com",
-    phoneNumber: "0123456789",
-    role: "PATIENT",
-    status: "Active",
-  };
-
-  const fallbackVitals = {
-    bloodPressure: [
-    ],
-    diabetes: [],
-    heartRate: [],
-  };
-
-  const fallbackVisits = [
-    { date: "2025-08-20", doctor: "Dr. Smith", reason: "General Checkup" },
-    { date: "2025-09-01", doctor: "Dr. Brown", reason: "Blood Test" },
-  ];
-
-  const fallbackProfile = {
-    allergies: "...",
-    bloodGroup: "...",
-    height: "...",
-    weight: "...",
-    chronicDiseases: "...",
-    systolic: "...",
-    diastolic: "...",
-    heartRate: "...",
-    majorEvents : "...",
-    majorHealthEvents: "...",
-    lifestyle: "...",
-  };
-
-  const [healthVitals, setHealthVitals] = useState(fallbackVitals);
-  const [recentVisits, setRecentVisits] = useState(fallbackVisits);
-  const [healthProfile, setHealthProfile] = useState(fallbackProfile);
-
-  const profile = user || fallbackUser;
+  const profile = user || fallbackDashboardUser;
 
 
   useEffect( () => {
@@ -93,10 +62,22 @@ const Dashboard = () => {
       }
       setHealthProfile(profile);
       setHealthVitals(response.data.vitals);
-      console.log("Fetched profile:", profile);
+      setMedications(response.data.medications || []);
+      setRecentVisits(response.data.recentVisits || fallbackDashboardVisits);
+      console.log("Fetched profile:", response.data.medications);
       }
     catch(error){
         console.error("Error fetching dashboard stats:", error);
+        return null;
+    }
+
+    try{
+      const response = await userInfoAPI.getRecentVisits();
+      setRecentVisits(response.data.recentVisits || fallbackDashboardVisits);
+      console.log("Fetched recent visits:", response.data);
+    }
+    catch(error){
+        console.error("Error fetching recent visits:", error);
         return null;
     }
   }
@@ -300,7 +281,7 @@ const Dashboard = () => {
 
           {/* Medication Timeline */}
           <div className="h-fit">
-            <MedicationTimeline />
+            <MedicationTimeline fetchedMedications={medications} />
           </div>
         </div>
 
@@ -392,18 +373,12 @@ const Dashboard = () => {
 
 
         {/* Recent Visits */}
-        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4">Recent Doctor Visits</h2>
-          <ul className="divide-y divide-gray-700">
-            {recentVisits.map((visit, index) => (
-              <li key={index} className="py-3 flex justify-between">
-                <span>{visit.date}</span>
-                <span>{visit.doctor}</span>
-                <span className="text-gray-400">{visit.reason}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <RecentVisits 
+          visits={recentVisits}
+          title="Recent Doctor Visits"
+          viewerType="patient"
+          showPrescriptionImage={true}
+        />
       </div>
       </div>
     </div>

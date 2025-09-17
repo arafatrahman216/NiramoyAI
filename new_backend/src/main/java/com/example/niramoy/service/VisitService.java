@@ -1,8 +1,13 @@
 package com.example.niramoy.service;
 
+import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
+import com.example.niramoy.entity.Doctor;
+import com.example.niramoy.entity.DoctorProfile;
 import com.example.niramoy.entity.Visits;
 import com.example.niramoy.entity.User;
+import com.example.niramoy.repository.DoctorProfileRepository;
+import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.VisitsRepository;
 import com.example.niramoy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +24,15 @@ public class VisitService {
 
     private final VisitsRepository visitsRepository;
     private final UserRepository userRepository;
+    private final DoctorRepository doctorRepository;
+    private final GoogleAIService googleAIService;
+    private final DoctorProfileRepository doctorProfileRepository;
 
     public UploadVisitReqDTO saveVisitData(
             Long userId,
             String appointmentDate,
             String doctorName,
+            String doctorId,
             String symptoms,
             String prescription,
             String prescriptionFileUrl,
@@ -38,12 +47,19 @@ public class VisitService {
 
             // Parse appointment date (HTML date input sends yyyy-MM-dd format)
             LocalDate parsedAppointmentDate = LocalDate.parse(appointmentDate);
-
+            Doctor doctor = null ;
+            Long fetchedDoctorId = null;
+            try {
+                fetchedDoctorId = Long.parseLong(doctorId);
+                doctor = doctorRepository.findByDoctorId(fetchedDoctorId).get();
+            } catch (Exception e) {
+                log.warn("Doctor with ID {} not found. Proceeding without linking to a doctor entity.", fetchedDoctorId);
+            }
             // Create and save visit entity
             Visits visit = Visits.builder()
                     .appointmentDate(parsedAppointmentDate)
                     .doctorName(doctorName)
-                    .doctorId(1L) // Temporary fix: use doctor ID 1 as default (TODO: implement doctor lookup by name)
+                    .doctor(doctor) // Temporary fix: use doctor ID 1 as default (TODO: implement doctor lookup by name)
                     .symptoms(symptoms)
                     .prescription(prescription)
                     .prescriptionFileUrl(prescriptionFileUrl)
@@ -52,6 +68,9 @@ public class VisitService {
                     .build();
 
             Visits savedVisit = visitsRepository.save(visit);
+
+
+
             log.info("Visit saved successfully with ID: {}", savedVisit.getVisitId());
 
             // Return DTO with saved data for confirmation
@@ -74,5 +93,43 @@ public class VisitService {
 
     public List<Visits> getAllVisitsByUser(User user) {
         return visitsRepository.findByUserOrderByAppointmentDateDesc(user);
+    }
+
+    public List<VisitDTO> getRecentVisits(User user, int i) {
+        
+        List<Visits> visits = visitsRepository.findByUserOrderByAppointmentDateDesc(user);
+        return visits.stream().limit(i).map(v -> {
+            VisitDTO dto = new VisitDTO();
+            dto.setVisitId(v.getVisitId());
+            dto.setAppointmentDate(v.getAppointmentDate().toString());
+            dto.setDoctorName(v.getDoctorName());
+            dto.setPatientName(user.getName());
+            dto.setUserId(user.getId());
+            dto.setDoctorId(v.getDoctor().getDoctorId());
+            dto.setSymptoms(v.getSymptoms());
+            dto.setPrescription(v.getPrescription());
+            dto.setPrescriptionFileUrl(v.getPrescriptionFileUrl());
+            return dto;
+        }).toList();
+
+    }
+
+    public List<VisitDTO> getRecentVisitsByDoctor(User doctor, int i) {
+        DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
+        List<Visits> visits = visitsRepository.findByDoctor_DoctorIdOrderByAppointmentDateDesc(doctorProfile.getDoctorId());
+        List<VisitDTO> recentVisits = visits.stream().limit(10).map(v -> {
+            VisitDTO dto = new VisitDTO();
+            dto.setVisitId(v.getVisitId());
+            dto.setAppointmentDate(v.getAppointmentDate().toString());
+            dto.setDoctorName(v.getDoctorName());
+            dto.setPatientName(v.getUser().getName());
+            dto.setUserId(v.getUser().getId());
+            dto.setDoctorId(v.getDoctor().getDoctorId());
+            dto.setSymptoms(v.getSymptoms());
+            dto.setPrescription(v.getPrescription());
+            dto.setPrescriptionFileUrl(v.getPrescriptionFileUrl());
+            return dto;
+        }).toList();
+        return recentVisits;
     }
 }

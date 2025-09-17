@@ -38,6 +38,10 @@ public class HealthLog {
     @Column(name = "temperature", length = 20)
     private Double temperature;
 
+    @OneToOne(mappedBy = "healthLog", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Visits visit;
+
     @Column(name = "stress_level")
     private Integer stressLevel;
 

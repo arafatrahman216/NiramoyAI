@@ -1,94 +1,47 @@
 import React, { useState } from 'react';
-import { Pill, Clock, Calendar, ChevronDown, ChevronUp, Bell } from 'lucide-react';
+import { Pill, Clock, Calendar, ChevronDown, ChevronUp, Bell,SyringeIcon,
+  Droplet
+} from 'lucide-react';
 
-// Dummy medication data for a single day with some medications at same time
 const dummyMedications = [
   {
-    id: 1,
-    name: "Metformin",
-    dosage: "500mg",
-    time: "08:00",
-    instruction: "Take with breakfast",
-    type: "tablet",
-    status: "upcoming"
+    medicineId: 1,
+    medicineName: "Napa",
+    doses: "1",
+    frequency: ["8:00", "13:00", "21:00"],
+    instructions: "after food",
+    type: "Tab",
+    duration: "12 days",
+    visit: { doctorName: "Dr. Smith" }
   },
   {
-    id: 2,
-    name: "Vitamin D",
-    dosage: "1000IU",
-    time: "08:00",
-    instruction: "Take with breakfast",
-    type: "capsule",
-    status: "upcoming"
-  },
-  {
-    id: 3,
-    name: "Lisinopril",
-    dosage: "10mg",
-    time: "12:00",
-    instruction: "Take with lunch",
-    type: "tablet",
-    status: "upcoming"
-  },
-  {
-    id: 4,
-    name: "Atorvastatin",
-    dosage: "20mg",
-    time: "20:00",
-    instruction: "Take with dinner",
-    type: "tablet",
-    status: "upcoming"
-  },
-  {
-    id: 5,
-    name: "Aspirin",
-    dosage: "81mg",
-    time: "20:00",
-    instruction: "Take with dinner",
-    type: "tablet",
-    status: "upcoming"
-  },
-  {
-    id: 6,
-    name: "Omega-3",
-    dosage: "1000mg",
-    time: "20:00",
-    instruction: "Take with dinner",
-    type: "capsule",
-    status: "upcoming"
-  },
-  {
-    id: 7,
-    name: "Magnesium",
-    dosage: "200mg",
-    time: "22:00",
-    instruction: "Take before bedtime",
-    type: "tablet",
-    status: "upcoming"
-  },
-  {
-    id: 8,
-    name: "Sodium",
-    dosage: "200mg",
-    time: "22:00",
-    instruction: "Take before bedtime",
-    type: "tablet",
-    status: "upcoming"
+    medicineId: 2,
+    medicineName: "Vitamin D",
+    doses: "2",
+    frequency: ["08:00"],
+    instructions: "Take with breakfast",
+    type: "Capsule",
+    duration: "30 days",
+    visit: { doctorName: "Dr. Jones" }
   }
 ];
 
-const MedicationTimeline = () => {
+const MedicationTimeline = ({fetchedMedications}) => {
   const [medications, setMedications] = useState(dummyMedications);
+  
   const [expandedId, setExpandedId] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update current time every minute
   React.useEffect(() => {
+    if (fetchedMedications && Array.isArray(fetchedMedications)) {
+    setMedications(fetchedMedications);
+  }
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchedMedications]);
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
@@ -144,22 +97,31 @@ const MedicationTimeline = () => {
   };
 
   const getPillIcon = (type) => {
-    return <Pill className="w-5 h-5 text-purple-400" />;
-  };
+    if (type.toLowerCase().includes('syrup')) return <Pill className="w-5 h-5 text-green-400" />;
+    if (type.toLowerCase().includes('capsule')) return <Pill className="w-5 h-5 text-blue-400" />;
+    if (type.toLowerCase().includes('injection')) return <SyringeIcon className="w-5 h-5 text-red-400" />;
+    if (type.toLowerCase().includes('ointment')) return <Pill className="w-5 h-5 text-yellow-400" />;
+    if (type.toLowerCase().includes('drop')) return <Droplet className="w-5 h-5 text-teal-400" />;
+    return <Pill className="w-5 h-5 text-purple-400" />;};
 
-  // Sort medications by time
-  const sortedMedications = [...medications].sort((a, b) => {
+  // Flatten medications by frequency and group by time
+  const flattenedMeds = medications.flatMap(med => 
+    (med.frequency || []).map(time => ({ 
+      ...med, 
+      time, 
+      id: `${med.medicineId}-${time}` 
+    }))
+  );
+  
+  const sortedMeds = flattenedMeds.sort((a, b) => {
     const [aHours, aMinutes] = a.time.split(':').map(Number);
     const [bHours, bMinutes] = b.time.split(':').map(Number);
     return aHours - bHours || aMinutes - bMinutes;
   });
 
-  // Group medications by time
-  const groupedMedications = sortedMedications.reduce((groups, med) => {
+  const groupedMedications = sortedMeds.reduce((groups, med) => {
     const time = med.time;
-    if (!groups[time]) {
-      groups[time] = [];
-    }
+    if (!groups[time]) groups[time] = [];
     groups[time].push(med);
     return groups;
   }, {});
@@ -185,10 +147,12 @@ const MedicationTimeline = () => {
           <div className="absolute left-3 top-2 h-full w-0.5 bg-gradient-to-b from-indigo-500/30 via-purple-500/30 to-pink-500/30"></div>
           
           {/* Medication groups by time */}
+          { medications?.length > 0 &&
           <div className="space-y-4">
             {Object.entries(groupedMedications).map(([time, medsAtTime], timeIndex) => {
               const status = getCurrentMedicationStatus(time);
               return (
+                
                 <div key={time} className="relative">
                   {/* Time marker */}
                   <div className={`absolute left-0 flex items-center justify-center w-6 h-6 rounded-full z-10 ${getStatusColor(status)} border-2`}>
@@ -208,8 +172,11 @@ const MedicationTimeline = () => {
                           <div className="flex items-center">
                             {getPillIcon(med.type)}
                             <div className="ml-2">
-                              <h4 className="text-sm font-medium text-white">{med.name} <span className="text-xs text-purple-400 ml-1">{med.dosage}</span></h4>
-                              <p className="text-xs text-gray-400 mt-1">{med.instruction}</p>
+                              <h4 className="text-sm font-medium text-white">
+                                {med.medicineName} <span className="text-xs text-purple-400 ml-1">{med.doses} dose(s)</span>
+                                {(med.frequency || []).length > 1 && <span className="text-xs text-blue-400 ml-1">({(med.frequency || []).length}x daily)</span>}
+                              </h4>
+                              <p className="text-xs text-gray-400 mt-1">{med.instructions}</p>
                             </div>
                           </div>
                           <button 
@@ -226,10 +193,24 @@ const MedicationTimeline = () => {
                         
                         {expandedId === med.id && (
                           <div className="mt-2 pt-2 border-t border-gray-600">
-                            <div className="flex items-center text-xs text-gray-400">
-                              <span className="inline-flex items-center px-2 py-1 rounded bg-gray-600/50">
-                                {med.type}
-                              </span>
+                            <div className="flex flex-col gap-2 text-xs text-gray-400">
+                              <div className="flex items-center justify-between">
+                                <span className="inline-flex items-center px-2 py-1 rounded bg-gray-600/50">
+                                  {med.type}
+                                </span>
+                                <span className="text-emerald-400">Duration: {med.duration}</span>
+                              </div>
+                              {(med.frequency || []).length > 1 && (
+                                <div>
+                                  <span className="text-blue-400">All times: </span>
+                                  {(med.frequency || []).map(time => formatTime(time)).join(', ')}
+                                </div>
+                              )}
+                              {med.visit?.doctorName && (
+                                <div className="text-indigo-400">
+                                  Prescribed by: {med.visit.doctorName}
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
@@ -239,7 +220,8 @@ const MedicationTimeline = () => {
                 </div>
               );
             })}
-          </div>
+            </div>
+            }
         </div>
       </div>
 

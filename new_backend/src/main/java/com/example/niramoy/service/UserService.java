@@ -2,12 +2,17 @@ package com.example.niramoy.service;
 
 import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.HealthProfile;
+import com.example.niramoy.entity.Medicine;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.enumerate.Role;
 import com.example.niramoy.error.DuplicateUserException;
+import com.example.niramoy.repository.MedicineRepository;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.HealthProfileRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +33,8 @@ import java.util.Map;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final HealthProfileRepository healthProfileRepository;
+    private final HealthService healthService;
+    private final MedicineRepository medicineRepository;
     private final UserKGService userKGService;
 
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
@@ -214,8 +222,11 @@ public class UserService implements UserDetailsService {
     }
 
 
+    public HashMap<String, Object> createUserDashboardMap(User user) {
 
-
-
-
+        HashMap<String,Object> healthDashboard = healthService.getHealthDashboardByUser(user);
+        List<Medicine> medications = medicineRepository.findMedicineByVisit_User(user);
+        healthDashboard.put("medications", medications);
+        return healthDashboard;
+    }
 }

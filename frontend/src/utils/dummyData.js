@@ -1,5 +1,16 @@
 // src/utils/dummyData.js
 // Centralized dummy/fallback data for the entire application
+//
+// CURRENT ACTIVE EXPORTS (use these for new components):
+// - Dashboard Fallback Data:
+//   * fallbackDashboardUser, fallbackDashboardVitals, fallbackDashboardVisits, fallbackDashboardProfile (Patient)
+//   * fallbackDoctorAppointments, fallbackDoctorRecentVisits, fallbackDoctorStats, fallbackDoctorDashboardProfile (Doctor)
+//
+// DEPRECATED EXPORTS (kept for backward compatibility):
+//   * fallbackRecentUserVisits, fallbackRecentDoctorVisits, fallbackStats
+//
+// COMPREHENSIVE DATA (organized by feature):
+//   * User Profile, Health Vitals, Health Logs, Prescriptions, Test Reports, Visit Timeline, etc.
 
 // User Profile Data
 export const fallbackUser = {
@@ -80,12 +91,12 @@ export const fallbackVitals = {
     { healthLogId: 6, date: '2025-09-11', time: '08:30', temp: 98.6 }
   ],
   bloodSugar: [
-    { healthLogId: 1, date: '2025-09-01', time: '09:00', level: 105 },
-    { healthLogId: 2, date: '2025-09-03', time: '14:30', level: 112 },
-    { healthLogId: 3, date: '2025-09-05', time: '11:15', level: 98 },
-    { healthLogId: 4, date: '2025-09-07', time: '16:45', level: 108 },
-    { healthLogId: 5, date: '2025-09-09', time: '10:20', level: 102 },
-    { healthLogId: 6, date: '2025-09-11', time: '08:30', level: 95 }
+    { healthLogId: 1, date: '2025-09-01', time: '09:00', sugar: 105 },
+    { healthLogId: 2, date: '2025-09-03', time: '14:30', sugar: 112 },
+    { healthLogId: 3, date: '2025-09-05', time: '11:15', sugar: 98 },
+    { healthLogId: 4, date: '2025-09-07', time: '16:45', sugar: 108 },
+    { healthLogId: 5, date: '2025-09-09', time: '10:20', sugar: 102 },
+    { healthLogId: 6, date: '2025-09-11', time: '08:30', sugar: 95 }
   ],
   stressLevel: [
     { healthLogId: 1, date: '2025-09-01', time: '09:00', level: 3 },
@@ -96,12 +107,12 @@ export const fallbackVitals = {
     { healthLogId: 6, date: '2025-09-11', time: '08:30', level: 2 }
   ],
   diabetes: [
-    { healthLogId: 1, date: '2025-09-01', time: '09:00', level: 105 },
-    { healthLogId: 2, date: '2025-09-03', time: '14:30', level: 112 },
-    { healthLogId: 3, date: '2025-09-05', time: '11:15', level: 98 },
-    { healthLogId: 4, date: '2025-09-07', time: '16:45', level: 108 },
-    { healthLogId: 5, date: '2025-09-09', time: '10:20', level: 102 },
-    { healthLogId: 6, date: '2025-09-11', time: '08:30', level: 95 }
+    { healthLogId: 1, date: '2025-09-01', time: '09:00', sugar: 105 },
+    { healthLogId: 2, date: '2025-09-03', time: '14:30', sugar: 112 },
+    { healthLogId: 3, date: '2025-09-05', time: '11:15', sugar: 98 },
+    { healthLogId: 4, date: '2025-09-07', time: '16:45', sugar: 108 },
+    { healthLogId: 5, date: '2025-09-09', time: '10:20', sugar: 102 },
+    { healthLogId: 6, date: '2025-09-11', time: '08:30', sugar: 95 }
   ]
 };
 
@@ -413,104 +424,157 @@ export const fallbackTestReports = [
 // Visit Timeline Data
 export const fallbackVisits = [
   {
-    id: 1,
-    date: '2025-09-10',
-    time: '10:00 AM',
-    type: 'routine',
-    doctor: 'Dr. Emily Rodriguez',
-    department: 'Internal Medicine',
-    reason: 'Quarterly diabetes checkup',
-    diagnosis: 'Type 2 Diabetes - Well Controlled',
-    treatment: 'Continue current medication regimen',
-    notes: 'Patient showing excellent glucose control. HbA1c improved from last visit.',
-    vitals: {
+    visitId: 1,
+    appointmentDate: '2025-09-10T10:00:00.000Z',
+    doctorName: 'Dr. Emily Rodriguez',
+    symptoms: 'Routine diabetes management and glucose monitoring',
+    prescription: 'Continue current medication regimen. Take Metformin 500mg twice daily with meals.',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-1.pdf',
+    testReportUrls: ['https://example.com/reports/hba1c-report-1.pdf', 'https://example.com/reports/lipid-panel-1.pdf'],
+    medicines: [
+      {
+        medicineId: 1,
+        medicineName: 'Metformin',
+        doses: ['500mg'],
+        frequency: ['08:00', '20:00'],
+        instructions: 'Take twice daily with meals',
+        type: 'Tablet',
+        duration: '3 months'
+      }
+    ],
+    healthLog: {
       bloodPressure: '120/80',
       heartRate: 72,
       temperature: 98.6,
-      weight: 185
-    },
-    status: 'completed',
-    followUp: '2025-12-10'
+      weight: 185,
+      notes: 'Patient showing excellent glucose control. HbA1c improved from last visit.'
+    }
   },
   {
-    id: 2,
-    date: '2025-08-15',
-    time: '2:30 PM',
-    type: 'routine',
-    doctor: 'Dr. Michael Chen',
-    department: 'Cardiology',
-    reason: 'Annual cardiac screening',
-    diagnosis: 'Hypertension - Stable',
-    treatment: 'Continue Lisinopril, lifestyle modifications',
-    notes: 'Blood pressure well controlled. ECG normal. Recommend continued exercise.',
-    vitals: {
+    visitId: 2,
+    appointmentDate: '2025-08-15T14:30:00.000Z',
+    doctorName: 'Dr. Michael Chen',
+    symptoms: 'Routine cardiac health assessment and hypertension monitoring',
+    prescription: 'Continue Lisinopril, lifestyle modifications',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-2.pdf',
+    testReportUrls: ['https://example.com/reports/ecg-report-1.pdf', 'https://example.com/reports/echo-report-1.pdf'],
+    medicines: [
+      {
+        medicineId: 2,
+        medicineName: 'Lisinopril',
+        doses: ['10mg'],
+        frequency: ['09:00'],
+        instructions: 'Take once daily in the morning',
+        type: 'Tablet',
+        duration: '1 year'
+      }
+    ],
+    healthLog: {
       bloodPressure: '125/82',
       heartRate: 75,
       temperature: 98.4,
-      weight: 187
-    },
-    status: 'completed',
-    followUp: '2026-02-15'
+      weight: 187,
+      notes: 'Blood pressure well controlled. ECG normal. Recommend continued exercise.'
+    }
   },
   {
-    id: 3,
-    date: '2025-07-20',
-    time: '11:15 AM',
-    type: 'urgent',
-    doctor: 'Dr. Sarah Johnson',
-    department: 'Emergency Medicine',
-    reason: 'Acute respiratory symptoms',
-    diagnosis: 'Upper Respiratory Infection',
-    treatment: 'Antibiotics prescribed, rest, fluids',
-    notes: 'Chest X-ray clear. Prescribed 10-day course of Amoxicillin.',
-    vitals: {
+    visitId: 3,
+    appointmentDate: '2025-07-20T11:15:00.000Z',
+    doctorName: 'Dr. Sarah Johnson',
+    symptoms: 'Cough, fever, and difficulty breathing for 3 days',
+    prescription: 'Antibiotics prescribed, rest, fluids',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-3.pdf',
+    testReportUrls: ['https://example.com/reports/chest-xray-1.pdf', 'https://example.com/reports/throat-culture-1.pdf'],
+    medicines: [
+      {
+        medicineId: 3,
+        medicineName: 'Amoxicillin',
+        doses: ['500mg'],
+        frequency: ['08:00', '14:00', '20:00'],
+        instructions: 'Take 3 times daily for 10 days',
+        type: 'Capsule',
+        duration: '10 days'
+      },
+      {
+        medicineId: 4,
+        medicineName: 'Ibuprofen',
+        doses: ['400mg'],
+        frequency: ['as needed'],
+        instructions: 'As needed for fever and pain',
+        type: 'Tablet',
+        duration: 'As needed'
+      }
+    ],
+    healthLog: {
       bloodPressure: '130/85',
       heartRate: 82,
       temperature: 100.2,
-      weight: 186
-    },
-    status: 'completed',
-    followUp: 'As needed'
+      weight: 186,
+      notes: 'Chest X-ray clear. Prescribed 10-day course of Amoxicillin.'
+    }
   },
   {
-    id: 4,
-    date: '2025-06-05',
-    time: '9:00 AM',
-    type: 'routine',
-    doctor: 'Dr. Emily Rodriguez',
-    department: 'Internal Medicine',
-    reason: 'Diabetes management follow-up',
-    diagnosis: 'Type 2 Diabetes',
-    treatment: 'Metformin dosage adjustment',
-    notes: 'HbA1c slightly elevated. Increased Metformin to 500mg twice daily.',
-    vitals: {
+    visitId: 4,
+    appointmentDate: '2025-06-05T09:00:00.000Z',
+    doctorName: 'Dr. Emily Rodriguez',
+    symptoms: 'Follow-up for diabetes management and medication adjustment',
+    prescription: 'Metformin dosage adjustment - increased to 500mg twice daily',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-4.pdf',
+    testReportUrls: ['https://example.com/reports/hba1c-report-2.pdf', 'https://example.com/reports/glucose-report-1.pdf'],
+    medicines: [
+      {
+        medicineId: 1,
+        medicineName: 'Metformin',
+        doses: ['500mg'],
+        frequency: ['08:00', '20:00'],
+        instructions: 'Take twice daily with meals (increased dose)',
+        type: 'Tablet',
+        duration: '3 months'
+      }
+    ],
+    healthLog: {
       bloodPressure: '128/84',
       heartRate: 78,
       temperature: 98.5,
-      weight: 188
-    },
-    status: 'completed',
-    followUp: '2025-09-05'
+      weight: 188,
+      notes: 'HbA1c slightly elevated. Increased Metformin to 500mg twice daily.'
+    }
   },
   {
-    id: 5,
-    date: '2025-05-12',
-    time: '3:45 PM',
-    type: 'routine',
-    doctor: 'Dr. Lisa Park',
-    department: 'Endocrinology',
-    reason: 'Diabetes specialist consultation',
-    diagnosis: 'Type 2 Diabetes - Needs Optimization',
-    treatment: 'Comprehensive diabetes education, meal planning',
-    notes: 'Extensive review of diabetes management. Patient enrolled in diabetes education program.',
-    vitals: {
+    visitId: 5,
+    appointmentDate: '2025-05-12T15:45:00.000Z',
+    doctorName: 'Dr. Lisa Park',
+    symptoms: 'Comprehensive diabetes evaluation and management optimization',
+    prescription: 'Comprehensive diabetes education, meal planning with dual therapy',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-5.pdf',
+    testReportUrls: ['https://example.com/reports/metabolic-panel-1.pdf', 'https://example.com/reports/microalbumin-1.pdf'],
+    medicines: [
+      {
+        medicineId: 1,
+        medicineName: 'Metformin',
+        doses: ['500mg'],
+        frequency: ['08:00', '20:00'],
+        instructions: 'Continue twice daily with meals',
+        type: 'Tablet',
+        duration: '3 months'
+      },
+      {
+        medicineId: 5,
+        medicineName: 'Glipizide',
+        doses: ['5mg'],
+        frequency: ['07:30'],
+        instructions: 'Take once daily before breakfast',
+        type: 'Tablet',
+        duration: '3 months'
+      }
+    ],
+    healthLog: {
       bloodPressure: '132/88',
       heartRate: 80,
       temperature: 98.3,
-      weight: 190
-    },
-    status: 'completed',
-    followUp: '2025-08-12'
+      weight: 190,
+      notes: 'Extensive review of diabetes management. Patient enrolled in diabetes education program.'
+    }
   }
 ];
 
@@ -563,48 +627,271 @@ export const fallbackAppointments = [
   }
 ];
 
-// Recent Visits Data (for User Dashboard)
+// Recent Visits Data (for User Dashboard) - DEPRECATED - Use fallbackDashboardVisits instead
 export const fallbackRecentUserVisits = [
-  { date: '2025-09-10', doctor: 'Dr. Emily Rodriguez', reason: 'Diabetes checkup' },
-  { date: '2025-08-15', doctor: 'Dr. Michael Chen', reason: 'Cardiac screening' }
+  { 
+    appointmentDate: "2025-09-10", 
+    doctorName: "Dr. Emily Rodriguez", 
+    symptoms: "Diabetes checkup",
+    prescription: "Continue current medications",
+    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Prescription+Image"
+  },
+  { 
+    appointmentDate: "2025-08-15", 
+    doctorName: "Dr. Michael Chen", 
+    symptoms: "Cardiac screening",
+    prescription: "Annual follow-up scheduled for 2026-02-15",
+    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Lab+Results"
+  }
 ];
 
-// Recent Visits Data (for Doctor Dashboard)
+// Recent Visits Data (for Doctor Dashboard) - DEPRECATED - Use fallbackDoctorRecentVisits instead
 export const fallbackRecentDoctorVisits = [
   {
     id: 1,
     patientName: 'Alice Johnson',
-    date: '2025-09-11',
+    visitDate: '2025-09-11',
     diagnosis: 'Hypertension follow-up',
+    treatment: 'Continue current medication regimen',
+    notes: 'Patient showing excellent blood pressure control. Continue lifestyle modifications.',
     status: 'completed'
   },
   {
     id: 2,
     patientName: 'Bob Smith',
-    date: '2025-09-11',
+    visitDate: '2025-09-11',
     diagnosis: 'Type 2 Diabetes monitoring',
+    treatment: 'Metformin dosage adjustment',
+    notes: 'HbA1c improved from last visit. Patient adhering well to diet plan.',
     status: 'completed'
   },
   {
     id: 3,
     patientName: 'Carol Davis',
-    date: '2025-09-10',
+    visitDate: '2025-09-10',
     diagnosis: 'Annual physical examination',
+    treatment: 'Preventive care recommendations',
+    notes: 'Overall health excellent. Recommended routine screenings.',
     status: 'completed'
   },
   {
     id: 4,
     patientName: 'David Wilson',
-    date: '2025-09-10',
+    visitDate: '2025-09-10',
     diagnosis: 'Chest pain evaluation',
+    treatment: 'Further cardiac assessment recommended',
+    notes: 'ECG normal, referred to cardiologist for stress test.',
     status: 'completed'
   }
 ];
 
-// Doctor Dashboard Stats
+// Doctor Dashboard Stats - DEPRECATED - Use fallbackDoctorStats instead
 export const fallbackStats = {
   todayAppointments: 8,
   totalPatients: 156,
   completedToday: 3,
   pendingReports: 12
+};
+
+// Dashboard Fallback Data - Patient Dashboard
+export const fallbackDashboardUser = {
+  name: "John Doe",
+  lastName: "Doe",
+  username: "johndoe",
+  email: "john@example.com",
+  phoneNumber: "0123456789",
+  role: "PATIENT",
+  status: "Active",
+};
+
+export const fallbackDashboardVitals = {
+  bloodPressure: [],
+  diabetes: [],
+  heartRate: [],
+};
+
+export const fallbackDashboardVisits = [
+  { 
+    appointmentDate: "2025-08-20", 
+    doctorName: "Dr. Smith", 
+    symptoms: "General Checkup",
+    prescription: "Continue current medications",
+    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Prescription+Image"
+  },
+  { 
+    appointmentDate: "2025-09-01", 
+    doctorName: "Dr. Brown", 
+    symptoms: "Blood Test Follow-up",
+    prescription: "Review lab results next visit",
+    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Lab+Results"
+  },
+];
+
+export const fallbackDashboardProfile = {
+  allergies: "...",
+  bloodGroup: "...",
+  height: "...",
+  weight: "...",
+  chronicDiseases: "...",
+  systolic: "...",
+  diastolic: "...",
+  heartRate: "...",
+  majorEvents : "...",
+  majorHealthEvents: "...",
+  lifestyle: "...",
+};
+
+// Dashboard Fallback Data - Doctor Dashboard
+export const fallbackDoctorAppointments = [
+  {
+    id: 1,
+    appointmentTime: "09:00:00",
+    patient: {
+      firstName: "John",
+      lastName: "Doe"
+    },
+    consultationType: "REGULAR",
+    status: "SCHEDULED",
+    symptoms: "Chest pain and shortness of breath during physical activity"
+  },
+  {
+    id: 2,
+    appointmentTime: "10:30:00",
+    patient: {
+      firstName: "Sarah",
+      lastName: "Johnson"
+    },
+    consultationType: "FOLLOW_UP",
+    status: "SCHEDULED",
+    symptoms: "Follow-up for diabetes management and blood sugar monitoring"
+  },
+  {
+    id: 3,
+    appointmentTime: "14:15:00",
+    patient: {
+      firstName: "Michael",
+      lastName: "Brown"
+    },
+    consultationType: "EMERGENCY",
+    status: "COMPLETED",
+    symptoms: "Severe headache with nausea and dizziness"
+  },
+  {
+    id: 4,
+    appointmentTime: "16:00:00",
+    patient: {
+      firstName: "Emily",
+      lastName: "Davis"
+    },
+    consultationType: "REGULAR",
+    status: "CANCELLED",
+    symptoms: "Regular checkup and blood pressure monitoring"
+  },
+  {
+    id: 5,
+    appointmentTime: "11:45:00",
+    patient: {
+      firstName: "James",
+      lastName: "Wilson"
+    },
+    consultationType: "REGULAR",
+    status: "SCHEDULED",
+    symptoms: "Persistent cough and fever for the past week"
+  },
+  {
+    id: 6,
+    appointmentTime: "15:30:00",
+    patient: {
+      firstName: "Maria",
+      lastName: "Garcia"
+    },
+    consultationType: "FOLLOW_UP",
+    status: "SCHEDULED",
+    symptoms: "Post-surgery follow-up and wound inspection"
+  }
+];
+
+export const fallbackDoctorRecentVisits = [
+  {
+    id: 1,
+    patientName: "Robert Wilson",
+    visitDate: "2025-09-10",
+    diagnosis: "Hypertension Stage 1",
+    treatment: "Lisinopril 10mg daily, lifestyle modifications",
+    notes: "Patient responded well to initial treatment. Blood pressure improved from 150/95 to 135/85."
+  },
+  {
+    id: 2,
+    patientName: "Lisa Anderson",
+    visitDate: "2025-09-09",
+    diagnosis: "Type 2 Diabetes Mellitus",
+    treatment: "Metformin 500mg twice daily, dietary counseling",
+    notes: "HbA1c levels decreased from 8.2% to 7.1%. Continue current medication."
+  },
+  {
+    id: 3,
+    patientName: "David Martinez",
+    visitDate: "2025-09-08",
+    diagnosis: "Acute Bronchitis",
+    treatment: "Amoxicillin 500mg TID x 7 days, rest",
+    notes: "Symptoms improving with antibiotic therapy. Follow up if no improvement in 3-4 days."
+  },
+  {
+    id: 4,
+    patientName: "Jennifer Taylor",
+    visitDate: "2025-09-07",
+    diagnosis: "Migraine with Aura",
+    treatment: "Sumatriptan 50mg PRN, lifestyle modifications",
+    notes: "Patient reports 70% reduction in migraine frequency with new medication regimen."
+  },
+  {
+    id: 5,
+    patientName: "Thomas Garcia",
+    visitDate: "2025-09-06",
+    diagnosis: "Gastroesophageal Reflux Disease",
+    treatment: "Omeprazole 20mg daily, dietary changes",
+    notes: "GERD symptoms well controlled. Patient educated on trigger foods to avoid."
+  },
+  {
+    id: 6,
+    patientName: "Amanda Rodriguez",
+    visitDate: "2025-09-05",
+    diagnosis: "Allergic Rhinitis",
+    treatment: "Cetirizine 10mg daily, nasal spray",
+    notes: "Seasonal allergies managed effectively. Patient advised to continue current regimen."
+  },
+  {
+    id: 7,
+    patientName: "Christopher Lee",
+    visitDate: "2025-09-04",
+    diagnosis: "Lower Back Pain",
+    treatment: "Physical therapy, NSAIDs as needed",
+    notes: "MRI shows no structural abnormalities. Patient responding well to conservative treatment."
+  },
+  {
+    id: 8,
+    patientName: "Patricia Moore",
+    visitDate: "2025-09-03",
+    diagnosis: "Anxiety Disorder",
+    treatment: "Sertraline 25mg daily, therapy referral",
+    notes: "Patient showing improvement with medication and counseling. Follow-up in 6 weeks."
+  }
+];
+
+export const fallbackDoctorStats = {
+  todayAppointments: 4,
+  upcomingAppointments: 12,
+  totalCompletedAppointments: 248,
+  weeklyAppointments: 28
+};
+
+export const fallbackDoctorDashboardProfile = {
+  specialization: "Internal Medicine",
+  degree: "MD, MBBS",
+  hospitalName: "City General Hospital",
+  available: true,
+  rating: 4.8,
+  totalReviews: 156,
+  experience: 12,
+  licenseNumber: "MD12345"
 };

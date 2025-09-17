@@ -3,25 +3,20 @@ package com.example.niramoy.controller;
 import com.example.niramoy.customExceptions.AgentProcessingException;
 import com.example.niramoy.dto.UserDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
+import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Messages;
-import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.dto.HealthProfileDTO;
-import com.example.niramoy.service.HealthService;
-import com.example.niramoy.service.ImageService;
-import com.example.niramoy.service.MessageService;
-import com.example.niramoy.service.UserService;
-import com.example.niramoy.service.VisitService;
+import com.example.niramoy.service.*;
+import com.example.niramoy.dto.HealthLogRecord;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -45,6 +40,8 @@ public class UserController {
     private final VisitService visitService;
     private final MessageService messageService;
     private final HealthService healthService;
+    private final ElevenLabService elevenLabService;
+    private final GoogleAIService googleAIService;
 
 
     @GetMapping("/profile")
@@ -321,27 +318,17 @@ public class UserController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<HashMap<String,Object>> getDashboardStats(){
-        HashMap<String,Object> response = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
+            HashMap<String,Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Authentication token is null. Please login to upload profile image");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         User user = (User) authentication.getPrincipal();
+        HashMap<String,Object> response = userService.createUserDashboardMap(user );
         response.put("success", true);
-        HealthProfile healthProfile = user.getHealthProfile();
-        Page<HealthLog> healthLogs = healthService.findByUser(user, PageRequest.of(0, 10));
-        response.put("healthProfile", healthProfile);
-        String systolicPressure = healthProfile.getBloodPressure().split("/")[0];
-        String diastolicPressure = healthProfile.getBloodPressure().split("/")[1];
-        response.put("systolicPressure", systolicPressure);
-        response.put("diastolicPressure", diastolicPressure);
-        response.put("healthLogs", healthLogs.getContent());
-        Map<String, List<Map<String, Object>>> vitals = healthService.transformToVitals(healthLogs.getContent());
-        response.put("vitals", vitals);
         return ResponseEntity.ok(response);
-
     }
 
     @GetMapping("/health-log")
@@ -389,7 +376,7 @@ public class UserController {
 
     @GetMapping("/test")
     public ResponseEntity<String> testEndpoint() {
-        return ResponseEntity.ok("Test endpoint is working!");
+        return ResponseEntity.ok("healthLogRecord");
     }
 
     @PostMapping("/upload-visit")
@@ -403,7 +390,9 @@ public class UserController {
             String doctorName = visitDTO.getDoctorName();
             String symptoms = visitDTO.getSymptoms();
             String prescription = visitDTO.getPrescription();
-            
+            String doctorId = visitDTO.getDoctorId();
+            System.out.println("doctor id : " + doctorId);
+
             String prescriptionFileUrl = null;
             // Check if prescription file is present and upload it
             if (visitDTO.getPrescriptionFile() != null && !visitDTO.getPrescriptionFile().isEmpty()) {
@@ -447,6 +436,7 @@ public class UserController {
                                                             userDTO.getId(),
                                                             appointmentDate,
                                                             doctorName,
+                                                            doctorId,
                                                             symptoms,
                                                             prescription,
                                                             prescriptionFileUrl,
@@ -462,6 +452,45 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error processing visit data: " + e.getMessage());
         }
+    }
+
+
+    @PostMapping("/audio-log")
+    public ResponseEntity<Map<String, Object>> uploadAudio(@ModelAttribute MultipartFile audio) {
+        try {
+            String transcription = elevenLabService.transcribeAudio(audio);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("text", transcription);
+            System.out.println(transcription);
+            HealthLogRecord healthLogRecord = healthService.getLogFromTranscription(transcription);
+            response.put("healthLogRecord", healthLogRecord);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/recent-visits")
+    public ResponseEntity<Map<String, Object>> getRecentVisits(){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+
+        }
+        User user = (User) authentication.getPrincipal();
+        List<VisitDTO> recentVisits = visitService.getRecentVisits(user, 10);
+        response.put("success", true);
+        response.put("recentVisits", recentVisits);
+        return ResponseEntity.ok(response);
+        
     }
 
 

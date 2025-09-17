@@ -1,5 +1,6 @@
 package com.example.niramoy.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,9 +19,14 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long medicineId;
 
-    @ManyToOne
-    @JoinColumn(name = "prescription_id", nullable = false)
-    private Prescription prescription;
+//    @ManyToOne
+//    @JoinColumn(name = "prescription_id", nullable = false)
+//    private Prescription prescription;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "visit_id", nullable = true)
+    @JsonIgnore
+    private Visits visit;
 
     private String medicineName;
     private List<String> frequency= new ArrayList<>();

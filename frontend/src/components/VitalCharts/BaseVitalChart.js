@@ -33,11 +33,11 @@ const BaseVitalChart = ({
     }
     if (payload && payload.length > 0 && payload[0].payload) {
       const data = payload[0].payload;
-      const date = new Date(value).toLocaleDateString();
+      const date = new Date(data.date).toLocaleDateString();
       const time = data.time || '';
       return `${date} ${time}`;
     }
-    return new Date(value).toLocaleDateString();
+    return value;
   };
 
   return (
@@ -57,10 +57,16 @@ const BaseVitalChart = ({
         </defs>
         <CartesianGrid strokeDasharray="2 2" stroke="#374151" strokeOpacity={0.5} />
         <XAxis 
-          dataKey="date" 
+          dataKey="healthLogId" 
           stroke="#9ca3af" 
           fontSize={12}
-          tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          tickFormatter={(value) => {
+            const item = data.find(d => d.healthLogId === value);
+            if (item && item.date) {
+              return new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+            return value;
+          }}
         />
         <YAxis stroke="#9ca3af" fontSize={12} />
         <Tooltip 

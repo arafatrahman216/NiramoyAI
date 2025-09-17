@@ -1,9 +1,18 @@
 package com.example.niramoy.utils;
 
+import com.example.niramoy.dto.HealthLogRecord;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+
+import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
+@RequiredArgsConstructor
 public class JsonParser {
-    
+
     private static String cleanJsonResponse(String jsonResponse) {
         if (jsonResponse == null || jsonResponse.isEmpty()) {
             return null;
@@ -99,4 +108,20 @@ public class JsonParser {
                 return parseExplanation(jsonResponse);
         }
     }
+
+    public static HealthLogRecord parseHealthLog(String geminiResponse) {
+        try {
+            HealthLogRecord healthLogRecord = new ObjectMapper().readValue(geminiResponse, HealthLogRecord.class);
+            return healthLogRecord;
+        }
+        catch (Exception e) {
+            return HealthLogRecord.builder().temperature("98.6").bloodSugar("6").diastolicBloodPressure("80")
+                    .systolicBloodPressure("120").stressLevel("0").heartRate("72").oxygenSaturation("100").
+                    otherSymptoms(new ArrayList<>()).note("")
+                    .weight("").build();
+        }
+    }
+
+
+
 }
