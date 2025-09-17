@@ -23,7 +23,6 @@ import {
 
 import VitalsChart from './VitalsChart';
 import HealthLogs from './HealthLogs';
-import Prescriptions from './Prescriptions';
 import VisitTimeline from './VisitTimeline';
 import TestReports from './TestReports';
 import axios from 'axios';
@@ -38,6 +37,7 @@ const PatientProfile = () => {
   const [vitals, setVitals] = useState([]);
   const [healthLog, setHealthLog] = useState([]);
   const [charts, setCharts] = useState([]);
+  const [visits, setVisits] = useState([]);
   const [activeTab, setActiveTab] = useState('vitals');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -96,6 +96,7 @@ const PatientProfile = () => {
       setVitals(response.data.vitals || fallbackcurrentVitals);
       setCharts(response.data.charts || []);
       setHealthLog(response.data.healthLogs );
+      setVisits(response.data.visits || []);
     } catch (err) {
       setPatient(fallbackPatient);
       setVitals(fallbackcurrentVitals);
@@ -124,7 +125,6 @@ const PatientProfile = () => {
   const tabs = [
     { id: 'vitals', label: 'Vitals & Charts', icon: Activity },
     { id: 'healthlogs', label: 'Health Logs', icon: FileText },
-    { id: 'prescriptions', label: 'Prescriptions', icon: Pill },
     { id: 'visits', label: 'Visit Timeline', icon: Clock },
     { id: 'tests', label: 'Test Reports', icon: TestTube }
   ];
@@ -280,8 +280,7 @@ const PatientProfile = () => {
           <div className="p-6">
             {activeTab === 'vitals' && <VitalsChart patientId={id} charts={charts} />}
             {activeTab === 'healthlogs' && <HealthLogs patientId={id} healthLog= {healthLog} />}
-            {activeTab === 'prescriptions' && <Prescriptions patientId={id} />}
-            {activeTab === 'visits' && <VisitTimeline patientId={id} />}
+            {activeTab === 'visits' && <VisitTimeline patientId={id} fetchedVisits={visits} />}
             {activeTab === 'tests' && <TestReports patientId={id} />}
           </div>
         </div>

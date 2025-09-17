@@ -424,172 +424,157 @@ export const fallbackTestReports = [
 // Visit Timeline Data
 export const fallbackVisits = [
   {
-    id: 1,
-    date: '2025-09-10',
-    time: '10:00 AM',
-    type: 'routine',
-    doctor: 'Dr. Emily Rodriguez',
-    department: 'Internal Medicine',
-    location: 'Room 301A',
-    reason: 'Quarterly diabetes checkup',
-    chiefComplaint: 'Routine diabetes management and glucose monitoring',
-    diagnosis: 'Type 2 Diabetes - Well Controlled',
-    treatment: 'Continue current medication regimen',
-    notes: 'Patient showing excellent glucose control. HbA1c improved from last visit.',
-    vitals: {
+    visitId: 1,
+    appointmentDate: '2025-09-10T10:00:00.000Z',
+    doctorName: 'Dr. Emily Rodriguez',
+    symptoms: 'Routine diabetes management and glucose monitoring',
+    prescription: 'Continue current medication regimen. Take Metformin 500mg twice daily with meals.',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-1.pdf',
+    testReportUrls: ['https://example.com/reports/hba1c-report-1.pdf', 'https://example.com/reports/lipid-panel-1.pdf'],
+    medicines: [
+      {
+        medicineId: 1,
+        medicineName: 'Metformin',
+        doses: ['500mg'],
+        frequency: ['08:00', '20:00'],
+        instructions: 'Take twice daily with meals',
+        type: 'Tablet',
+        duration: '3 months'
+      }
+    ],
+    healthLog: {
       bloodPressure: '120/80',
       heartRate: 72,
       temperature: 98.6,
-      weight: 185
-    },
-    procedures: ['Blood glucose test', 'HbA1c test'],
-    prescriptions: [
-      {
-        medication: 'Metformin 500mg',
-        instruction: 'Take twice daily with meals'
-      }
-    ],
-    labsOrdered: ['HbA1c', 'Lipid Panel', 'Kidney Function'],
-    duration: '45 minutes',
-    cost: '$150',
-    status: 'completed',
-    followUp: 'Schedule follow-up in 3 months (2025-12-10)'
+      weight: 185,
+      notes: 'Patient showing excellent glucose control. HbA1c improved from last visit.'
+    }
   },
   {
-    id: 2,
-    date: '2025-08-15',
-    time: '2:30 PM',
-    type: 'routine',
-    doctor: 'Dr. Michael Chen',
-    department: 'Cardiology',
-    location: 'Cardiology Wing B',
-    reason: 'Annual cardiac screening',
-    chiefComplaint: 'Routine cardiac health assessment and hypertension monitoring',
-    diagnosis: 'Hypertension - Stable',
-    treatment: 'Continue Lisinopril, lifestyle modifications',
-    notes: 'Blood pressure well controlled. ECG normal. Recommend continued exercise.',
-    vitals: {
+    visitId: 2,
+    appointmentDate: '2025-08-15T14:30:00.000Z',
+    doctorName: 'Dr. Michael Chen',
+    symptoms: 'Routine cardiac health assessment and hypertension monitoring',
+    prescription: 'Continue Lisinopril, lifestyle modifications',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-2.pdf',
+    testReportUrls: ['https://example.com/reports/ecg-report-1.pdf', 'https://example.com/reports/echo-report-1.pdf'],
+    medicines: [
+      {
+        medicineId: 2,
+        medicineName: 'Lisinopril',
+        doses: ['10mg'],
+        frequency: ['09:00'],
+        instructions: 'Take once daily in the morning',
+        type: 'Tablet',
+        duration: '1 year'
+      }
+    ],
+    healthLog: {
       bloodPressure: '125/82',
       heartRate: 75,
       temperature: 98.4,
-      weight: 187
-    },
-    procedures: ['ECG', 'Echocardiogram'],
-    prescriptions: [
-      {
-        medication: 'Lisinopril 10mg',
-        instruction: 'Take once daily in the morning'
-      }
-    ],
-    labsOrdered: ['Lipid Panel', 'BNP'],
-    duration: '60 minutes',
-    cost: '$250',
-    status: 'completed',
-    followUp: 'Annual follow-up scheduled for 2026-02-15'
+      weight: 187,
+      notes: 'Blood pressure well controlled. ECG normal. Recommend continued exercise.'
+    }
   },
   {
-    id: 3,
-    date: '2025-07-20',
-    time: '11:15 AM',
-    type: 'urgent',
-    doctor: 'Dr. Sarah Johnson',
-    department: 'Emergency Medicine',
-    location: 'ER Bay 3',
-    reason: 'Acute respiratory symptoms',
-    chiefComplaint: 'Cough, fever, and difficulty breathing for 3 days',
-    diagnosis: 'Upper Respiratory Infection',
-    treatment: 'Antibiotics prescribed, rest, fluids',
-    notes: 'Chest X-ray clear. Prescribed 10-day course of Amoxicillin.',
-    vitals: {
+    visitId: 3,
+    appointmentDate: '2025-07-20T11:15:00.000Z',
+    doctorName: 'Dr. Sarah Johnson',
+    symptoms: 'Cough, fever, and difficulty breathing for 3 days',
+    prescription: 'Antibiotics prescribed, rest, fluids',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-3.pdf',
+    testReportUrls: ['https://example.com/reports/chest-xray-1.pdf', 'https://example.com/reports/throat-culture-1.pdf'],
+    medicines: [
+      {
+        medicineId: 3,
+        medicineName: 'Amoxicillin',
+        doses: ['500mg'],
+        frequency: ['08:00', '14:00', '20:00'],
+        instructions: 'Take 3 times daily for 10 days',
+        type: 'Capsule',
+        duration: '10 days'
+      },
+      {
+        medicineId: 4,
+        medicineName: 'Ibuprofen',
+        doses: ['400mg'],
+        frequency: ['as needed'],
+        instructions: 'As needed for fever and pain',
+        type: 'Tablet',
+        duration: 'As needed'
+      }
+    ],
+    healthLog: {
       bloodPressure: '130/85',
       heartRate: 82,
       temperature: 100.2,
-      weight: 186
-    },
-    procedures: ['Chest X-ray', 'Throat culture'],
-    prescriptions: [
-      {
-        medication: 'Amoxicillin 500mg',
-        instruction: 'Take 3 times daily for 10 days'
-      },
-      {
-        medication: 'Ibuprofen 400mg',
-        instruction: 'As needed for fever and pain'
-      }
-    ],
-    labsOrdered: ['CBC', 'CRP'],
-    duration: '30 minutes',
-    cost: '$200',
-    status: 'completed',
-    followUp: 'Return if symptoms worsen or persist beyond 10 days'
+      weight: 186,
+      notes: 'Chest X-ray clear. Prescribed 10-day course of Amoxicillin.'
+    }
   },
   {
-    id: 4,
-    date: '2025-06-05',
-    time: '9:00 AM',
-    type: 'follow-up',
-    doctor: 'Dr. Emily Rodriguez',
-    department: 'Internal Medicine',
-    location: 'Room 301A',
-    reason: 'Diabetes management follow-up',
-    chiefComplaint: 'Follow-up for diabetes management and medication adjustment',
-    diagnosis: 'Type 2 Diabetes',
-    treatment: 'Metformin dosage adjustment',
-    notes: 'HbA1c slightly elevated. Increased Metformin to 500mg twice daily.',
-    vitals: {
+    visitId: 4,
+    appointmentDate: '2025-06-05T09:00:00.000Z',
+    doctorName: 'Dr. Emily Rodriguez',
+    symptoms: 'Follow-up for diabetes management and medication adjustment',
+    prescription: 'Metformin dosage adjustment - increased to 500mg twice daily',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-4.pdf',
+    testReportUrls: ['https://example.com/reports/hba1c-report-2.pdf', 'https://example.com/reports/glucose-report-1.pdf'],
+    medicines: [
+      {
+        medicineId: 1,
+        medicineName: 'Metformin',
+        doses: ['500mg'],
+        frequency: ['08:00', '20:00'],
+        instructions: 'Take twice daily with meals (increased dose)',
+        type: 'Tablet',
+        duration: '3 months'
+      }
+    ],
+    healthLog: {
       bloodPressure: '128/84',
       heartRate: 78,
       temperature: 98.5,
-      weight: 188
-    },
-    procedures: ['Blood glucose monitoring'],
-    prescriptions: [
-      {
-        medication: 'Metformin 500mg',
-        instruction: 'Take twice daily with meals (increased dose)'
-      }
-    ],
-    labsOrdered: ['HbA1c', 'Fasting glucose'],
-    duration: '30 minutes',
-    cost: '$125',
-    status: 'completed',
-    followUp: 'Follow-up in 3 months (2025-09-05)'
+      weight: 188,
+      notes: 'HbA1c slightly elevated. Increased Metformin to 500mg twice daily.'
+    }
   },
   {
-    id: 5,
-    date: '2025-05-12',
-    time: '3:45 PM',
-    type: 'specialist',
-    doctor: 'Dr. Lisa Park',
-    department: 'Endocrinology',
-    location: 'Specialty Clinic 2B',
-    reason: 'Diabetes specialist consultation',
-    chiefComplaint: 'Comprehensive diabetes evaluation and management optimization',
-    diagnosis: 'Type 2 Diabetes - Needs Optimization',
-    treatment: 'Comprehensive diabetes education, meal planning',
-    notes: 'Extensive review of diabetes management. Patient enrolled in diabetes education program.',
-    vitals: {
+    visitId: 5,
+    appointmentDate: '2025-05-12T15:45:00.000Z',
+    doctorName: 'Dr. Lisa Park',
+    symptoms: 'Comprehensive diabetes evaluation and management optimization',
+    prescription: 'Comprehensive diabetes education, meal planning with dual therapy',
+    prescriptionFileUrl: 'https://example.com/prescriptions/prescription-5.pdf',
+    testReportUrls: ['https://example.com/reports/metabolic-panel-1.pdf', 'https://example.com/reports/microalbumin-1.pdf'],
+    medicines: [
+      {
+        medicineId: 1,
+        medicineName: 'Metformin',
+        doses: ['500mg'],
+        frequency: ['08:00', '20:00'],
+        instructions: 'Continue twice daily with meals',
+        type: 'Tablet',
+        duration: '3 months'
+      },
+      {
+        medicineId: 5,
+        medicineName: 'Glipizide',
+        doses: ['5mg'],
+        frequency: ['07:30'],
+        instructions: 'Take once daily before breakfast',
+        type: 'Tablet',
+        duration: '3 months'
+      }
+    ],
+    healthLog: {
       bloodPressure: '132/88',
       heartRate: 80,
       temperature: 98.3,
-      weight: 190
-    },
-    procedures: ['Comprehensive metabolic panel', 'Diabetic foot exam'],
-    prescriptions: [
-      {
-        medication: 'Metformin 500mg',
-        instruction: 'Continue twice daily with meals'
-      },
-      {
-        medication: 'Glipizide 5mg',
-        instruction: 'Take once daily before breakfast'
-      }
-    ],
-    labsOrdered: ['HbA1c', 'Microalbumin', 'Lipid Panel'],
-    duration: '90 minutes',
-    cost: '$300',
-    status: 'completed',
-    followUp: 'Return in 3 months for comprehensive review (2025-08-12)'
+      weight: 190,
+      notes: 'Extensive review of diabetes management. Patient enrolled in diabetes education program.'
+    }
   }
 ];
 

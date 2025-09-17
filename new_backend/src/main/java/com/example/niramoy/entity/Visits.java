@@ -64,6 +64,9 @@ public class Visits {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "visit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<Medicine> medicines;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

@@ -30,5 +30,5 @@ public class GivenTests {
     private java.util.List<String> imageLinks;
 
     private String summary;
-    private String urgency;
+
 }

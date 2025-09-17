@@ -1,5 +1,6 @@
 package com.example.niramoy.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,8 +23,9 @@ public class Medicine {
 //    @JoinColumn(name = "prescription_id", nullable = false)
 //    private Prescription prescription;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visit_id", nullable = true)
+    @JsonIgnore
     private Visits visit;
 
     private String medicineName;
