@@ -11,6 +11,7 @@ import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Messages;
 import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.service.*;
+import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.dto.HealthLogRecord;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,7 +42,6 @@ public class UserController {
     private final MessageService messageService;
     private final HealthService healthService;
     private final ElevenLabService elevenLabService;
-    private final GoogleAIService googleAIService;
 
 
     @GetMapping("/profile")
