@@ -1,18 +1,18 @@
 package com.example.niramoy.service.agent;
 
+
+
+import com.example.niramoy.service.AIServices.AIService;
 import org.springframework.stereotype.Service;
-import com.example.niramoy.service.GoogleAIService;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ConsultAgent implements Agent {
-    private final GoogleAIService googleAIService;
-
-    public ConsultAgent(GoogleAIService googleAIService) {
-        this.googleAIService = googleAIService;
-    }
+    private final AIService aiService;
 
     private static final PromptTemplate CONSULT_PROMPT = PromptTemplate.from(
         """
@@ -88,7 +88,7 @@ public class ConsultAgent implements Agent {
         );
         
         Prompt prompt = CONSULT_PROMPT.apply(chainVariables);
-        String response = googleAIService.generateContent(prompt.text());
+        String response = aiService.generateContent(prompt.text());
         
         return response;
     }

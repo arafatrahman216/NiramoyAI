@@ -35,6 +35,7 @@ public class UserService implements UserDetailsService {
     private final HealthProfileRepository healthProfileRepository;
     private final HealthService healthService;
     private final MedicineRepository medicineRepository;
+    private final UserKGService userKGService;
 
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
     // until then the query result will be stored in persistence context
@@ -152,21 +153,22 @@ public class UserService implements UserDetailsService {
         if (healthProfile != null) {
             updateHealthProfileFields(healthProfile, healthProfileDTO);
             healthProfile = healthProfileRepository.save(healthProfile);
-        }
-        else {
+        } else {
             // Create new health profile
             healthProfile = new HealthProfile();
             healthProfile.setUserId(userId);
             healthProfile.setUser(user); // Set the User entity reference
             updateHealthProfileFields(healthProfile, healthProfileDTO);
-            // Only save for new entities
 
             System.out.println("This is the health profile to be saved: " + healthProfile);
             healthProfile = healthProfileRepository.save(healthProfile);
         }
 
+        healthProfile = userKGService.saveHealthProfile(healthProfile);
         return convertToHealthProfileDTO(healthProfile);
     }
+
+
 
 
 
