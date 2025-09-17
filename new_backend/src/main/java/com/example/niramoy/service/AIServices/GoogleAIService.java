@@ -1,6 +1,10 @@
 package com.example.niramoy.service.AIServices;
 
+import com.example.niramoy.service.ImageService;
+import dev.langchain4j.data.image.Image;
+import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Profile;
@@ -16,10 +20,12 @@ import com.example.niramoy.service.ImageService;
 @Service
 @Profile("googleai")
 public class GoogleAIService implements AIService {
+
     @Value("${google.api.key}")
     private String googleApiKey;
     private final ChatLanguageModel chatModel;
     private final ImageService imageService;
+
 
     public GoogleAIService(ChatLanguageModel chatModel, ImageService imageService) {
         this.chatModel = chatModel;
@@ -64,6 +70,7 @@ public class GoogleAIService implements AIService {
             // Add a user message with image
             UserMessage userMessage = UserMessage.from(
                 ImageContent.from(image)
+
             );
             messages.add(userMessage);
 

@@ -6,6 +6,7 @@ import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.HealthLogRepository;
 import com.example.niramoy.dto.HealthLogRecord;
+import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.utils.JsonParser;
 import com.example.niramoy.service.AIServices.AIService;
 import jakarta.transaction.Transactional;
@@ -29,6 +30,7 @@ public class HealthService {
 
     private final HealthLogRepository healthLogRepository;
     private final AIService AiService;
+
 
 
     public Page<HealthLog> findByUser(User user, Pageable pageable) {
