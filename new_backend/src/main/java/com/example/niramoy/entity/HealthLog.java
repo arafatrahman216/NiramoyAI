@@ -47,7 +47,7 @@ public class HealthLog {
     @Column(name = "oxygen_saturation")
     private Double oxygenSaturation;
 
-    @Column(name = "other_symptoms")
+    @Column(name = "other_symptoms" , columnDefinition = "text[]")
     private List<String> otherSymptoms= new ArrayList<>();
 
     @Column(name = "note", columnDefinition = "TEXT")

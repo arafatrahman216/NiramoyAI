@@ -28,8 +28,7 @@ import { redirectBasedOnRole } from '../../utils/roleRedirect';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     username: '',
     password: '',
@@ -86,7 +85,7 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.firstName.trim() && formData.lastName.trim() && 
+    if (formData.name.trim() && 
         formData.email.trim() && formData.username.trim() && 
         formData.password.trim()) {
       const success = await signup(formData);
@@ -100,8 +99,10 @@ const Signup = () => {
           alert('Admin accounts must be created through the Admin Portal.');
           return;
         }
+        alert('Account created successfully! Please log in.');
+        navigate('/login');
         
-        redirectBasedOnRole(userData, navigate);
+        // redirectBasedOnRole(userData, navigate);
       }
     }
   };
@@ -147,32 +148,18 @@ const Signup = () => {
             )}
 
             <Box component="form" onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="First Name"
-                    name="firstName"
-                    value={formData.firstName}
+                    label="Full Name"
+                    name="name"
+                    type='text'
+                    value={formData.name}
+                    margin="normal"
                     onChange={handleInputChange}
                     required
                     disabled={loading}
                     sx={darkTextFieldStyle}
                   />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label="Last Name"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                    sx={darkTextFieldStyle}
-                  />
-                </Grid>
-              </Grid>
 
               <TextField
                 fullWidth
@@ -268,8 +255,7 @@ const Signup = () => {
                 fullWidth
                 variant="contained"
                 size="large"
-                disabled={loading || !formData.firstName.trim() || !formData.lastName.trim() || 
-                         !formData.email.trim() || !formData.username.trim() || !formData.password.trim()}
+                disabled={loading || !formData.name.trim() || !formData.email.trim() || !formData.username.trim() || !formData.password.trim()}
                 sx={{ 
                   mt: 3, 
                   mb: 2, 

@@ -97,27 +97,67 @@ public class DoctorProfileService {
         Doctor doctor = doctorProfile.getDoctor();
         return DoctorProfileDTO.builder()
                 .name(doctor.getName())
-                .phoneNumber(user.getPhoneNumber())
+                .phoneNumber(user.getPhoneNumber()).about(doctorProfile.getAbout())
                 .email(user.getEmail()).consultationFee(doctorProfile.getConsultationFee())
                 .hospitalName(doctor.getHospitalName()).isAvailable(doctorProfile.getIsAvailable())
                 .experience(doctor.getExperience().toString()).degree(doctor.getDegree())
                 .specialization(doctor.getSpecialization()).isVerified(doctorProfile.getIsVerified()).build();
     }
 
+    @Transactional
     public void updateProfile(User user, Map<String, Object> updates) {
         DoctorProfile doctorProfile = doctorProfileRepository.findByUsername(user.getUsername());
         if (doctorProfile == null) {
             throw new RuntimeException("Doctor profile not found for user id: " + user.getId());
         }
-        if (updates.containsKey("consultationFee")) {
-            doctorProfile.setConsultationFee((double) Double.parseDouble((String) updates.get("consultationFee")));
+        try
+        {
+            if (updates.containsKey("qualification")) {
+                doctorProfile.getDoctor().setDegree((String) updates.get("qualification"));
+            }
+            if (updates.containsKey("hospitalAffiliation")) {
+                doctorProfile.getDoctor().setHospitalName((String) updates.get("hospitalAffiliation"));
+            }
+            if (updates.containsKey("aboutDoctor")) {
+                System.out.println( (String) updates.get("aboutDoctor"));
+                doctorProfile.setAbout((String) updates.get("aboutDoctor"));
+            }
+            if (updates.containsKey("phoneNumber")) {
+                user.setPhoneNumber((String) updates.get("phoneNumber"));
+            }
+            if (updates.containsKey("consultationFee")) {
+                doctorProfile.setConsultationFee((double) Double.parseDouble( updates.get("consultationFee").toString()));
+            }
+            if (updates.containsKey("isAvailable")) {
+                System.out.println(("isAvailable: " + updates.get("isAvailable")));
+                doctorProfile.setIsAvailable((boolean) updates.get("isAvailable"));
+            }
+            if (updates.containsKey("experienceYears")) {
+                doctorProfile.getDoctor().setExperience((Integer) Integer.parseInt( updates.get("experienceYears").toString()));
+                System.out.println("experience: " + updates.get("experienceYears"));
+            }
         }
-        if (updates.containsKey("isAvailable")) {
-            doctorProfile.setIsAvailable((boolean) updates.get("isAvailable"));
+        catch (Exception e){
+            System.out.println(e.getMessage());
+            e.printStackTrace() ;
         }
         doctorProfileRepository.save(doctorProfile);
         userRepository.save(user);
+        doctorRepository.save(doctorProfile.getDoctor());
         System.out.println("hi after update");
+
+    }
+
+    public Map<String, Object> getPatientData(User doctor, int patientId) {
+        //current vitals from health profile
+        //user info from user table using dto
+        // last 10 health logs
+        // prescriptions of the user for the doctor
+        // visit data for the doctor visit timeline
+        // test report from test report table
+        return  null;
+
+
 
     }
 }

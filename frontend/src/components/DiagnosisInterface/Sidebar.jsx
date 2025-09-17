@@ -6,7 +6,7 @@ import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
 // ==============================================
 // Contains: Logo, New Chat, Navigation, Sign In
 // Edit handleNavigation() to add routing/page changes
-const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSidebarOpen }) => {
+const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSidebarOpen, onNewChat }) => {
   // TODO: Add navigation logic here
   const handleNavigation = (section) => {
     console.log(`Navigate to: ${section}`);
@@ -29,10 +29,12 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
     }
   };
 
-  // TODO: Add new chat functionality
+  // NEW CHAT FUNCTIONALITY
   const handleNewChat = () => {
-    console.log('Start new chat');
-    // Add logic to reset chat state, clear messages, etc.
+    console.log('Start new chat from sidebar');
+    if (onNewChat) {
+      onNewChat();
+    }
   };
 
   // TODO: Add sign in functionality
@@ -42,7 +44,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
   };
 
   return (
-    <div className="w-16 bg-zinc-950 border-r border-zinc-800 flex flex-col items-center py-4 space-y-6">
+    <div className="fixed left-0 top-0 bottom-0 w-16 bg-zinc-950 border-r border-zinc-800 flex flex-col items-center py-4 space-y-6 z-50">
       {/* PERPLEXITY LOGO */}
       {/* Edit this section to change logo appearance */}
       <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">

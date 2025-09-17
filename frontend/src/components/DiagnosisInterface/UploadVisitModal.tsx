@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { diagnosisAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
+import { diagnosisAPI } from '../../services/api';
 
 // ==============================================
 // UPLOAD VISIT MODAL COMPONENT
@@ -36,9 +36,6 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     testReports: []
   });
 
-  // UPLOAD STATE - Prevent multiple clicks
-  const [isUploading, setIsUploading] = useState(false);
-
   // FORM HANDLERS
   const handleInputChange = (field: keyof VisitData, value: string | boolean) => {
     setVisitData(prev => ({ ...prev, [field]: value }));
@@ -61,76 +58,111 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     }));
   };
 
-  // UPLOAD HANDLER WITH OPTIMISTIC UI
+  // UPLOAD HANDLER
   const handleFinalUpload = async () => {
-    // Prevent multiple uploads
-    if (isUploading) return;
-    
-    setIsUploading(true);
-
-    // OPTIMISTIC UI: Immediately show upload state
-    const optimisticToastId = toast.loading("Uploading visit data...", {
-      position: "top-right",
-      autoClose: false,
-      closeOnClick: false,
-      draggable: false,
-    });
-
-    // Immediately close modal and navigate (optimistic)
-    onClose();
-    navigate("/diagnosis");
-
-    try {
-      const formData = new FormData();
-      if (visitData.prescriptionFile) {
-        formData.append('prescriptionFile', visitData.prescriptionFile);
-      }
-      formData.append('doctorName', visitData.doctorName);
-      formData.append('symptoms', visitData.symptoms);
-      formData.append('prescription', visitData.prescription);
-      formData.append('appointmentDate', visitData.appointmentDate);
-      
-      // Append each test report file to FormData
-      visitData.testReports.forEach((file) => {
-        formData.append('testReports', file);
+    // Validate required fields
+    if (!visitData.appointmentDate || !visitData.doctorName || !visitData.symptoms || 
+        !visitData.prescription || !visitData.prescriptionFile) {
+      toast.error('Please fill in all required fields and upload a prescription image.', {
+        style: {
+          background: '#7f1d1d',
+          color: '#fff',
+          border: '1px solid #dc2626',
+          borderRadius: '6px',
+          padding: '12px 16px',
+          fontSize: '14px',
+        },
       });
-
-      // Send to backend API
-      const response = await diagnosisAPI.uploadVisitData(formData);
-      
-      // SUCCESS: Update toast to success
-      toast.update(optimisticToastId, {
-        render: "Visit uploaded successfully! 🎉",
-        type: "success",
-        isLoading: false,
-        autoClose: 1500,
-        closeOnClick: true,
-        draggable: true,
-        hideProgressBar: true,
-      });
-
-      console.log('Upload successful:', response.data);
-
-    } catch (error) {
-      console.error('Upload failed:', error);
-      
-      // ROLLBACK: Update toast to error and navigate back
-      toast.update(optimisticToastId, {
-        render: "Upload failed. Please try again.",
-        type: "error",
-        isLoading: false,
-        autoClose: 4000,
-        closeOnClick: true,
-        draggable: true,
-        hideProgressBar: true,
-      });
-
-      // ROLLBACK: Navigate back to modal (could also reopen modal)
-      // For now, we stay on diagnosis page with error message
-      // TODO: Consider reopening modal with preserved data
-    } finally {
-      setIsUploading(false);
+      return;
     }
+    
+    // Close modal and navigate immediately
+    onClose();
+    resetForm();
+    navigate('/diagnosis');
+    
+    // Create FormData for upload
+    const formData = new FormData();
+    formData.append('appointmentDate', visitData.appointmentDate);
+    formData.append('doctorName', visitData.doctorName);
+    formData.append('symptoms', visitData.symptoms);
+    formData.append('prescription', visitData.prescription);
+    
+    // Prescription file is mandatory
+    if (visitData.prescriptionFile) {
+      formData.append('prescriptionFile', visitData.prescriptionFile);
+    }
+    
+    // Test reports are optional - append each file with the same field name
+    visitData.testReports.forEach((file) => {
+      formData.append('testReports', file);
+    });
+    
+    // Show promise-based toast that tracks upload progress
+    toast.promise(
+      diagnosisAPI.uploadVisitData(formData),
+      {
+        loading: 'Uploading visit data...',
+        success: 'Visit uploaded successfully! 🎉',
+        error: (err) => {
+          console.error('Upload error:', err);
+          
+          // Handle different error status codes
+          if (err.response?.status === 401) {
+            return 'Authentication failed. Please log in again.';
+          } else if (err.response?.status === 500) {
+            return 'Server error. Please try again later.';
+          } else if (err.response?.status === 400) {
+            return 'Bad request. Please check your data.';
+          } else {
+            return 'Upload failed. Please try again.';
+          }
+        }
+      },
+      {
+        style: {
+          background: '#1f2937',
+          color: '#fff',
+          border: '1px solid #374151',
+          borderRadius: '6px',
+          padding: '12px 16px',
+          fontSize: '14px',
+          minWidth: '300px',
+        },
+        success: {
+          duration: 3000,
+          style: {
+            background: '#065f46',
+            color: '#fff',
+            border: '1px solid #10b981',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            fontSize: '14px',
+          },
+        },
+        error: {
+          duration: 5000,
+          style: {
+            background: '#7f1d1d',
+            color: '#fff',
+            border: '1px solid #dc2626',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            fontSize: '14px',
+          },
+        },
+        loading: {
+          style: {
+            background: '#1f2937',
+            color: '#fff',
+            border: '1px solid #374151',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            fontSize: '14px',
+          },
+        },
+      }
+    );
   };
 
   // UTILITY FUNCTIONS
@@ -269,7 +301,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                   <div className="border-2 border-dashed border-emerald-600 rounded-lg p-6 text-center hover:border-emerald-500 transition-colors bg-emerald-500/5">
                     <input
                       type="file"
-                      accept=".jpg,.jpeg,.png"
+                      accept=".jpg,.jpeg,.png,.pdf"
                       onChange={handlePrescriptionFileChange}
                       className="hidden"
                       id="prescription-upload"
@@ -284,7 +316,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                       <span className="text-emerald-400 font-medium">
                         {visitData.prescriptionFile ? visitData.prescriptionFile.name : 'Click to upload prescription'}
                       </span>
-                      <span className="text-zinc-400 text-xs">JPG, PNG files accepted (Required)</span>
+                      <span className="text-zinc-400 text-xs">JPG, PNG, PDF files accepted (Required)</span>
                     </label>
                   </div>
                 </div>
@@ -297,7 +329,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                   <div className="border-2 border-dashed border-zinc-600 rounded-lg p-6 text-center hover:border-zinc-500 transition-colors">
                     <input
                       type="file"
-                      accept=".jpg,.jpeg,.png"
+                      accept=".jpg,.jpeg,.png,.pdf"
                       multiple
                       onChange={handleTestReportFileChange}
                       className="hidden"
@@ -313,7 +345,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                       <span className="text-zinc-400">
                         Click to upload test reports
                       </span>
-                      <span className="text-zinc-500 text-xs">JPG, PNG files. Multiple files allowed (Optional)</span>
+                      <span className="text-zinc-500 text-xs">JPG, PNG, PDF files. Multiple files allowed (Optional)</span>
                     </label>
                   </div>
                 </div>
@@ -362,16 +394,10 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
             {/* UPLOAD BUTTON */}
             <button
               onClick={handleFinalUpload}
-              disabled={!isFormValid() || isUploading}
-              className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+              disabled={!isFormValid()}
+              className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              {isUploading && (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              )}
-              {isUploading ? 'Uploading...' : 'Upload Visit'}
+              Upload Visit
             </button>
           </div>
 
