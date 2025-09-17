@@ -9,6 +9,7 @@ import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.VisitsRepository;
+import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class VisitService {
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorProfileRepository doctorProfileRepository;
+    private final AIService AiService;
 
     public UploadVisitReqDTO saveVisitData(
             Long userId,
@@ -35,8 +37,8 @@ public class VisitService {
             String symptoms,
             String prescription,
             String prescriptionFileUrl,
-            List<String> testReportFileUrls) {
-
+            List<String> testReportFileUrls)
+    {
         try {
             log.info("Saving visit data for user ID: {}", userId);
 
@@ -66,11 +68,16 @@ public class VisitService {
                     .user(user)
                     .build();
 
+                    
             Visits savedVisit = visitsRepository.save(visit);
-
-
-
+            
+            Boolean kgSavedStatus = saveVisitDataToKG(savedVisit);
+            if(!kgSavedStatus){
+                log.error("Failed to save visit data to Knowledge Graph for visit ID: {}", savedVisit.getVisitId());
+                throw new RuntimeException("Failed to save visit data to Knowledge Graph");
+            }
             log.info("Visit saved successfully with ID: {}", savedVisit.getVisitId());
+
 
             // Return DTO with saved data for confirmation
             return UploadVisitReqDTO.builder()
@@ -84,6 +91,12 @@ public class VisitService {
             log.error("Error saving visit data: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to save visit data: " + e.getMessage());
         }
+    }
+
+    public boolean saveVisitDataToKG(Visits visit) {
+        String extractedPrescriptionText = AiService.getTextFromImageUrl(visit.getPrescriptionFileUrl());
+        log.info("Extracted Prescription Text: " + extractedPrescriptionText);
+        return true;
     }
 
     public List<Visits> getAllVisitsByUser(Long userId) {

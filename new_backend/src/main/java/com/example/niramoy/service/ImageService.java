@@ -144,27 +144,11 @@ public class ImageService {
         }
     }
 
-    /**
-     * Validate prompt
-     */
-    public void validatePrompt(String prompt) {
-        if (prompt == null || prompt.trim().isEmpty()) {
-            throw new IllegalArgumentException("Prompt cannot be null or empty");
-        }
-        if (prompt.length() > 2000) {
-            throw new IllegalArgumentException("Prompt cannot exceed 2000 characters");
-        }
-    }
 
-    /**
-     * Check if content type is valid image format
-     */
     private boolean isValidImageType(String contentType) {
         return contentType.equals("image/jpeg") || contentType.equals("image/jpg") || contentType.equals("image/png") ||
                 contentType.equals("image/gif") || contentType.equals("image/webp");
     }
-
-
 
     private byte[] downloadImageFromUrl(String imageUrl) throws IOException {
         try {
@@ -218,9 +202,8 @@ public class ImageService {
         }
     }
 
-    public Image buildImageFromMultipartFile(MultipartFile imageFile, String prompt) {
+    public Image buildImageFromMultipartFile(MultipartFile imageFile) {
         validateImageFile(imageFile);
-        validatePrompt(prompt);
         try{
             // Convert image to base64
             byte[] imageBytes = imageFile.getBytes();
@@ -235,9 +218,8 @@ public class ImageService {
         }
     }
 
-    public Image buildImageFromUrl(String imageUrl, String prompt) {
+    public Image buildImageFromUrl(String imageUrl) {
         validateUrl(imageUrl);
-        validatePrompt(prompt);
         try {
             // Download image from URL
             byte[] imageBytes = downloadImageFromUrl(imageUrl);
