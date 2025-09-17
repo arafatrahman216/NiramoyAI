@@ -26,7 +26,6 @@ public class VisitService {
     private final VisitsRepository visitsRepository;
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
-    private final AIService googleAIService;
     private final DoctorProfileRepository doctorProfileRepository;
 
     public UploadVisitReqDTO saveVisitData(

@@ -8,6 +8,7 @@ import com.example.niramoy.repository.HealthLogRepository;
 import com.example.niramoy.dto.HealthLogRecord;
 import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.utils.JsonParser;
+import com.example.niramoy.service.AIServices.AIService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,7 +29,8 @@ import static java.lang.Integer.parseInt;
 public class HealthService {
 
     private final HealthLogRepository healthLogRepository;
-    private final AIService googleAIService;
+    private final AIService AiService;
+
 
 
     public Page<HealthLog> findByUser(User user, Pageable pageable) {
@@ -239,7 +241,7 @@ public class HealthService {
 
         Text: %s
         """.formatted(transcription) ;
-        String rawResponse = googleAIService.generateContent(prompt);
+        String rawResponse = AiService.generateContent(prompt);
         System.out.println(rawResponse);
         return JsonParser.parseHealthLog(rawResponse);
 
