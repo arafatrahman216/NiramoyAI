@@ -17,17 +17,12 @@ public class GivenTests {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long givenTestId;
 
-    @ManyToOne
-    @JoinColumn(name = "prescription_id", nullable = false)
-    private Prescription prescription;
+    @Column(name = "test_name")
+    private String testName;
 
-    // direct reference to master Test table
-    @ManyToOne
-    @JoinColumn(name = "test_ref_id")
-    private Tests test;
-
+    @Column(name = "test_datetime")
     private java.time.LocalDateTime testDatetime;
-    private String report;
+
 
     @ElementCollection
     @CollectionTable(name = "test_image_urls", joinColumns = @JoinColumn(name = "given_test_id"))
@@ -35,5 +30,5 @@ public class GivenTests {
     private java.util.List<String> imageLinks;
 
     private String summary;
-    private String urgency;
+
 }

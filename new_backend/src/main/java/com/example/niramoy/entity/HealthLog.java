@@ -38,6 +38,10 @@ public class HealthLog {
     @Column(name = "temperature", length = 20)
     private Double temperature;
 
+    @OneToOne(mappedBy = "healthLog", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Visits visit;
+
     @Column(name = "stress_level")
     private Integer stressLevel;
 
@@ -47,7 +51,7 @@ public class HealthLog {
     @Column(name = "oxygen_saturation")
     private Double oxygenSaturation;
 
-    @Column(name = "other_symptoms")
+    @Column(name = "other_symptoms" , columnDefinition = "text[]")
     private List<String> otherSymptoms= new ArrayList<>();
 
     @Column(name = "note", columnDefinition = "TEXT")

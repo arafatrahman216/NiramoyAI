@@ -5,6 +5,7 @@ import { CircularProgress, Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import NavigationGuard from './components/NavigationGuard';
 import LandingPage from './components/LandingPage';
@@ -31,6 +32,7 @@ import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterfa
 import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
 import Timeline from './components/Timeline/Timeline';
 import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
+import PatientProfile from './components/PatientProfile/PatientProfile';
 
 
 const theme = createTheme({
@@ -433,6 +435,17 @@ function App() {
                     </PatientRoute>
                   }
                 />
+
+                <Route
+                  path='/patient/profile'
+                  element={
+                    <PatientRoute>
+                      <PatientProfile />
+                    </PatientRoute>
+                  }
+                />
+
+                {/* Example protected route */}
                 <Route path="/test" element={
                   <PatientRoute>
                     
@@ -456,6 +469,70 @@ function App() {
         draggable
         pauseOnHover
         theme="dark"
+      />
+      
+      {/* React Hot Toast for modern toast notifications */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        gutter={8}
+        containerClassName=""
+        containerStyle={{
+          top: 20,
+          right: 20,
+        }}
+        toastOptions={{
+          // Define default options - slim and dark themed
+          className: '',
+          duration: 4000,
+          style: {
+            background: '#1f2937',
+            color: '#fff',
+            border: '1px solid #374151',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            fontSize: '14px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            minWidth: '320px',
+            maxWidth: '400px',
+          },
+          // Default options for specific types
+          success: {
+            duration: 3000,
+            style: {
+              background: '#065f46',
+              color: '#fff',
+              border: '1px solid #10b981',
+              borderRadius: '6px',
+              padding: '12px 16px',
+              fontSize: '14px',
+              boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.1), 0 4px 6px -2px rgba(16, 185, 129, 0.05)',
+            },
+          },
+          error: {
+            duration: 5000,
+            style: {
+              background: '#7f1d1d',
+              color: '#fff',
+              border: '1px solid #dc2626',
+              borderRadius: '6px',
+              padding: '12px 16px',
+              fontSize: '14px',
+              boxShadow: '0 10px 15px -3px rgba(220, 38, 38, 0.1), 0 4px 6px -2px rgba(220, 38, 38, 0.05)',
+            },
+          },
+          loading: {
+            style: {
+              background: '#1f2937',
+              color: '#fff',
+              border: '1px solid #374151',
+              borderRadius: '6px',
+              padding: '12px 16px',
+              fontSize: '14px',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            },
+          },
+        }}
       />
     </ThemeProvider>
   );

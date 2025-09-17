@@ -48,6 +48,8 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
+      console.log('Attempting login for:', username);
+      
       const response = await axios.post(`${API_BASE_URL}/login`, {
         usernameOrEmail: username,
         password,
@@ -83,7 +85,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/register`, userData);
+      const response = await axios.post(`${API_BASE_URL}/signup`, userData);
 
       if (response.data.success) {
         const { token, user: newUser } = response.data;

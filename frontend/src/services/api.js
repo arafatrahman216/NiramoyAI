@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:8000/api';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 20000, // 20 seconds timeout
 });
 
 // Add request interceptor to include auth token and debug logging
@@ -18,8 +18,8 @@ api.interceptors.request.use((config) => {
   
   // Debug logging for all API requests
   console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-  console.log(`📤 Request data:`, config.data);
-  console.log(`📋 Request headers:`, config.headers);
+  // console.log(`📤 Request data:`, config.data);
+  // console.log(`📋 Request headers:`, config.headers);
   
   return config;
 });
@@ -60,6 +60,8 @@ export const doctorAPI = {
   
   // Get doctor details
   getDoctorById: (id) => api.get(`/public/doctors/${id}`),
+
+  getPatientInfo : (id) => api.post('/doctor/patient', {"id": id}),
   
 };
 
@@ -80,8 +82,8 @@ export const testCenterAPI = {
 // AI Chatbot API endpoints
 export const chatbotAPI = {
   // Send message to AI chatbot
-  sendMessage: (message, conversationId = null) => 
-    api.post('/chatbot/message', { message, conversationId }),
+  sendMessage: (message, chatId, mode = 'explain') => 
+    api.post('/user/chat', { message, chatId: chatId.toString(), mode }),
   
   // Get conversation history
   getConversation: (conversationId) => 
@@ -89,7 +91,11 @@ export const chatbotAPI = {
   
   // Start new conversation
   startConversation: () => 
-    api.post('/chatbot/conversation/start'),
+    api.post('/user/start-conversation'),
+
+  // Get user's chat sessions
+  getChatSessions: () => 
+    api.get('/user/chat-sessions'),
 };
 
 
@@ -173,5 +179,23 @@ export const diagnosisAPI = {
     api.post('/user/upload-visit', visitData),
 
 }
+
+
+
+
+export const userInfoAPI = {
+  getUserProfile: () => api.get('/user/profile'),
+
+  updateUserProfile: (editData) => api.patch('/user/profile', editData) ,
+
+  uploadProfilePic : (formData ) => api.post('/upload/image', formData),
+
+  getDashboardData: () => api.get('/user/dashboard'),
+
+  getHealthLog : ()=> api.get('/user/health-log'),
+
+  getRecentVisits : () => api.get('/user/recent-visits')
+
+};
 
 export default api;

@@ -16,7 +16,7 @@ const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col h-full">
+    <div className="fixed left-16 top-0 bottom-0 w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col z-30">
       {/* SIDEBAR HEADER */}
       <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
         <h2 className="text-lg font-semibold text-white">Visits Timeline</h2>

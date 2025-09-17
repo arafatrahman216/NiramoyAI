@@ -15,6 +15,7 @@ import java.util.List;
 public class UploadVisitReqDTO {
     private String appointmentDate;
     private String doctorName;
+    private String doctorId;
     private String symptoms;
     private String prescription;
     private MultipartFile prescriptionFile;

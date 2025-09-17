@@ -2,12 +2,17 @@ package com.example.niramoy.service;
 
 import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.HealthProfile;
+import com.example.niramoy.entity.Medicine;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.enumerate.Role;
 import com.example.niramoy.error.DuplicateUserException;
+import com.example.niramoy.repository.MedicineRepository;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.HealthProfileRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +33,9 @@ import java.util.Map;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final HealthProfileRepository healthProfileRepository;
+    private final HealthService healthService;
+    private final MedicineRepository medicineRepository;
+    private final UserKGService userKGService;
 
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
     // until then the query result will be stored in persistence context
@@ -144,21 +153,22 @@ public class UserService implements UserDetailsService {
         if (healthProfile != null) {
             updateHealthProfileFields(healthProfile, healthProfileDTO);
             healthProfile = healthProfileRepository.save(healthProfile);
-        }
-        else {
+        } else {
             // Create new health profile
             healthProfile = new HealthProfile();
             healthProfile.setUserId(userId);
             healthProfile.setUser(user); // Set the User entity reference
             updateHealthProfileFields(healthProfile, healthProfileDTO);
-            // Only save for new entities
 
             System.out.println("This is the health profile to be saved: " + healthProfile);
             healthProfile = healthProfileRepository.save(healthProfile);
         }
 
+        healthProfile = userKGService.saveHealthProfile(healthProfile);
         return convertToHealthProfileDTO(healthProfile);
     }
+
+
 
 
 
@@ -206,9 +216,17 @@ public class UserService implements UserDetailsService {
         return dto;
     }
 
+    private String safeGetString(Map<String, Object> formData, String key, String defaultValue) {
+        String value = (String) formData.get(key);
+        return (value == null || value.isEmpty()) ? defaultValue : value;
+    }
 
 
+    public HashMap<String, Object> createUserDashboardMap(User user) {
 
-
-
+        HashMap<String,Object> healthDashboard = healthService.getHealthDashboardByUser(user);
+        List<Medicine> medications = medicineRepository.findMedicineByVisit_User(user);
+        healthDashboard.put("medications", medications);
+        return healthDashboard;
+    }
 }
