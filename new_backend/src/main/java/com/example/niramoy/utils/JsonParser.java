@@ -2,10 +2,13 @@ package com.example.niramoy.utils;
 
 import com.example.niramoy.dto.HealthLogRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 @RequiredArgsConstructor
 public class JsonParser {
@@ -118,4 +121,7 @@ public class JsonParser {
                     .weight("").build();
         }
     }
+
+
+
 }

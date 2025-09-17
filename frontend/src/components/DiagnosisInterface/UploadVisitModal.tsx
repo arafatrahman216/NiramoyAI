@@ -18,6 +18,7 @@ interface VisitData {
   appointmentDate: string;
   doctorName: string;
   symptoms: string;
+  doctorId: string;
   prescription: string;
   prescriptionFile: File | null;
   testReports: File[];
@@ -30,6 +31,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
   const [visitData, setVisitData] = useState<VisitData>({
     appointmentDate: '',
     doctorName: '',
+    doctorId : '',
     symptoms: '',
     prescription: '',
     prescriptionFile: null,
@@ -86,6 +88,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     formData.append('appointmentDate', visitData.appointmentDate);
     formData.append('doctorName', visitData.doctorName);
     formData.append('symptoms', visitData.symptoms);
+    formData.append('doctorId', visitData.doctorId);
     formData.append('prescription', visitData.prescription);
     
     // Prescription file is mandatory
@@ -170,6 +173,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     setVisitData({
       appointmentDate: '',
       doctorName: '',
+      doctorId: '',
       symptoms: '',
       prescription: '',
       prescriptionFile: null,
@@ -257,6 +261,20 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                     required
                   />
                 </div>
+                {/* DOCTOR ID */}
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Doctor ID (if any)
+                  </label>
+                  <input
+                    type="text"
+                    value={visitData.doctorId}
+                    onChange={(e) => handleInputChange('doctorId', e.target.value)}
+                    placeholder="Enter doctor's ID (optional)"
+                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                  />
+                </div>
+
 
                 {/* SYMPTOMS */}
                 <div>

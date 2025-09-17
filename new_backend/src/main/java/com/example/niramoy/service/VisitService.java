@@ -25,12 +25,14 @@ public class VisitService {
     private final VisitsRepository visitsRepository;
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
+    private final GoogleAIService googleAIService;
     private final DoctorProfileRepository doctorProfileRepository;
 
     public UploadVisitReqDTO saveVisitData(
             Long userId,
             String appointmentDate,
             String doctorName,
+            String doctorId,
             String symptoms,
             String prescription,
             String prescriptionFileUrl,
@@ -45,8 +47,14 @@ public class VisitService {
 
             // Parse appointment date (HTML date input sends yyyy-MM-dd format)
             LocalDate parsedAppointmentDate = LocalDate.parse(appointmentDate);
-
-            Doctor doctor = doctorRepository.findByDoctorId(1L).get();
+            Doctor doctor = null ;
+            Long fetchedDoctorId = null;
+            try {
+                fetchedDoctorId = Long.parseLong(doctorId);
+                doctor = doctorRepository.findByDoctorId(fetchedDoctorId).get();
+            } catch (Exception e) {
+                log.warn("Doctor with ID {} not found. Proceeding without linking to a doctor entity.", fetchedDoctorId);
+            }
             // Create and save visit entity
             Visits visit = Visits.builder()
                     .appointmentDate(parsedAppointmentDate)
@@ -60,6 +68,9 @@ public class VisitService {
                     .build();
 
             Visits savedVisit = visitsRepository.save(visit);
+
+
+
             log.info("Visit saved successfully with ID: {}", savedVisit.getVisitId());
 
             // Return DTO with saved data for confirmation

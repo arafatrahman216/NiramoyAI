@@ -390,7 +390,9 @@ public class UserController {
             String doctorName = visitDTO.getDoctorName();
             String symptoms = visitDTO.getSymptoms();
             String prescription = visitDTO.getPrescription();
-            
+            String doctorId = visitDTO.getDoctorId();
+            System.out.println("doctor id : " + doctorId);
+
             String prescriptionFileUrl = null;
             // Check if prescription file is present and upload it
             if (visitDTO.getPrescriptionFile() != null && !visitDTO.getPrescriptionFile().isEmpty()) {
@@ -434,6 +436,7 @@ public class UserController {
                                                             userDTO.getId(),
                                                             appointmentDate,
                                                             doctorName,
+                                                            doctorId,
                                                             symptoms,
                                                             prescription,
                                                             prescriptionFileUrl,
