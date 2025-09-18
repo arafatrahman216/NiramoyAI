@@ -13,6 +13,7 @@ interface Message {
   content: string;
   agent: boolean;
   timestamp?: string;
+  isPlan?: boolean;
 }
 
 interface ChatConversationProps {
@@ -63,7 +64,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         messageId: msg.messageId,
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp,
+        isPlan: msg.isPlan || false
       }));
       setMessages(formattedMessages);
       setLoading(false);
@@ -94,7 +96,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         messageId: msg.messageId,
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp,
+        isPlan: msg.isPlan || false
       }));
       
       console.log('Formatted Messages:', formattedMessages);
@@ -123,7 +126,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         messageId: msg.messageId,
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp,
+        isPlan: msg.isPlan || false
       }));
       setMessages(formattedMessages);
       // Scroll to bottom when new data comes from parent
@@ -209,66 +213,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     }
   };
 
-  // Check if message content contains care plan data
+  // Parse care plan data from JSON content
   const parseCarePlanData = (content: string) => {
     console.log('Parsing content for care plan data:', content);
-    
-    // Test for dummy data trigger
-    if (content.toLowerCase().includes('show care plan') || content.toLowerCase().includes('test care plan')) {
-      console.log('Triggered dummy care plan data');
-      return {
-        "Plan": {
-          "PreTreatment_Phase": [
-            {
-              "step": 1,
-              "action": "Initial consultation",
-              "why": "To assess your condition and plan treatment",
-              "where": "Medical center",
-              "cost": "200",
-              "timeframe": "Within 24 hours",
-              "this_step_importance": "high"
-            }
-          ],
-          "Treatment_Phase": [
-            {
-              "step": 1,
-              "action": "Primary treatment",
-              "why": "To address the main health concern",
-              "where": "Hospital",
-              "cost": "2000",
-              "timeframe": "3-5 days",
-              "this_step_importance": "high"
-            }
-          ],
-          "PostTreatment_Phase": [
-            {
-              "step": 1,
-              "action": "Follow-up visit",
-              "why": "To monitor recovery progress",
-              "where": "Clinic",
-              "cost": "150",
-              "timeframe": "1 week after treatment",
-              "this_step_importance": "moderate"
-            }
-          ],
-          "EstimatedTotalCost": {
-            "low": "$2000",
-            "typical": "$3000",
-            "high": "$5000"
-          },
-          "ActionChecklist": [
-            "Schedule initial consultation",
-            "Prepare medical history",
-            "Arrange transportation"
-          ],
-          "Urgency": "Urgent",
-          "Assumptions": [
-            "Patient is stable",
-            "Insurance coverage available"
-          ]
-        }
-      };
-    }
     
     try {
       // Try to parse as JSON first
@@ -295,7 +242,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         }
       }
     }
-    console.log('No care plan data found');
+    console.log('No care plan data found, using fallback');
+    // Return null - the CarePlanTimeline component will handle fallback data
     return null;
   };
 
@@ -336,15 +284,15 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                       /* AI MESSAGE - Check for care plan data or render plain text */
                       <div className="flex-1">
                         {(() => {
-                          const carePlanData = "THIS WILL BE UPDATED";
-                            if (carePlanData && chatData?.mode === 'planner') {
-                            // Render care plan timeline
+                          // Check if this is a plan message from backend
+                          if (message.isPlan) {
+                            const carePlanData = parseCarePlanData(message.content);
                             return (
                               <div className="w-full">
-                              <CarePlanTimeline careData={carePlanData} />
+                                <CarePlanTimeline careData={carePlanData} />
                               </div>
                             );
-                            } else {
+                          } else {
                             // Render regular text message
                             return (
                               <>
@@ -443,9 +391,11 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
           </div>
         ) : (
           messages.map((message) => {
-            const carePlanData = message.agent ? parseCarePlanData(message.content) : null;
-            
-            if (carePlanData) {
+            // Check if this is a plan message from backend
+            if (message.agent && message.isPlan) {
+              // Parse the JSON content for care plan data
+              const carePlanData = parseCarePlanData(message.content);
+              
               // Render care plan timeline in full width
               return (
                 <div key={message.messageId} className="w-full">

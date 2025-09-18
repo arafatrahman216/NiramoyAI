@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+// FIXME : DELEte extra fucntions
 @RequiredArgsConstructor
 public class JsonParser {
 
@@ -44,6 +45,25 @@ public class JsonParser {
             return "Error parsing explanation: " + e.getMessage();
         }
     }
+
+    public static JSONObject parseExplanationJson(String jsonResponse) {
+        String cleanedResponse = cleanJsonResponse(jsonResponse);
+        if (cleanedResponse == null) {
+            return null;
+        }
+
+        try {
+            JSONObject json = new JSONObject(cleanedResponse);
+            if (json.has("Explanation")) {
+                Object explanation = json.get("Explanation");
+                return new JSONObject().put("Explanation", explanation);
+            } else {
+                return new JSONObject().put("Explanation", "No explanation available.");
+            }
+        } catch (Exception e) {
+            return new JSONObject().put("Explanation", "Error parsing explanation: " + e.getMessage());
+        }
+    }
     
     public static String parsePlan(String jsonResponse) {
         String cleanedResponse = cleanJsonResponse(jsonResponse);
@@ -58,7 +78,40 @@ public class JsonParser {
             return "Error parsing plan: " + e.getMessage();
         }
     }
-    
+
+    public static JSONObject parsePlanJson(String jsonResponse) {
+        String cleanedResponse = cleanJsonResponse(jsonResponse);
+        if (cleanedResponse == null) {
+            return null;
+        }
+
+        try {
+            JSONObject json = new JSONObject(cleanedResponse);
+            JSONObject result = new JSONObject();
+            
+            if (json.has("Plan")) {
+                Object plan = json.get("Plan");
+                result.put("Plan", plan);
+            } else {
+                result.put("Plan", "No plan available.");
+            }
+            
+            // Preserve the is_plan field if it exists
+            if (json.has("is_plan")) {
+                result.put("is_plan", json.getBoolean("is_plan"));
+            } else {
+                result.put("is_plan", false);
+            }
+            
+            return result;
+        } catch (Exception e) {
+            JSONObject errorResult = new JSONObject();
+            errorResult.put("Plan", "Error parsing plan: " + e.getMessage());
+            errorResult.put("is_plan", false);
+            return errorResult;
+        }
+    }
+
     public static String parseAnswer(String jsonResponse) {
         String cleanedResponse = cleanJsonResponse(jsonResponse);
         if (cleanedResponse == null) {
@@ -70,6 +123,25 @@ public class JsonParser {
             return json.optString("Answer", "No answer available.");
         } catch (Exception e) {
             return "Error parsing answer: " + e.getMessage();
+        }
+    }
+
+    public static JSONObject parseAnswerJson(String jsonResponse) {
+        String cleanedResponse = cleanJsonResponse(jsonResponse);
+        if (cleanedResponse == null) {
+            return null;
+        }
+
+        try {
+            JSONObject json = new JSONObject(cleanedResponse);
+            if (json.has("Answer")) {
+                Object answer = json.get("Answer");
+                return new JSONObject().put("Answer", answer);
+            } else {
+                return new JSONObject().put("Answer", "No answer available.");
+            }
+        } catch (Exception e) {
+            return new JSONObject().put("Answer", "Error parsing answer: " + e.getMessage());
         }
     }
     
@@ -84,6 +156,25 @@ public class JsonParser {
             return json.optString("Consultation", "No consultation available.");
         } catch (Exception e) {
             return "Error parsing consultation: " + e.getMessage();
+        }
+    }
+
+    public static JSONObject parseConsultationJson(String jsonResponse) {
+        String cleanedResponse = cleanJsonResponse(jsonResponse);
+        if (cleanedResponse == null) {
+            return null;
+        }
+
+        try {
+            JSONObject json = new JSONObject(cleanedResponse);
+            if (json.has("Consultation")) {
+                Object consultation = json.get("Consultation");
+                return new JSONObject().put("Consultation", consultation);
+            } else {
+                return new JSONObject().put("Consultation", "No consultation available.");
+            }
+        } catch (Exception e) {
+            return new JSONObject().put("Consultation", "Error parsing consultation: " + e.getMessage());
         }
     }
 
@@ -108,6 +199,29 @@ public class JsonParser {
                 return parseConsultation(jsonResponse);
             default:
                 return parseExplanation(jsonResponse);
+        }
+    }
+
+    public static JSONObject parseResponseJson(String jsonResponse, String mode) {
+        if (mode == null) {
+            mode = "explain";
+        }
+        
+        switch (mode.toLowerCase()) {
+            case "explain":
+                return parseExplanationJson(jsonResponse);
+            case "plan":
+            case "planner":
+                return parsePlanJson(jsonResponse);
+            case "qna":
+            case "q&a":
+            case "question":
+                return parseAnswerJson(jsonResponse);
+            case "consult":
+            case "consultation":
+                return parseConsultationJson(jsonResponse);
+            default:
+                return parseExplanationJson(jsonResponse);
         }
     }
 

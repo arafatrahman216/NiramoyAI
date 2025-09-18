@@ -58,6 +58,12 @@ public class PlannerAgent implements Agent {
             User Query: {{query}}
 
             Important Instructions:
+            - Detect User intent. If user if asking for a plan or guideline or timeline then make "is_plan": true in the json response. Then response in "Plan" and Keep "Explanation" empty.
+            - If user is not asking for a plan or guideline or timeline then make "is_plan": false in the json response. Then response in "Explanation" and Keep "Plan" empty.
+            - If intent is not relevant at all, politely refuse to answer and suggest consulting a healthcare
+            - If intent is somewhat relevent answer the question with basic knowledge
+            - If the question type doesnot match PLANNER mode, refer to use other Modes
+              like QnA,Consult, Next Move Planner
             - Keep PreTreatment, Treatment, PostTreatment phases empty if not applicable.
             - Include EstimatedTime for each relevant phase.
             - Include step-specific importance ("this_step_importance") for every step.
@@ -66,6 +72,7 @@ public class PlannerAgent implements Agent {
 
             Example JSON structure (flexible; phases can be empty if not needed):
             {
+            "is_plan": true,
             "Plan": {
                 "PreTreatment_Phase": [],
                 "Treatment_Phase": [],
@@ -76,10 +83,11 @@ public class PlannerAgent implements Agent {
                 "Urgency": "",
                 "Assumptions": [""]
             }
+            "Explanation" : "..."
             }
 
             Example Response:
-            {
+            {   
                 "Plan": 
                 {
                     "PreTreatment_Phase": [

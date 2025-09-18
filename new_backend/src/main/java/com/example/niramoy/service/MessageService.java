@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.example.niramoy.customExceptions.AgentProcessingException;
 import org.springframework.stereotype.Service;
+import org.json.JSONObject;
 
 
 @Slf4j
@@ -69,7 +70,60 @@ public class MessageService {
         }
     }
 
-    public Messages sendMessageAndGetReply(Long chatId, String message, String mode, Long userId) {
+    // public Messages sendMessageAndGetReply(Long chatId, String message, String mode, Long userId) {
+    //     try {
+    //         // 1. Save user message to database
+    //         ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
+    //         Messages userMessage = Messages.builder()
+    //                 .content(message)
+    //                 .isAgent(false)
+    //                 .chatSession(chatSession)
+    //                 .build();
+    //         messageRepository.save(userMessage);
+
+    //         // 2. Process message and generate AI reply
+    //         String aiReply;
+    //         Agent agentWithMode = agentSelector.selectAgent(mode);
+    //         log.info("Message : " + message);
+            
+    //         try{
+    //             aiReply = agentWithMode.processQuery(message, userId);
+    //         } catch (Exception e){
+    //             throw new AgentProcessingException("AI Service is currently unavailable. Please try again later.", e);
+    //         }
+
+    //         String parsedAiReply = JsonParser.parseResponse(aiReply, mode);
+
+    //         Messages aiMessage;
+    //         if( mode  == "planner" && ){
+    //             aiMessage =  Messages.builder()
+    //                 .content(parsedAiReply)
+    //                 .isAgent(true)
+    //                 .isPlan(true)
+    //                 .chatSession(chatSession)
+    //                 .build();
+    //         } else {
+    //             aiMessage =  Messages.builder()
+    //                 .content(parsedAiReply)
+    //                 .isAgent(true)
+    //                 .chatSession(chatSession)
+    //                 .isPlan(false)
+    //                 .build();
+    //         }
+
+
+    //         // 3. Save AI reply to database
+    //         Messages savedAiMessage = messageRepository.save(aiMessage);
+
+    //         return savedAiMessage;
+    //     } catch (Exception e) {
+    //         throw new RuntimeException("Failed to process message: " + e.getMessage());
+    //     }
+    // }
+
+
+
+        public Messages sendMessageAndGetReply(Long chatId, String message, String mode, Long userId) {
         try {
             // 1. Save user message to database
             ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
@@ -91,14 +145,24 @@ public class MessageService {
                 throw new AgentProcessingException("AI Service is currently unavailable. Please try again later.", e);
             }
 
-            String parsedAiReply = JsonParser.parseResponse(aiReply, mode);
-
-            // 3. Save AI reply to database
-            Messages aiMessage = Messages.builder()
+            JSONObject parsedAiReplyJson = JsonParser.parseResponseJson(aiReply, mode);
+            String parsedAiReply = parsedAiReplyJson.toString();
+            
+            Messages aiMessage;
+            // Check if this is planner mode AND LLM explicitly set is_plan to true
+            boolean isPlanMessage = "planner".equals(mode) && 
+                                   parsedAiReplyJson.has("is_plan") && 
+                                   parsedAiReplyJson.getBoolean("is_plan");
+            
+            aiMessage = Messages.builder()
                     .content(parsedAiReply)
                     .isAgent(true)
+                    .isPlan(isPlanMessage)
                     .chatSession(chatSession)
                     .build();
+
+
+            // 3. Save AI reply to database
             Messages savedAiMessage = messageRepository.save(aiMessage);
 
             return savedAiMessage;
@@ -106,7 +170,6 @@ public class MessageService {
             throw new RuntimeException("Failed to process message: " + e.getMessage());
         }
     }
-
 
 
 
