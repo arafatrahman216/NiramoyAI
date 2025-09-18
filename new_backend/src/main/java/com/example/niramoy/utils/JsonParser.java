@@ -84,7 +84,7 @@ public class JsonParser {
             return "Error parsing consultation: " + e.getMessage();
         }
     }
-    
+
     // Generic parser that tries to extract the main content regardless of the key
     public static String parseResponse(String jsonResponse, String mode) {
         if (mode == null) {
@@ -122,6 +122,14 @@ public class JsonParser {
         }
     }
 
+    // Generic LLM json answer to json Object conversion    
+    public static JSONObject parseJsonToObject(String jsonResponse) {
+        String cleanedResponse = cleanJsonResponse(jsonResponse);
+        if (cleanedResponse == null) {
+            return null;
+        }
 
-
+        JSONObject json = new JSONObject(cleanedResponse);
+        return json;
+    }
 }
