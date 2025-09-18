@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { chatbotAPI } from '../../services/api';
+import CarePlanTimeline from './CarePlanTimeline';
 
 // ==============================================
 // CHAT CONVERSATION COMPONENT
@@ -208,6 +209,96 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     }
   };
 
+  // Check if message content contains care plan data
+  const parseCarePlanData = (content: string) => {
+    console.log('Parsing content for care plan data:', content);
+    
+    // Test for dummy data trigger
+    if (content.toLowerCase().includes('show care plan') || content.toLowerCase().includes('test care plan')) {
+      console.log('Triggered dummy care plan data');
+      return {
+        "Plan": {
+          "PreTreatment_Phase": [
+            {
+              "step": 1,
+              "action": "Initial consultation",
+              "why": "To assess your condition and plan treatment",
+              "where": "Medical center",
+              "cost": "200",
+              "timeframe": "Within 24 hours",
+              "this_step_importance": "high"
+            }
+          ],
+          "Treatment_Phase": [
+            {
+              "step": 1,
+              "action": "Primary treatment",
+              "why": "To address the main health concern",
+              "where": "Hospital",
+              "cost": "2000",
+              "timeframe": "3-5 days",
+              "this_step_importance": "high"
+            }
+          ],
+          "PostTreatment_Phase": [
+            {
+              "step": 1,
+              "action": "Follow-up visit",
+              "why": "To monitor recovery progress",
+              "where": "Clinic",
+              "cost": "150",
+              "timeframe": "1 week after treatment",
+              "this_step_importance": "moderate"
+            }
+          ],
+          "EstimatedTotalCost": {
+            "low": "$2000",
+            "typical": "$3000",
+            "high": "$5000"
+          },
+          "ActionChecklist": [
+            "Schedule initial consultation",
+            "Prepare medical history",
+            "Arrange transportation"
+          ],
+          "Urgency": "Urgent",
+          "Assumptions": [
+            "Patient is stable",
+            "Insurance coverage available"
+          ]
+        }
+      };
+    }
+    
+    try {
+      // Try to parse as JSON first
+      const parsed = JSON.parse(content);
+      console.log('Parsed JSON:', parsed);
+      if (parsed.Plan && (parsed.Plan.PreTreatment_Phase || parsed.Plan.Treatment_Phase || parsed.Plan.PostTreatment_Phase)) {
+        console.log('Found valid care plan data');
+        return parsed;
+      }
+    } catch (error) {
+      console.log('JSON parsing failed, trying regex match');
+      // If JSON parsing fails, look for JSON-like structure in the content
+      const jsonMatch = content.match(/\{[\s\S]*"Plan"[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const extracted = JSON.parse(jsonMatch[0]);
+          console.log('Extracted JSON from regex:', extracted);
+          if (extracted.Plan && (extracted.Plan.PreTreatment_Phase || extracted.Plan.Treatment_Phase || extracted.Plan.PostTreatment_Phase)) {
+            console.log('Found valid care plan data from regex');
+            return extracted;
+          }
+        } catch (nestedError) {
+          console.log('Nested parsing failed');
+        }
+      }
+    }
+    console.log('No care plan data found');
+    return null;
+  };
+
   if (embedded) {
     // Embedded mode - ChatGPT style with full-width messages
     return (
@@ -242,48 +333,65 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                         </p>
                       </div>
                     ) : (
-                      /* AI MESSAGE - Plain text with action buttons */
+                      /* AI MESSAGE - Check for care plan data or render plain text */
                       <div className="flex-1">
-                        <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
-                          {message.content}
-                        </p>
-                        
-                        {/* ACTION BUTTONS FOR AI RESPONSES */}
-                        <div className="flex items-center space-x-2 mt-2">
-                          {/* Copy functionality with visual feedback */}
-                          <button
-                            onClick={() => handleCopyMessage(message.messageId, message.content)}
-                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-                            title={copiedMessageId === message.messageId ? "Copied!" : "Copy response"}
-                          >
-                            {copiedMessageId === message.messageId ? (
-                              /* Checkmark icon when copied */
-                              <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              /* Copy icon default state */
-                              <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            )}
-                          </button>
+                        {(() => {
+                          const carePlanData = "THIS WILL BE UPDATED";
+                            if (carePlanData && chatData?.mode === 'planner') {
+                            // Render care plan timeline
+                            return (
+                              <div className="w-full">
+                              <CarePlanTimeline careData={carePlanData} />
+                              </div>
+                            );
+                            } else {
+                            // Render regular text message
+                            return (
+                              <>
+                              <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
+                                {message.content}
+                              </p>
+                              
+                              {/* ACTION BUTTONS FOR AI RESPONSES */}
+                              <div className="flex items-center space-x-2 mt-2">
+                                {/* Copy functionality with visual feedback */}
+                                <button
+                                onClick={() => handleCopyMessage(message.messageId, message.content)}
+                                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+                                title={copiedMessageId === message.messageId ? "Copied!" : "Copy response"}
+                                >
+                                {copiedMessageId === message.messageId ? (
+                                  /* Checkmark icon when copied */
+                                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                ) : (
+                                  /* Copy icon default state */
+                                  <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      </svg>
+                                    )}
+                                  </button>
 
-                          {/* TODO: Read aloud functionality - implement text-to-speech */}
-                          <button
-                            onClick={() => {
-                              // TODO: Implement text-to-speech functionality
-                              // Use Web Speech API or external TTS service
-                              console.log('Read aloud functionality - TODO');
-                            }}
-                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-                            title="Read aloud"
-                          >
-                            <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
-                            </svg>
-                          </button>
-                        </div>
+                                  {/* TODO: Read aloud functionality - implement text-to-speech */}
+                                  <button
+                                    onClick={() => {
+                                      // TODO: Implement text-to-speech functionality
+                                      // Use Web Speech API or external TTS service
+                                      console.log('Read aloud functionality - TODO');
+                                    }}
+                                    className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+                                    title="Read aloud"
+                                  >
+                                    <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </>
+                            );
+                          }
+                        })()}
                       </div>
                     )}
                   </div>
@@ -334,25 +442,39 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
             <p className="text-xs text-zinc-600 mt-1">Start the conversation by sending a message</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.messageId}
-              className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  !message.agent
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-zinc-800 text-zinc-100'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-                <p className="text-xs mt-1 opacity-70">
-                  {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
-                </p>
-              </div>
-            </div>
-          ))
+          messages.map((message) => {
+            const carePlanData = message.agent ? parseCarePlanData(message.content) : null;
+            
+            if (carePlanData) {
+              // Render care plan timeline in full width
+              return (
+                <div key={message.messageId} className="w-full">
+                  <CarePlanTimeline careData={carePlanData} />
+                </div>
+              );
+            } else {
+              // Render regular chat bubble
+              return (
+                <div
+                  key={message.messageId}
+                  className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      !message.agent
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-zinc-800 text-zinc-100'
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                    <p className="text-xs mt-1 opacity-70">
+                      {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+          })
         )}
         <div ref={messagesEndRef} />
       </div>

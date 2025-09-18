@@ -1,9 +1,12 @@
 import React from 'react';
 import { Clock, MapPin, DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
 
-const CarePlanTimeline = () => {
-  // Your JSON data
-  const careData = {
+const CarePlanTimeline = ({ careData }) => {
+  // Debug logging
+  console.log('CarePlanTimeline received careData:', careData);
+  
+  // Default dummy data if no careData is provided
+  const defaultCareData = {
     "Plan": {
       "PreTreatment_Phase": [
         {
@@ -89,11 +92,17 @@ const CarePlanTimeline = () => {
     }
   };
 
+  // Use provided data or fall back to dummy data
+  const data = careData || defaultCareData;
+
+  // Safe access to Plan data with fallbacks
+  const planData = data?.Plan || defaultCareData.Plan;
+
   // Combine all steps from all phases in order
   const allSteps = [
-    ...careData.Plan.PreTreatment_Phase,
-    ...careData.Plan.Treatment_Phase,
-    ...careData.Plan.PostTreatment_Phase
+    ...(planData?.PreTreatment_Phase || []),
+    ...(planData?.Treatment_Phase || []),
+    ...(planData?.PostTreatment_Phase || [])
   ];
 
   // Get color based on importance with glowing effects
@@ -131,7 +140,7 @@ const CarePlanTimeline = () => {
   };
 
   const getUrgencyStyle = (urgency) => {
-    switch (urgency.toLowerCase()) {
+    switch (urgency?.toLowerCase()) {
       case 'urgent':
         return 'bg-red-900/80 text-red-300 border-red-500 shadow-red-500/50 shadow-2xl';
       case 'emergency — go to er now':
@@ -146,10 +155,12 @@ const CarePlanTimeline = () => {
   return (
     <div className="max-w-7xl mx-auto p-8 bg-black min-h-screen text-gray-100">
       {/* Urgency Banner */}
-      <div className={`mb-12 p-6 rounded-xl border-2 text-center font-bold text-xl ${getUrgencyStyle(careData.Plan.Urgency)}`}>
-        <AlertTriangle className="inline-block mr-3 w-8 h-8" />
-        URGENCY: {careData.Plan.Urgency}
-      </div>
+      {planData?.Urgency && (
+        <div className={`mb-12 p-6 rounded-xl border-2 text-center font-bold text-xl ${getUrgencyStyle(planData.Urgency)}`}>
+          <AlertTriangle className="inline-block mr-3 w-8 h-8" />
+          URGENCY: {planData.Urgency}
+        </div>
+      )}
 
       {/* Timeline */}
       <div className="relative">
@@ -249,7 +260,7 @@ const CarePlanTimeline = () => {
                   {/* Importance indicator */}
                   <div className="mt-4">
                     <span className={`inline-block px-3 py-1 rounded-full text-black text-xs font-bold ${colors.bg} ${colors.glow}`}>
-                      {step.this_step_importance.toUpperCase()} PRIORITY
+                      {step.this_step_importance?.toUpperCase()} PRIORITY
                     </span>
                   </div>
                 </div>
@@ -260,55 +271,61 @@ const CarePlanTimeline = () => {
       </div>
 
       {/* Action Checklist */}
-      <div className="mt-16 bg-gray-900/80 rounded-2xl shadow-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
-        <h2 className="text-xl font-bold text-green-300 mb-6 flex items-center">
-          <CheckCircle className="w-6 h-6 mr-3 text-green-400" />
-          Action Checklist
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {careData.Plan.ActionChecklist.map((item, index) => (
-            <div key={index} className="flex items-start p-3 bg-gray-800/60 rounded-xl border border-gray-600/40">
-              <input 
-                type="checkbox" 
-                className="mt-1 mr-3 w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500 focus:ring-2" 
-              />
-              <span className="text-gray-300 text-sm leading-relaxed">{item}</span>
-            </div>
-          ))}
+      {planData?.ActionChecklist && planData.ActionChecklist.length > 0 && (
+        <div className="mt-16 bg-gray-900/80 rounded-2xl shadow-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
+          <h2 className="text-xl font-bold text-green-300 mb-6 flex items-center">
+            <CheckCircle className="w-6 h-6 mr-3 text-green-400" />
+            Action Checklist
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {planData.ActionChecklist.map((item, index) => (
+              <div key={index} className="flex items-start p-3 bg-gray-800/60 rounded-xl border border-gray-600/40">
+                <input 
+                  type="checkbox" 
+                  className="mt-1 mr-3 w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500 focus:ring-2" 
+                />
+                <span className="text-gray-300 text-sm leading-relaxed">{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Cost Estimate */}
-      <div className="mt-8 bg-gray-900/80 rounded-xl p-4 border border-gray-700/50">
-        <h2 className="text-lg font-bold text-green-300 mb-3">Estimated Cost</h2>
-        <div className="flex justify-between text-center text-sm">
-          <div>
-            <div className="text-green-400 font-semibold">Low</div>
-            <div className="text-green-300">{careData.Plan.EstimatedTotalCost.low}</div>
-          </div>
-          <div>
-            <div className="text-blue-400 font-semibold">Typical</div>
-            <div className="text-blue-300">{careData.Plan.EstimatedTotalCost.typical}</div>
-          </div>
-          <div>
-            <div className="text-red-400 font-semibold">High</div>
-            <div className="text-red-300">{careData.Plan.EstimatedTotalCost.high}</div>
+      {planData?.EstimatedTotalCost && (
+        <div className="mt-8 bg-gray-900/80 rounded-xl p-4 border border-gray-700/50">
+          <h2 className="text-lg font-bold text-green-300 mb-3">Estimated Cost</h2>
+          <div className="flex justify-between text-center text-sm">
+            <div>
+              <div className="text-green-400 font-semibold">Low</div>
+              <div className="text-green-300">{planData.EstimatedTotalCost.low}</div>
+            </div>
+            <div>
+              <div className="text-blue-400 font-semibold">Typical</div>
+              <div className="text-blue-300">{planData.EstimatedTotalCost.typical}</div>
+            </div>
+            <div>
+              <div className="text-red-400 font-semibold">High</div>
+              <div className="text-red-300">{planData.EstimatedTotalCost.high}</div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Assumptions */}
-      <div className="mt-8 bg-gray-800/60 rounded-xl p-4 border border-gray-600/40">
-        <h2 className="text-lg font-bold text-green-300 mb-4">Assumptions</h2>
-        <div className="text-gray-300 leading-relaxed text-sm">
-          {careData.Plan.Assumptions.map((assumption, index) => (
-            <p key={index} className="mb-2 flex items-start">
-              <span className="text-green-400 mr-2 text-sm">•</span>
-              <span>{assumption}</span>
-            </p>
-          ))}
+      {planData?.Assumptions && planData.Assumptions.length > 0 && (
+        <div className="mt-8 bg-gray-800/60 rounded-xl p-4 border border-gray-600/40">
+          <h2 className="text-lg font-bold text-green-300 mb-4">Assumptions</h2>
+          <div className="text-gray-300 leading-relaxed text-sm">
+            {planData.Assumptions.map((assumption, index) => (
+              <p key={index} className="mb-2 flex items-start">
+                <span className="text-green-400 mr-2 text-sm">•</span>
+                <span>{assumption}</span>
+              </p>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
