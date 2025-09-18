@@ -33,6 +33,7 @@ public class UserKGService {
         return graphDB.getSchema();
     }
 
+
     public HealthProfile saveHealthProfile(HealthProfile healthProfile) {
         final PromptTemplate SUMMARY_PROMPT = PromptTemplate.from(
             """
@@ -484,4 +485,113 @@ public class UserKGService {
         return true;
     }
 
+
+    public String getVisitSummaryLastThree(Long patientID) {
+        String cypherQuery = """
+            MATCH (p:Patient {patientID: $patientID})-[:HAS_VISIT]->(v:Visit)
+            RETURN v.visit_summary as visitSummary, v.date as date
+            ORDER BY v.date DESC
+            LIMIT 3
+        """;
+        
+        try {
+            List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, Map.of("patientID", patientID));
+            
+            if (results == null || results.isEmpty()) {
+                return "No visits found for patient ID: " + patientID;
+            }
+            
+            StringBuilder concatenatedSummary = new StringBuilder();
+            concatenatedSummary.append("Complete Visit History for Patient ").append(patientID).append(": ");
+            
+            for (int i = 0; i < results.size(); i++) {
+                Map<String, Object> visit = results.get(i);
+                String visitSummary = (String) visit.getOrDefault("visitSummary", "");
+                String date = (String) visit.getOrDefault("date", "");
+                
+                if (!visitSummary.isEmpty()) {
+                    concatenatedSummary.append("Visit on ").append(date).append(": ")
+                                    .append(visitSummary);
+                    
+                    if (i < results.size() - 1) {
+                        concatenatedSummary.append(" | "); // Separator between visit summaries
+                    }
+                }
+            }
+            
+            return concatenatedSummary.toString();
+            
+        } catch (Exception e) {
+            log.error("Error fetching concatenated visit summary for patient {}: {}", patientID, e.getMessage(), e);
+            return "Error fetching visit summary for patient ID: " + patientID;
+        }
+    }
+
+
+    public String getDoctorAdvice(Long patientID) {
+        String cypherQuery = """
+            MATCH (p:Patient {patientID: $patientID})-[:HAS_VISIT]->(v:Visit)
+            RETURN v.doctor_advice as doctorAdvice, v.date as date
+            ORDER BY v.date DESC
+            LIMIT 3
+        """;
+        
+        try {
+            List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, Map.of("patientID", patientID));
+            
+            if (results == null || results.isEmpty()) {
+                return "No visits found for patient ID: " + patientID;
+            }
+            
+            StringBuilder concatenatedSummary = new StringBuilder();
+            concatenatedSummary.append("Complete Doctor's Advice for Patient ").append(patientID).append(": ");
+
+            for (int i = 0; i < results.size(); i++) {
+                Map<String, Object> visit = results.get(i);
+                String visitSummary = (String) visit.getOrDefault("doctorAdvice", "");
+                String date = (String) visit.getOrDefault("date", "");
+                
+                if (!visitSummary.isEmpty()) {
+                    concatenatedSummary.append("Visit on ").append(date).append(": ")
+                                    .append(visitSummary);
+                    
+                    if (i < results.size() - 1) {
+                        concatenatedSummary.append(" | "); // Separator between visit summaries
+                    }
+                }
+            }
+            
+            return concatenatedSummary.toString();
+            
+        } catch (Exception e) {
+            log.error("Error fetching concatenated visit summary for patient {}: {}", patientID, e.getMessage(), e);
+            return "Error fetching visit summary for patient ID: " + patientID;
+        }
+    }
+
+
+    public String getPatientSummary(Long patientID) {
+        String cypherQuery = """
+            MATCH (p:Patient {patientID: $patientID})
+            RETURN p.patient_summary as patientSummary
+        """;
+
+        try{
+            List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, Map.of("patientID", patientID));
+            if (results == null || results.isEmpty()) {
+                return "No patient data found.";
+            }
+
+            return results.get(0).getOrDefault("patientSummary", "No summary available.").toString();
+        } catch (Exception e) {
+            log.error("Error fetching patient summary: {}", e.getMessage(), e);
+            return "Error fetching patient summary.";
+        }
+                
+    }
+
+
+    private String getHistorySummary() {
+        return "";
+    }
 }
