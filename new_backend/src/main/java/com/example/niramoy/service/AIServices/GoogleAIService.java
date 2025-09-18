@@ -4,19 +4,17 @@ import com.example.niramoy.service.ImageService;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Profile;
-import dev.langchain4j.data.message.*;
-import dev.langchain4j.data.image.Image;
 
 import java.util.List;
 import java.util.ArrayList;
 
-import com.example.niramoy.service.ImageService;
 
-
+@Slf4j
 @Service
 @Profile("googleai")
 public class GoogleAIService implements AIService {
@@ -37,6 +35,8 @@ public class GoogleAIService implements AIService {
         try {
             return chatModel.generate(prompt);
         } catch (Exception e) {
+            log.info("Google AI Service - generateContent called with prompt: {}", prompt);
+            log.info("Response: {}", e.getMessage());
             throw new RuntimeException("Failed to generate content with Google AI", e);
         }
     }
@@ -79,6 +79,7 @@ public class GoogleAIService implements AIService {
             return response.text();
 
         } catch (Exception e) {
+            log.info("Response: {}", e.getMessage());
             throw new RuntimeException("Failed to analyze image from URL: " + imageUrl, e);
         }
     }

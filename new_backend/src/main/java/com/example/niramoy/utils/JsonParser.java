@@ -9,6 +9,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class JsonParser {
@@ -131,5 +133,117 @@ public class JsonParser {
 
         JSONObject json = new JSONObject(cleanedResponse);
         return json;
+    }
+
+    // Generic method to parse any field from JSON response
+    public static String parseJsonField(String jsonResponse, String fieldName) {
+        String cleanedResponse = cleanJsonResponse(jsonResponse);
+        if (cleanedResponse == null) {
+            return "";
+        }
+
+        try {
+            JSONObject json = new JSONObject(cleanedResponse);
+            return json.optString(fieldName, "");
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    // Parse symptoms from JSON response into a List<String>
+    public static List<String> parseSymptomsList(JSONObject jsonObject) {
+        if (jsonObject == null || !jsonObject.has("Symptoms")) {
+            return Collections.emptyList();
+        }
+
+        try {
+            Object symptomsObj = jsonObject.get("Symptoms");
+            if (symptomsObj instanceof String) {
+                String symptomsStr = (String) symptomsObj;
+                return List.of(symptomsStr.split(","))
+                    .stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
+            } else if (symptomsObj instanceof org.json.JSONArray) {
+                org.json.JSONArray arr = (org.json.JSONArray) symptomsObj;
+                return arr.toList().stream()
+                    .map(Object::toString).map(String::trim).filter(s -> !s.isEmpty()).toList();
+            } else {
+                return Collections.emptyList();
+            }
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    // Parse diagnosis from JSON response into a List<String>
+    public static List<String> parseDiagnosisList(JSONObject jsonObject) {
+        if (jsonObject == null || !jsonObject.has("Diagnosis")) {
+            return Collections.emptyList();
+        }
+
+        try {
+            Object diagnosisObj = jsonObject.get("Diagnosis");
+            if (diagnosisObj instanceof String) {
+                String diagnosisStr = (String) diagnosisObj;
+                return List.of(diagnosisStr.split(","))
+                    .stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
+            } else if (diagnosisObj instanceof org.json.JSONArray) {
+                org.json.JSONArray arr = (org.json.JSONArray) diagnosisObj;
+                return arr.toList().stream()
+                    .map(Object::toString).map(String::trim).filter(s -> !s.isEmpty()).toList();
+            } else {
+                return Collections.emptyList();
+            }
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    // Parse prescribed medicines from JSON response
+    public static List<Map<String, String>> parsePrescribedMedicines(JSONObject jsonObject) {
+        if (jsonObject == null || !jsonObject.has("PrescribedMedicines")) {
+            return Collections.emptyList();
+        }
+
+        try {
+            org.json.JSONArray medicinesArray = jsonObject.getJSONArray("PrescribedMedicines");
+            List<Map<String, String>> medicinesList = new ArrayList<>();
+            
+            for (int i = 0; i < medicinesArray.length(); i++) {
+                org.json.JSONObject medObj = medicinesArray.getJSONObject(i);
+                Map<String, String> medicine = Map.of(
+                    "medicine_name", medObj.optString("medicine_name", ""),
+                    "dosage_and_duration", medObj.optString("dosage_and_duration", "")
+                );
+                medicinesList.add(medicine);
+            }
+            return medicinesList;
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    // Parse given tests from JSON response
+    public static List<Map<String, String>> parseGivenTests(JSONObject jsonObject) {
+        if (jsonObject == null || !jsonObject.has("GivenTests")) {
+            return Collections.emptyList();
+        }
+
+        try {
+            org.json.JSONArray testsArray = jsonObject.getJSONArray("GivenTests");
+            List<Map<String, String>> testsList = new ArrayList<>();
+            
+            for (int i = 0; i < testsArray.length(); i++) {
+                org.json.JSONObject testObj = testsArray.getJSONObject(i);
+                Map<String, String> test = Map.of(
+                    "test_name", testObj.optString("test_name", ""),
+                    "test_report_summary", testObj.optString("test_report_summary", ""),
+                    "test_report_severity", testObj.optString("test_report_severity", "")
+                );
+                testsList.add(test);
+            }
+            return testsList;
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
     }
 }

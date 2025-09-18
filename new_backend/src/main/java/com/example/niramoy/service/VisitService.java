@@ -35,7 +35,7 @@ public class VisitService {
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorProfileRepository doctorProfileRepository;
-    private final AIService AiService;
+    private final UserKGService userKGService;
 
     public UploadVisitReqDTO saveVisitData(
             Long userId,
@@ -56,8 +56,10 @@ public class VisitService {
 
             // Parse appointment date (HTML date input sends yyyy-MM-dd format)
             LocalDate parsedAppointmentDate = LocalDate.parse(appointmentDate);
+
+            //Fetching doctor
             Doctor doctor = null ;
-            Long fetchedDoctorId = null;
+            Long fetchedDoctorId = -1L;
             try {
                 fetchedDoctorId = Long.parseLong(doctorId);
                 doctor = doctorRepository.findByDoctorId(fetchedDoctorId).get();
@@ -77,10 +79,11 @@ public class VisitService {
                     .user(user)
                     .build();
 
-                    
+        
             Visits savedVisit = visitsRepository.save(visit);
-            
-            Boolean kgSavedStatus = saveVisitDataToKG(savedVisit);
+
+            // Extrct the entity and relationships and save it to KG
+            Boolean kgSavedStatus = userKGService.saveVisitDetails(savedVisit, userId, fetchedDoctorId);
             if(!kgSavedStatus){
                 log.error("Failed to save visit data to Knowledge Graph for visit ID: {}", savedVisit.getVisitId());
                 throw new RuntimeException("Failed to save visit data to Knowledge Graph");
@@ -102,10 +105,6 @@ public class VisitService {
         }
     }
 
-    public boolean saveVisitDataToKG(Visits visit, Long patientID) {
-        // BUG : shokal e korbo
-        return true;
-    }
 
     public List<Visits> getAllVisitsByUser(Long userId) {
         return visitsRepository.findByUserIdOrderByAppointmentDateDesc(userId);
