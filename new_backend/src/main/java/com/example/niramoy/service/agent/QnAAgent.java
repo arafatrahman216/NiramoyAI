@@ -1,5 +1,6 @@
 package com.example.niramoy.service.agent;
 
+import com.example.niramoy.service.UserKGService;
 import com.example.niramoy.service.AIServices.AIService;
 import org.springframework.stereotype.Service;
 import dev.langchain4j.model.input.Prompt;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class QnAAgent implements Agent {
     private final AIService aiService;
+    private final UserKGService userKGService;
 
     private static final PromptTemplate QNA_PROMPT = PromptTemplate.from(
         "You are a professional Health Assistant. " +
@@ -28,16 +30,21 @@ public class QnAAgent implements Agent {
         "Doctor's Advice: {{doctor_advice}}\n" +
         "Patient Summary: {{patient_summary}}\n" +
         "History Summary: {{history_summary}}\n" +
+        "Also track user intent. If intent is not relevant at all, politely refuse to answer and suggest consulting a healthcare professional." +
+        "If intent is somewhat relevent answer the question with basic knowledge" +
+        "If the question type doesnot match EXPLANATION mode, refer to use other Modes like QnA,Consult, Next Move Planner" +
+        "ALWAYS return JSON like this {\"Explanation\": \"...\"}.\n\n" +
         "user_query: {{query}}"
     );
 
+
     @Override
-    public String processQuery(String query) {
+    public String processQuery(String query, Long userId) {
         Map<String, Object> chainVariables = Map.of(
-            "visit_summary", getVisitSummary(),
-            "doctor_advice", getDoctorAdvice(),
-            "patient_summary", getPatientSummary(),
-            "history_summary", getHistorySummary(),
+            "visit_summary", userKGService.getVisitSummaryLastThree(userId),
+            "doctor_advice", userKGService.getDoctorAdvice(userId),
+            "patient_summary", userKGService.getPatientSummary(userId),
+            "history_summary", userKGService.getHistorySummary(userId),
             "query", query
         );
         
@@ -47,20 +54,4 @@ public class QnAAgent implements Agent {
         return response;
     }
 
-    // Dummy implementations - will be replaced with actual data later
-    private String getVisitSummary() {
-        return "Patient visited on 2025-09-13 for complaints of persistent headache and mild fever. Vitals were stable. No alarming symptoms detected during examination.";
-    }
-
-    private String getDoctorAdvice() {
-        return "Doctor advised rest, increased fluid intake, and prescribed paracetamol for headache. Recommended follow-up if symptoms persist or worsen.";
-    }
-
-    private String getPatientSummary() {
-        return "35-year-old male, generally healthy, with no significant chronic illnesses. Reports occasional migraines and mild seasonal allergies.";
-    }
-
-    private String getHistorySummary() {
-        return "Previous visits include treatment for mild respiratory infections and routine check-ups. No history of major surgeries or hospitalizations.";
-    }
 }

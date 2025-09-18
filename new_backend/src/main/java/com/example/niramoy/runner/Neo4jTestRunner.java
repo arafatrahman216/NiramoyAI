@@ -9,12 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
-@Component
+// @Component
 public class Neo4jTestRunner implements CommandLineRunner {
     private final GraphDB graphDB;
     private final UserKGService UserKGService;

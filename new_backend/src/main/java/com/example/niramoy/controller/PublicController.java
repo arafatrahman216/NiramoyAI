@@ -20,7 +20,6 @@ public class PublicController {
     public ResponseEntity<DoctorProfile>
 
     getDoctorsByUsername(){
-
         return ResponseEntity.status(200).body(doctorProfileService.findDoctorByUsername("hasib"));
     }
 

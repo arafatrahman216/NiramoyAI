@@ -13,14 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import com.example.niramoy.customExceptions.AgentProcessingException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MessageService {
-
     private final MessageRepository messageRepository;
     private final ChatSessionRepository chatSessionRepository;
     private final AgentSelector agentSelector;
@@ -72,7 +69,7 @@ public class MessageService {
         }
     }
 
-    public Messages sendMessageAndGetReply(Long chatId, String message, String mode) {
+    public Messages sendMessageAndGetReply(Long chatId, String message, String mode, Long userId) {
         try {
             // 1. Save user message to database
             ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
@@ -89,7 +86,7 @@ public class MessageService {
             log.info("Message : " + message);
             
             try{
-                aiReply = agentWithMode.processQuery(message);
+                aiReply = agentWithMode.processQuery(message, userId);
             } catch (Exception e){
                 throw new AgentProcessingException("AI Service is currently unavailable. Please try again later.", e);
             }

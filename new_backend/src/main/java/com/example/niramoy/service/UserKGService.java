@@ -591,7 +591,7 @@ public class UserKGService {
     }
 
 
-    private String getHistorySummary() {
+    public String getHistorySummary(Long patientID) {
         return "";
     }
 }

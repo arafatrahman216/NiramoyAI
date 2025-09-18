@@ -1,73 +1,201 @@
 package com.example.niramoy.service.agent;
 
+import com.example.niramoy.service.UserKGService;
 import com.example.niramoy.service.AIServices.AIService;
+
+import org.checkerframework.checker.units.qual.s;
+import org.springframework.boot.actuate.health.Health;
 import org.springframework.stereotype.Service;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
+import dev.langchain4j.spi.prompt.PromptTemplateFactory.Input;
+
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlannerAgent implements Agent {
     private final AIService aiService;
-    
+    private final UserKGService userKGService;
+
+    private static final String planningPrompt = """
+            You are a professional Health Assistant.
+
+            Goal:
+            Generate a clear, empathetic, actionable care plan based on the patient’s context, visit notes, and query. Your plan should be practical, in plain language, and use second-person ("you"). Adapt to the situation: some cases may not require Pre-Treatment or Post-Treatment phases. If urgent/unsafe, highlight it immediately with concrete steps.
+
+            Output requirements (MANDATORY):
+            - Return ONLY valid JSON with top-level "Plan".
+            - "Plan" keys must include:
+            "PreTreatment_Phase", "Treatment_Phase", "PostTreatment_Phase",
+            "EstimatedTime", "EstimatedTotalCost", "ActionChecklist", "Urgency".
+            - Each phase = array of step objects with fields:
+            "step", "action", "why", "where", "cost", "timeframe", "this_step_importance".
+            - For Treatment: add "expected_side_effects" if relevant.
+            - For PostTreatment: add "red_flags" if relevant.
+            - Include only relevant phases; leave empty arrays if not applicable.
+            - "EstimatedTime": estimated duration of each phase in days/weeks.
+            - "EstimatedTotalCost": Low/Typical/High ranges.
+            - "ActionChecklist": 5–10 practical, copyable steps for the patient.
+            - "Urgency": "Routine", "Soon (days)", "Urgent (24–48h)", "Emergency — go to ER now".
+
+            Behavior:
+            - Be concise, empathetic, and friendly.
+            - Avoid jargon; explain medical terms simply.
+            - Always justify major actions/tests briefly ("why").
+            - If danger is possible, instruct immediate action (ER or urgent care).
+            - Fill missing info with reasonable assumptions and note them in "Assumptions".
+
+            Input placeholders (always provided):
+            Visit Summary: {{visit_summary}}
+            Doctor's Advice: {{doctor_advice}}
+            Patient Summary: {{patient_summary}}
+            History Summary: {{history_summary}}
+            KG Context: {{kg_context}}
+            User Query: {{query}}
+
+            Important Instructions:
+            - Keep PreTreatment, Treatment, PostTreatment phases empty if not applicable.
+            - Include EstimatedTime for each relevant phase.
+            - Include step-specific importance ("this_step_importance") for every step.
+            - Include red flags for PostTreatment steps if relevant.
+            - If urgent, state clearly and prioritize critical steps.
+
+            Example JSON structure (flexible; phases can be empty if not needed):
+            {
+            "Plan": {
+                "PreTreatment_Phase": [],
+                "Treatment_Phase": [],
+                "PostTreatment_Phase": [],
+                "EstimatedTime": {},
+                "EstimatedTotalCost": {"low":"", "typical":"", "high":""},
+                "ActionChecklist": [],
+                "Urgency": "",
+                "Assumptions": [""]
+            }
+            }
+
+            Example Response:
+            {
+                "Plan": 
+                {
+                    "PreTreatment_Phase": [
+                    {
+                        "step": 1,
+                        "action": "Consult your cardiologist or surgeon immediately.",
+                        "why": "To discuss your upcoming heart surgery and any pre-operative preparations needed.  This is crucial for a safe procedure.",
+                        "where" : "Max hospital",
+                        "cost": "300",
+                        "timeframe": "Within 24 hours – this is vital.",
+                        "this_step_importance" : "low"
+                    },
+                    {
+                        "step": 2,
+                        "action": "Complete all pre-operative tests and assessments as directed by your surgeon.",
+                        "why": "These tests help determine your overall health and readiness for surgery, ensuring a safer procedure.",
+                        "where": "Your doctor's office or a designated testing facility.",
+                        "cost": "Varies greatly depending on tests ordered (blood work, EKG, chest X-ray, etc.).  Expect $200-$1000.",
+                        "timeframe": "As soon as possible, following your consultation.",
+                        "this_step_importance" : "high"
+                    }
+                    
+                    ],
+                    "Treatment_Phase": [
+                    {
+                        "step": 1,
+                        "action": "Heart Surgery",
+                        "expected_side_effects": "Pain, swelling, bruising, infection, bleeding, complications related to anesthesia.  Your surgeon will discuss specific risks.",
+                        "cost": "5000"
+                        "why": "To address the underlying heart condition."
+                        "where" : "",
+                        "timeframe" : "7 days",
+                        "this_step_importance" : "high"
+                    }
+                    ],
+                    "PostTreatment_Phase": [
+                    {
+                        "step": 1,
+                        "action": "Hospital Stay",
+                        "when": "Immediately following surgery.",
+                        "where" : "Max Hospital",
+                        "cost" : "1000",
+                        "why" : "need to heal"
+                        "timeframe" : "7 days",
+                        "red_flags": ["Excessive bleeding", "Chest pain", "Shortness of breath", "High fever", "Swelling in legs"]
+                        "this_step_importance" : "high"
+                
+                    },
+                    {
+                        "step": 2,
+                        "action": "Follow-up appointments",
+                        "when": "Scheduled by your cardiologist or surgeon.",
+                        "where" : "Max Hospital",
+                        "cost" : "1000",
+                        "why" : "checkup",
+                        "timeframe" : "come after 10 days",
+                        "red_flags": ["Unexplained weight gain", "Fatigue", "Persistent cough"]
+                        "this_step_importance" : "moderate"
+                    }
+                    ],
+                    "EstimatedTime" : {
+                    "PreTreatment_Phase" : "1",
+                    "Treatment_Phase" : "2",
+                    "PostTreatment_Phase": "4"
+                    },
+                    "EstimatedTotalCost": {
+                    "low": "$5000",
+                    "typical": "$15000",
+                    "high": "$50000+"
+                    },
+                    "ActionChecklist": [
+                    "Schedule a consultation with your cardiologist/surgeon immediately.",
+                    "Complete all pre-operative tests and assessments.",
+                    "Arrange for transportation to and from the hospital.",
+                    "Prepare your home for recovery.",
+                    "Pack a hospital bag.",
+                    "Inform family and friends of your surgery schedule.",
+                    "Clarify insurance coverage and payment arrangements."
+                    ],
+                    "Urgency": "Urgent",
+                    "Assumptions": [
+                        "Patient is stable and can undergo surgery.",
+                        "Insurance will cover the majority of the costs.",
+                        "Patient has a support system in place for recovery."
+                    ]
+                }
+            }""";
+
 
     private static final PromptTemplate PLAN_PROMPT = PromptTemplate.from(
-        "You are a professional Health Assistant. " +
-        "Given the following context about a patient's visit to a doctor, and patient's medical history, " +
-        "answer user query with the intent to provide a detailed plan of action for the patient's current condition if relevant. " +
-        "If you detect the intention is to seek a plan of action, then follow the instructions given for plan:\n" +
-        "1. Provide a step by step plan of action.\n" +
-        "2. Explain with empathy, call him you.\n" +
-        "3. Give some conclusion like not to worry, see another doctor or anything you see fit according to the query. Keep it concise and friendly.\n" +
-        "4. Make points or segments as needed, but when explaining keep it fluent and easy, dont use jargon.\n" +
-        "5. IMPORTANT: Keep your response under 1500 characters. Be concise but helpful.\n" +
-        "MUST return JSON like this: {\"Plan\": \"...\"}.\n\n" +
-        "Visit Summary: {{visit_summary}}\n" +
-        "Doctor's Advice: {{doctor_advice}}\n" +
-        "Patient Summary: {{patient_summary}}\n" +
-        "History Summary: {{history_summary}}\n" +
-        "KG Context: {{kg_context}}\n" +
-        "user_query: {{query}}"
+        planningPrompt
     );
 
+
     @Override
-    public String processQuery(String query) {
+    public String processQuery(String query, Long userId) {
         Map<String, Object> chainVariables = Map.of(
-            "visit_summary", getVisitSummary(),
-            "doctor_advice", getDoctorAdvice(),
-            "patient_summary", getPatientSummary(),
-            "history_summary", getHistorySummary(),
-            "kg_context", getKGContext(),
+            "visit_summary", userKGService.getVisitSummaryLastThree(userId),
+            "doctor_advice", userKGService.getDoctorAdvice(userId),
+            "patient_summary", userKGService.getPatientSummary(userId),
+            "history_summary", userKGService.getHistorySummary(userId),
+            "kg_context", "",
             "query", query
         );
         
+        log.info("In Planning Agent");
         Prompt prompt = PLAN_PROMPT.apply(chainVariables);
-        String response = aiService.generateContent(prompt.text());
-
+        String response;
+        try{
+          response = aiService.generateContent(prompt.text());
+        } catch (Exception e) {
+            log.error("Error generating content: {}", e.getMessage());
+            return "{\"Plan\": {\"Error\": \"Failed to generate plan due to internal error.\"}}";
+        }
+        log.info("Got answer from AI " + response);
         return response;
     }
-    
 
-    //TODO: Fetch data from KG
-    private String getVisitSummary() {
-        return "Patient visited on 2025-09-13 for complaints of persistent headache and mild fever. Vitals were stable. No alarming symptoms detected during examination.";
-    }
-
-    private String getDoctorAdvice() {
-        return "Doctor advised rest, increased fluid intake, and prescribed paracetamol for headache. Recommended follow-up if symptoms persist or worsen.";
-    }
-
-    private String getPatientSummary() {
-        return "35-year-old male, generally healthy, with no significant chronic illnesses. Reports occasional migraines and mild seasonal allergies.";
-    }
-
-    private String getHistorySummary() {
-        return "Previous visits include treatment for mild respiratory infections and routine check-ups. No history of major surgeries or hospitalizations.";
-    }
-
-    private String getKGContext() {
-        return "Providing knowledge graph data for this specific patient. Patient has history of migraines, seasonal allergies. Current medications include paracetamol as needed. Recent lab results show normal vitals.";
-    }
 }

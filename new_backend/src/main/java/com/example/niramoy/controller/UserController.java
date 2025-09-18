@@ -202,9 +202,10 @@ public class UserController {
             }
             
             Long chatId = Long.parseLong(chatIdStr);
+            Long userId = user.getId();
             
             // Process message and get AI reply (synchronous for now, but DB saves are async internally)
-            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message, mode);
+            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message, mode, userId);
 
             response.put("success", true);
             response.put("message", "Message sent and processed successfully");
