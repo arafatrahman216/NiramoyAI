@@ -180,6 +180,12 @@ export const diagnosisAPI = {
 
 }
 
+// Symptoms-based doctor search API
+export const symptomsAPI = {
+  searchDoctorsBySymptoms: (query) =>
+    api.post('/public/query', { query }),
+};
+
 
 
 
