@@ -21,9 +21,10 @@ interface ChatConversationProps {
   onBack: () => void;
   chatData?: any;
   embedded?: boolean;
+  isProcessing?: boolean;
 }
 
-const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false }) => {
+const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false, isProcessing = false }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
@@ -381,6 +382,27 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
             </div>
           ))
         )}
+        
+        {/* PROCESSING INDICATOR - Show when AI is generating response */}
+        {isProcessing && (
+          <div className="w-full py-6">
+            <div className="max-w-3xl mx-auto px-6">
+              <div className="flex justify-start">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 text-zinc-400">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                    <span className="text-sm">AI is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
     );

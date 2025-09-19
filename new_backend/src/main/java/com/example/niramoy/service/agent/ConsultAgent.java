@@ -80,8 +80,10 @@ public class ConsultAgent implements Agent {
             Also track user intent. If intent is not relevant at all, politely refuse to answer
             and suggest consulting a healthcare professional.
             If intent is somewhat relevent answer the question with basic knowledge
-            If the question type doesnot match EXPLANATION mode, refer to use other Modes
+            If the question type doesnot match CONSULT mode, refer to use other Modes
             like QnA,Consult, Next Move Planner
+                
+            Must Answer with only \"Explanation\" key
             ALWAYS return JSON like this {\"Explanation\": \"...\"}.\n\n
             user_query: {{query}}
         """
@@ -101,6 +103,7 @@ public class ConsultAgent implements Agent {
         Prompt prompt = CONSULT_PROMPT.apply(chainVariables);
         String response = aiService.generateContent(prompt.text());
         
+        System.out.println("ConsultAgent response: " + response);
         return response;
     }
 

@@ -391,6 +391,9 @@ const DiagnosisInterface = () => {
   
   // UPLOAD VISIT MODAL STATE
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  
+  // PROCESSING STATE - tracks when AI is generating response
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // MAIN SEARCH HANDLER
   // Handles search/message sending based on current context
@@ -409,6 +412,9 @@ const DiagnosisInterface = () => {
       console.log('Sending message to current chat:', selectedChatId);
       console.log('Message content:', query);
       console.log('Auth token exists:', !!localStorage.getItem('token'));
+      
+      // Set processing state to show loading indicator
+      setIsProcessing(true);
       
       // Add user message immediately to local state
       const userMessage = {
@@ -503,10 +509,15 @@ const DiagnosisInterface = () => {
           } else {
             alert('Error sending message. Please try again.');
           }
+      } finally {
+        // Always clear processing state
+        setIsProcessing(false);
       }
     } else {
       // If not in chat mode, create new chat (default search behavior)
       console.log('Creating new chat for search query:', query);
+      
+      setIsProcessing(true);
       
       try {
         const response = await chatbotAPI.startConversation();
@@ -526,6 +537,8 @@ const DiagnosisInterface = () => {
       } catch (error) {
         console.error('Error creating new chat:', error);
         alert('Unable to start new chat. Please try again.');
+      } finally {
+        setIsProcessing(false);
       }
     }
   };
@@ -668,7 +681,7 @@ const DiagnosisInterface = () => {
                   chatId={selectedChatId}
                   onBack={handleBackToSearch}
                   chatData={selectedChatData}
-
+                  isProcessing={isProcessing}
                   embedded={true}
                 />
               </div>
@@ -681,6 +694,7 @@ const DiagnosisInterface = () => {
                     setQuery={setQuery} 
                     onSearch={handleSearch}
                     placeholder="Continue conversation or search..."
+                    disabled={isProcessing}
                   />
                 </div>
               </div>
@@ -695,7 +709,8 @@ const DiagnosisInterface = () => {
               <SearchInput 
                 query={query} 
                 setQuery={setQuery} 
-                onSearch={handleSearch} 
+                onSearch={handleSearch}
+                disabled={isProcessing}
               />
             </div>
           )}

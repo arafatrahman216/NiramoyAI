@@ -118,72 +118,6 @@ public class JsonParser {
         }
     }
 
-    public static String parseAnswer(String jsonResponse) {
-        String cleanedResponse = cleanJsonResponse(jsonResponse);
-        if (cleanedResponse == null) {
-            return "No answer available.";
-        }
-
-        try {
-            JSONObject json = new JSONObject(cleanedResponse);
-            return json.optString("Answer", "No answer available.");
-        } catch (Exception e) {
-            return "Error parsing answer: " + e.getMessage();
-        }
-    }
-
-    public static JSONObject parseAnswerJson(String jsonResponse) {
-        String cleanedResponse = cleanJsonResponse(jsonResponse);
-        if (cleanedResponse == null) {
-            return null;
-        }
-
-        try {
-            JSONObject json = new JSONObject(cleanedResponse);
-            if (json.has("Answer")) {
-                Object answer = json.get("Answer");
-                return new JSONObject().put("Answer", answer);
-            } else {
-                return new JSONObject().put("Answer", "No answer available.");
-            }
-        } catch (Exception e) {
-            return new JSONObject().put("Answer", "Error parsing answer: " + e.getMessage());
-        }
-    }
-    
-    public static String parseConsultation(String jsonResponse) {
-        String cleanedResponse = cleanJsonResponse(jsonResponse);
-        if (cleanedResponse == null) {
-            return "No consultation available.";
-        }
-
-        try {
-            JSONObject json = new JSONObject(cleanedResponse);
-            return json.optString("Consultation", "No consultation available.");
-        } catch (Exception e) {
-            return "Error parsing consultation: " + e.getMessage();
-        }
-    }
-
-    public static JSONObject parseConsultationJson(String jsonResponse) {
-        String cleanedResponse = cleanJsonResponse(jsonResponse);
-        if (cleanedResponse == null) {
-            return null;
-        }
-
-        try {
-            JSONObject json = new JSONObject(cleanedResponse);
-            if (json.has("Consultation")) {
-                Object consultation = json.get("Consultation");
-                return new JSONObject().put("Consultation", consultation);
-            } else {
-                return new JSONObject().put("Consultation", "No consultation available.");
-            }
-        } catch (Exception e) {
-            return new JSONObject().put("Consultation", "Error parsing consultation: " + e.getMessage());
-        }
-    }
-
     // Generic parser that tries to extract the main content regardless of the key
     public static String parseResponse(String jsonResponse, String mode) {
         if (mode == null) {
@@ -199,10 +133,10 @@ public class JsonParser {
             case "qna":
             case "q&a":
             case "question":
-                return parseAnswer(jsonResponse);
+                return parseExplanation(jsonResponse);
             case "consult":
             case "consultation":
-                return parseConsultation(jsonResponse);
+                return parseExplanation(jsonResponse);
             default:
                 return parseExplanation(jsonResponse);
         }
@@ -222,10 +156,10 @@ public class JsonParser {
             case "qna":
             case "q&a":
             case "question":
-                return parseAnswerJson(jsonResponse);
+                return parseExplanationJson(jsonResponse);
             case "consult":
             case "consultation":
-                return parseConsultationJson(jsonResponse);
+                return parseExplanationJson(jsonResponse);
             default:
                 return parseExplanationJson(jsonResponse);
         }

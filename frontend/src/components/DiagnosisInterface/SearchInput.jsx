@@ -6,7 +6,7 @@ import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe, MessageSquare, 
 // ==============================================
 // Contains: Input field and all action buttons
 // Edit individual button handlers to add functionality
-const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything..." }) => {
+const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...", disabled = false }) => {
   const [activeMode, setActiveMode] = useState('explain');
 
   const modes = [
@@ -67,30 +67,33 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !disabled) {
       handleModeAction(activeMode);
       onSearch(activeMode);
     }
   };
 
   const handleSearchWithMode = () => {
-    handleModeAction(activeMode);
-    onSearch(activeMode);
+    if (!disabled) {
+      handleModeAction(activeMode);
+      onSearch(activeMode);
+    }
   };
 
   return (
     <div className="w-full max-w-3xl">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600">
+      <div className={`bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
         {/* MAIN INPUT FIELD */}
         {/* Edit placeholder text, styling here */}
         <input
           type="text"
-          placeholder={`Ask anything in ${activeMode} mode...`}
+          placeholder={disabled ? "AI is processing..." : `Ask anything in ${activeMode} mode...`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyPress={handleKeyPress}
           onFocus={handleFocus}
-          className="w-full bg-transparent text-white placeholder-zinc-500 outline-none text-lg font-light"
+          disabled={disabled}
+          className="w-full bg-transparent text-white placeholder-zinc-500 outline-none text-lg font-light disabled:cursor-not-allowed"
         />
         
         {/* ACTION BUTTONS ROW */}
@@ -174,11 +177,15 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
             {/* This button calls the main search function with mode context */}
             <button 
               onClick={handleSearchWithMode}
-              disabled={!query.trim()}
+              disabled={!query.trim() || disabled}
               className="bg-emerald-500 p-2 rounded-lg hover:bg-emerald-600 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors group"
-              title={`Search in ${activeMode} mode`}
+              title={disabled ? "Processing..." : `Search in ${activeMode} mode`}
             >
-              <ArrowUp size={18} className="text-white group-disabled:text-zinc-500" />
+              {disabled ? (
+                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+              ) : (
+                <ArrowUp size={18} className="text-white group-disabled:text-zinc-500" />
+              )}
             </button>
           </div>
         </div>
