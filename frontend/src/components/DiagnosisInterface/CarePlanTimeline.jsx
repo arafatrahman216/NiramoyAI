@@ -115,37 +115,37 @@ const CarePlanTimeline = ({ careData }) => {
     ...(planData?.PostTreatment_Phase || [])
   ];
 
-  // Get color based on importance with glowing effects
+  // Get color based on importance with glowing effects - updated color scheme
   const getImportanceColor = (importance) => {
     importance = importance?.toLowerCase();
     switch (importance) {
       case 'high': 
         return {
           bg: 'bg-red-500',
-          glow: 'shadow-red-500/50 shadow-2xl',
+          glow: 'shadow-red-500/60 shadow-2xl',
           border: 'border-red-400',
           text: 'text-red-400'
         };
       case 'moderate': 
         return {
           bg: 'bg-yellow-500',
-          glow: 'shadow-yellow-500/50 shadow-2xl',
+          glow: 'shadow-yellow-500/60 shadow-2xl',
           border: 'border-yellow-400',
           text: 'text-yellow-400'
         };
       case 'low': 
         return {
-          bg: 'bg-green-500',
-          glow: 'shadow-green-500/50 shadow-2xl',
-          border: 'border-green-400',
-          text: 'text-green-400'
+          bg: 'bg-emerald-500',
+          glow: 'shadow-emerald-500/60 shadow-2xl',
+          border: 'border-emerald-400',
+          text: 'text-emerald-400'
         };
       default: 
         return {
-          bg: 'bg-gray-500',
-          glow: 'shadow-gray-500/50 shadow-2xl',
-          border: 'border-gray-400',
-          text: 'text-gray-400'
+          bg: 'bg-emerald-500',
+          glow: 'shadow-emerald-500/60 shadow-2xl',
+          border: 'border-emerald-400',
+          text: 'text-emerald-400'
         };
     }
   };
@@ -153,124 +153,142 @@ const CarePlanTimeline = ({ careData }) => {
   const getUrgencyStyle = (urgency) => {
     switch (urgency?.toLowerCase()) {
       case 'urgent':
-        return 'bg-red-900/80 text-red-300 border-red-500 shadow-red-500/50 shadow-2xl';
+        return 'bg-red-950/50 text-red-200 border-red-800/60 backdrop-blur-sm';
       case 'emergency — go to er now':
-        return 'bg-red-900 text-red-200 border-red-400 animate-pulse shadow-red-600/70 shadow-2xl';
-      case 'soon (days)':
-        return 'bg-yellow-900/80 text-yellow-300 border-yellow-500 shadow-yellow-500/50 shadow-2xl';
+        return 'bg-red-950/70 text-red-100 border-red-700/80 animate-pulse backdrop-blur-sm';
+      case 'within 1 week':
+        return 'bg-amber-950/50 text-amber-200 border-amber-800/60 backdrop-blur-sm';
       default:
-        return 'bg-blue-900/80 text-blue-300 border-blue-500 shadow-blue-500/50 shadow-2xl';
+        return 'bg-emerald-950/50 text-emerald-200 border-emerald-800/60 backdrop-blur-sm';
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 text-gray-100">
-      {/* Urgency Banner */}
+    <div className="max-w-4xl mx-auto p-4 text-zinc-100">
+      {/* Modern Urgency Alert */}
       {planData?.Urgency && (
-        <div className={`mb-8 p-4 rounded-xl border-2 text-center font-bold text-lg ${getUrgencyStyle(planData.Urgency)}`}>
-          <AlertTriangle className="inline-block mr-3 w-6 h-6" />
-          URGENCY: {planData.Urgency}
+        <div className={`mb-6 p-4 rounded-2xl border text-center ${getUrgencyStyle(planData.Urgency)}`}>
+          <div className="flex items-center justify-center space-x-2">
+            <AlertTriangle className="w-5 h-5" />
+            <span className="font-medium text-base">
+              {planData.Urgency === 'urgent' ? 'Urgent Medical Plan' : 
+               planData.Urgency === 'emergency — go to er now' ? 'Emergency - Seek Immediate Care' :
+               `Medical Plan - ${planData.Urgency}`}
+            </span>
+          </div>
         </div>
       )}
 
       {/* Timeline */}
       <div className="relative">
-        {/* Vertical line with glow */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-green-400 to-green-600 h-full shadow-green-400/50 shadow-lg"></div>
+        {/* Vertical line - glowy and vibrant */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-emerald-400 via-emerald-500 to-emerald-600 h-full shadow-emerald-400/50 shadow-lg opacity-80"></div>
 
         {allSteps.map((step, index) => {
           const isRight = index % 2 === 0;
           const colors = getImportanceColor(step.this_step_importance);
           
           return (
-            <div key={index} className="relative mb-6">
-              {/* Timeline node - smaller and cleaner */}
-              <div className={`absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full border-2 ${colors.bg} ${colors.glow} z-20 flex items-center justify-center`}>
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+            <div key={index} className="relative" style={{ marginBottom: index === allSteps.length - 1 ? '2rem' : '4rem' }}>
+              {/* Timeline node - bigger and glowy */}
+                {/* <div className={`absolute left-1/2 transform -translate-x-1/2 w-10 h-10 rounded-2xl hover:rounded-full border-0 ${colors.bg} z-20 flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-500 ease-in-out hover:scale-105 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-lg ring-1 ring-gradient-to-r ring-from-transparent ring-to-white/10 ${colors.glow}`}> */}
+                {/* <div className={`absolute left-1/2 transform -translate-x-1/2 w-11 h-11 rounded-2xl border-0 ${colors.bg} z-20 flex items-center justify-center transition-all duration-500 ease-out hover:scale-110 hover:-translate-y-1 shadow-lg hover:shadow-xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-transparent to-black/5 ring-1 ring-white/10 hover:ring-white/25 ${colors.glow} group-hover:animate-spin-slow`}> */}
+              <div className={`absolute left-1/2 transform -translate-x-1/2 w-11 h-11 rounded-3xl border-0 ${colors.bg} z-20 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 ease-out hover:scale-105 hover:-translate-y-0.5 ring-1 ring-black/5 backdrop-blur-sm ${colors.glow} group`}>
+
+                {/* <div className="w-3 h-3 bg-white rounded-full shadow-inner"></div> */}
               </div>
               
-              {/* Dotted line from node to content */}
+              {/* Dotted line from node to content - emerald green */}
               <div 
-                className={`absolute top-4 ${
+                className={`absolute top-5 ${
                   isRight 
-                    ? 'left-1/2 ml-4 w-16' 
-                    : 'right-1/2 mr-4 w-16'
+                    ? 'left-1/2 w-20' 
+                    : 'right-1/2 w-20'
                 }`}
                 style={{
-                  borderTop: '2px dotted rgba(74, 222, 128, 0.6)',
-                  height: '2px'
+                  borderTop: '3px dotted rgba(52, 211, 153, 0.6)',
+                  height: '4px',
+                  transform: isRight ? 'translateX(40px)' : 'translateX(-40px)'
                 }}
               ></div>
               
-              {/* Content card */}
-              <div className={`w-5/12 ${isRight ? 'ml-auto pl-20' : 'mr-auto pr-20'}`}>
-                <div className="bg-gray-900/60 rounded-xl shadow-lg p-6 border border-gray-700/30 backdrop-blur-sm hover:bg-gray-800/60 transition-all duration-300">
+              {/* Content card - positioned to start from midpoint of previous card */}
+              <div 
+                className={`w-5/12 ${isRight ? 'ml-auto pl-20' : 'mr-auto pr-20'}`}
+                style={{ 
+                  marginTop: index === 0 ? '0' : '-12rem' // Start from midpoint of previous card
+                }}
+              >
+                                <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/60 backdrop-blur-sm hover:bg-zinc-900/70 hover:border-zinc-700/70 transition-all duration-300 shadow-lg hover:shadow-emerald-500/10">
                   {/* Action title */}
-                  <h3 className="text-lg font-bold text-green-300 mb-3 leading-tight">
+                  <h3 className="text-base font-semibold text-zinc-100 mb-3 leading-tight">
                     {step.action}
                   </h3>
                   
                   {/* Why */}
                   <div className="mb-4">
-                    <p className="text-gray-300 text-sm leading-relaxed">
-                      <span className="text-green-400 font-semibold">Why:</span> {step.why}
+                    <p className="text-zinc-300 text-sm leading-relaxed">
+                      <span className="text-emerald-400 font-medium">Purpose:</span> {step.why}
                     </p>
                   </div>
 
                   {/* Details grid */}
-                  <div className="grid grid-cols-1 gap-3 text-sm mb-3">
+                  <div className="grid grid-cols-1 gap-2 text-sm mb-3">
                     {/* Where */}
                     {step.where && (
-                      <div className="flex items-center text-gray-300">
-                        <MapPin className="w-5 h-5 mr-3 text-blue-400" />
-                        <span><span className="text-blue-400 font-semibold">Where:</span> {step.where}</span>
+                      <div className="flex items-center text-zinc-300">
+                        <MapPin className="w-4 h-4 mr-2 text-emerald-400" />
+                        <span className="text-zinc-400">{step.where}</span>
                       </div>
                     )}
                     
                     {/* Cost */}
                     {step.cost && (
-                      <div className="flex items-center text-gray-300">
-                        <DollarSign className="w-5 h-5 mr-3 text-green-400" />
-                        <span><span className="text-green-400 font-semibold">Cost:</span> ${step.cost}</span>
+                      <div className="flex items-center text-zinc-300">
+                        <DollarSign className="w-4 h-4 mr-2 text-emerald-400" />
+                        <span className="text-zinc-400">${step.cost}</span>
                       </div>
                     )}
                     
                     {/* Timeframe */}
                     {step.timeframe && (
-                      <div className="flex items-center text-gray-300">
-                        <Clock className="w-5 h-5 mr-3 text-purple-400" />
-                        <span><span className="text-purple-400 font-semibold">Timeframe:</span> {step.timeframe}</span>
+                      <div className="flex items-center text-zinc-300">
+                        <Clock className="w-4 h-4 mr-2 text-emerald-400" />
+                        <span className="text-zinc-400">{step.timeframe}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Expected side effects */}
                   {step.expected_side_effects && (
-                    <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded-lg">
-                      <p className="text-sm text-yellow-300">
-                        <span className="font-semibold text-yellow-400">Expected Side Effects:</span> {step.expected_side_effects}
+                    <div className="mt-3 p-3 bg-amber-950/20 border border-amber-800/30 rounded-lg">
+                      <p className="text-xs text-amber-200">
+                        <span className="font-medium text-amber-300">Side Effects:</span> {step.expected_side_effects}
                       </p>
                     </div>
                   )}
 
                   {/* Red flags */}
                   {step.red_flags && (
-                    <div className="mt-4 p-3 bg-red-900/30 border border-red-600/50 rounded-lg">
-                      <p className="text-sm text-red-300 font-medium mb-2 flex items-center">
-                        <AlertTriangle className="w-4 h-4 mr-2 text-red-400" />
-                        Red Flags - Seek immediate medical attention:
+                    <div className="mt-3 p-3 bg-red-950/20 border border-red-800/30 rounded-lg">
+                      <p className="text-xs text-red-200 font-medium mb-2 flex items-center">
+                        <AlertTriangle className="w-3 h-3 mr-1 text-red-400" />
+                        Warning Signs:
                       </p>
-                      <ul className="text-sm text-red-300 list-disc list-inside space-y-1">
+                      <ul className="text-xs text-red-200 space-y-1">
                         {step.red_flags.map((flag, flagIndex) => (
-                          <li key={flagIndex}>{flag}</li>
+                          <li key={flagIndex} className="flex items-start">
+                            <span className="text-red-400 mr-1 text-xs">•</span>
+                            <span>{flag}</span>
+                          </li>
                         ))}
                       </ul>
                     </div>
                   )}
 
                   {/* Importance indicator */}
-                  <div className="mt-4">
-                    <span className={`inline-block px-3 py-1 rounded-full text-black text-xs font-bold ${colors.bg} ${colors.glow}`}>
+                  <div className="mt-3">
+                    <span className={`inline-block px-2 py-1 rounded-full text-white text-xs font-medium ${colors.bg} ${colors.glow} opacity-90`}>
                       {step.this_step_importance?.toUpperCase()} PRIORITY
                     </span>
                   </div>
@@ -283,20 +301,20 @@ const CarePlanTimeline = ({ careData }) => {
 
       {/* Action Checklist */}
       {planData?.ActionChecklist && planData.ActionChecklist.length > 0 && (
-        <div className="mt-8 bg-gray-900/60 rounded-xl shadow-lg p-5 border border-gray-700/30 backdrop-blur-sm">
-          <h2 className="text-lg font-bold text-green-300 mb-4 flex items-center">
-            <CheckCircle className="w-5 h-5 mr-2 text-green-400" />
-            Action Checklist
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="mt-6 bg-zinc-900/30 rounded-2xl p-4 border border-zinc-800/40 backdrop-blur-sm">
+          <div className="flex items-center mb-4 pb-2 border-b border-zinc-800/50">
+            <CheckCircle className="w-4 h-4 mr-2 text-emerald-400" />
+            <h2 className="text-base font-medium text-zinc-200">Action Items</h2>
+          </div>
+          <div className="space-y-2">
             {planData.ActionChecklist.map((item, index) => (
-              <div key={index} className="flex items-start p-3 bg-gray-800/60 rounded-xl border border-gray-600/40">
+              <label key={index} className="flex items-start p-2 rounded-lg hover:bg-zinc-800/30 transition-colors cursor-pointer group">
                 <input 
                   type="checkbox" 
-                  className="mt-1 mr-3 w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500 focus:ring-2" 
+                  className="mt-1 mr-3 w-3.5 h-3.5 text-emerald-600 bg-zinc-800 border-zinc-600 rounded focus:ring-emerald-500 focus:ring-1" 
                 />
-                <span className="text-gray-300 text-sm leading-relaxed">{item}</span>
-              </div>
+                <span className="text-zinc-300 text-sm leading-relaxed group-hover:text-zinc-200">{item}</span>
+              </label>
             ))}
           </div>
         </div>
@@ -304,20 +322,23 @@ const CarePlanTimeline = ({ careData }) => {
 
       {/* Cost Estimate */}
       {planData?.EstimatedTotalCost && (
-        <div className="mt-6 bg-gray-900/60 rounded-xl p-4 border border-gray-700/30">
-          <h2 className="text-base font-bold text-green-300 mb-3">Estimated Cost</h2>
-          <div className="flex justify-between text-center text-sm">
-            <div>
-              <div className="text-green-400 font-semibold">Low</div>
-              <div className="text-green-300">{planData.EstimatedTotalCost.low}</div>
+        <div className="mt-4 bg-zinc-900/30 rounded-2xl p-4 border border-zinc-800/40 backdrop-blur-sm">
+          <div className="flex items-center mb-3 pb-2 border-b border-zinc-800/50">
+            <DollarSign className="w-4 h-4 mr-2 text-emerald-400" />
+            <h2 className="text-base font-medium text-zinc-200">Cost Estimate</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
+              <div className="text-emerald-400 font-medium text-xs mb-1">Low</div>
+              <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.low}</div>
             </div>
-            <div>
-              <div className="text-blue-400 font-semibold">Typical</div>
-              <div className="text-blue-300">{planData.EstimatedTotalCost.typical}</div>
+            <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
+              <div className="text-blue-400 font-medium text-xs mb-1">Typical</div>
+              <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.typical}</div>
             </div>
-            <div>
-              <div className="text-red-400 font-semibold">High</div>
-              <div className="text-red-300">{planData.EstimatedTotalCost.high}</div>
+            <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
+              <div className="text-amber-400 font-medium text-xs mb-1">High</div>
+              <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.high}</div>
             </div>
           </div>
         </div>
@@ -325,14 +346,19 @@ const CarePlanTimeline = ({ careData }) => {
 
       {/* Assumptions */}
       {planData?.Assumptions && planData.Assumptions.length > 0 && (
-        <div className="mt-6 bg-gray-800/50 rounded-xl p-4 border border-gray-600/30">
-          <h2 className="text-base font-bold text-green-300 mb-3">Assumptions</h2>
-          <div className="text-gray-300 leading-relaxed text-sm">
+        <div className="mt-4 bg-zinc-900/20 rounded-2xl p-4 border border-zinc-800/30 backdrop-blur-sm">
+          <div className="flex items-center mb-3 pb-2 border-b border-zinc-800/40">
+            <div className="w-4 h-4 mr-2 bg-zinc-600 rounded-full flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full"></div>
+            </div>
+            <h2 className="text-base font-medium text-zinc-200">Plan Assumptions</h2>
+          </div>
+          <div className="space-y-2">
             {planData.Assumptions.map((assumption, index) => (
-              <p key={index} className="mb-2 flex items-start">
-                <span className="text-green-400 mr-2 text-sm">•</span>
-                <span>{assumption}</span>
-              </p>
+              <div key={index} className="flex items-start text-sm">
+                <span className="text-emerald-400 mr-2 mt-1.5 text-xs">•</span>
+                <span className="text-zinc-300 leading-relaxed">{assumption}</span>
+              </div>
             ))}
           </div>
         </div>
