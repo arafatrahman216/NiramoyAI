@@ -3,24 +3,29 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Service
 public class DoctorScrapper {
 
-    public static String scrapeDoctors(String cityName, String specialty) throws Exception {
+    @Cacheable(value = "scrappedDoctors", key = "{#cityName, #specialty}")
+    public String scrapeDoctors(String cityName, String specialty) throws Exception {
+        System.out.println("inside scrapeDoctors");
         String cityId = "1";
         String specialtyId = "1";
         String url = "https://sasthyaseba.com/search?type=doctor&country_id=22" ;
         if (cityName != null) {
             cityId = String.valueOf(IdMapper.getCityId(cityName));
             if (cityId!=null)
-            url+= "&city_id="+ cityId;
+                url+= "&city_id="+ cityId;
         }
         if (specialty != null) {
             specialtyId = String.valueOf(IdMapper.getSpecialityId(specialty));
             if (specialtyId!=null)
-            url+= "&speciality_id="+ specialtyId;
+                url+= "&speciality_id="+ specialtyId;
         }
 
         Document doc = Jsoup.connect(url)

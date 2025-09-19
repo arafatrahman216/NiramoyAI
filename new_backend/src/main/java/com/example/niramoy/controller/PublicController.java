@@ -5,13 +5,14 @@ import com.example.niramoy.entity.DoctorProfile;
 import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.service.DoctorProfileService;
 import com.example.niramoy.service.SearchService;
+import com.example.niramoy.utils.DoctorScrapper;
 import com.example.niramoy.utils.IdMapper;
 import com.example.niramoy.utils.JsonParser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.example.niramoy.utils.DoctorScrapper.scrapeDoctors;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ public class PublicController {
     private final DoctorProfileService doctorProfileService;
     private  final SearchService searchService;
     private final AIService aiService;
+    private final DoctorScrapper doctorScrapper;
 
 
     @GetMapping("/doctors/search")
@@ -53,10 +55,10 @@ public class PublicController {
     public String searchEndpoint(
             @RequestParam(required = false) String cityName,
             @RequestParam(required = false) String specialty
-                                 ){
+    ){
         try {
-            String json = scrapeDoctors(cityName, specialty);
-            System.out.println(json);
+            String json = doctorScrapper.scrapeDoctors(cityName, specialty);
+            System.out.println("outside");
             return json;
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,12 +80,12 @@ public class PublicController {
                         "Give me only the raw JSON object, no code block, no language tag, no explanation."+
                         "Do not include any explanations or additional text or delimeter(json or ```) outside the JSON brackets ."
 //                       + "suggest from these categories : "+ IdMapper.getAllSpecialities()
-                         , query.get("query"));
+                , query.get("query"));
         Map<String, Object> response = new HashMap<>();
         Map<String,Object> citySpecialty = JsonParser.parseCityAndSpecialty(aiResponse);
         String doctorSuggestion = null ;
         try {
-            doctorSuggestion=scrapeDoctors(citySpecialty.get("cityName").toString(),citySpecialty.get("specialty").toString());
+            doctorSuggestion=doctorScrapper.scrapeDoctors(citySpecialty.get("cityName").toString(),citySpecialty.get("specialty").toString());
             System.out.println(doctorSuggestion);
             response.put("doctorSuggestion", JsonParser.parseDoctorSuggestions(doctorSuggestion));
         }

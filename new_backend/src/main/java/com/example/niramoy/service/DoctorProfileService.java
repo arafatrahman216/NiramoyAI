@@ -59,7 +59,7 @@ public class DoctorProfileService {
         catch (DuplicateUserException e){
             throw new DuplicateUserException("User already exists");
         }
-        
+
     }
 
 
