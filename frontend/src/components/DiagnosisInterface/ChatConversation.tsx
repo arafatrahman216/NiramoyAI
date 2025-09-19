@@ -38,16 +38,34 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     scrollToBottom();
   }, [messages]);
 
-  // Listen for chat updates from search input
+  // Listen for new messages to add locally (no refresh needed)
   useEffect(() => {
-    const handleChatUpdate = () => {
-      // Refetch messages when chat is updated
+    const handleAddMessage = (event: any) => {
+      const newMessage = event.detail;
+      console.log('Adding message locally:', newMessage);
+      
+      setMessages(prev => [...prev, {
+        messageId: newMessage.messageId,
+        content: newMessage.content,
+        agent: newMessage.isAgent,
+        timestamp: newMessage.timestamp
+      }]);
+    };
+
+    window.addEventListener('addMessage', handleAddMessage);
+    return () => window.removeEventListener('addMessage', handleAddMessage);
+  }, []);
+
+  // Listen for chat refresh events (only when needed)
+  useEffect(() => {
+    const handleChatRefresh = () => {
+      console.log('Chat refresh event received - fetching messages');
       fetchMessages();
     };
 
-    window.addEventListener('chatRefresh', handleChatUpdate);
-    return () => window.removeEventListener('chatRefresh', handleChatUpdate);
-  }, [chatId]);
+    window.addEventListener('chatRefresh', handleChatRefresh);
+    return () => window.removeEventListener('chatRefresh', handleChatRefresh);
+  }, []);
 
   // Fetch messages function
   const fetchMessages = async () => {
@@ -55,34 +73,12 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     
     setLoading(true);
     
-    // If we have chatData with messages, use it directly
-    if (chatData && chatData.messages) {
-      console.log('Using chatData messages:', chatData.messages);
-      const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
-        messageId: msg.messageId,
-        content: msg.content,
-        agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
-      }));
-      setMessages(formattedMessages);
-      setLoading(false);
-      return;
-    }
-
-    // Otherwise fetch from API
+    // Always fetch from API since chatData from sidebar doesn't contain messages
     try {
       console.log('Fetching messages for chat ID:', chatId);
       
-      const response = await fetch('/api/user/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ chatId: chatId.toString() })
-      });
-      
-      const conversationData = await response.json();
+      const response = await chatbotAPI.getMessages(chatId);
+      const conversationData = response.data;
       
       console.log('Full API Response:', response);
       console.log('Conversation Data:', conversationData);
@@ -112,35 +108,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
   // Fetch conversation messages
   useEffect(() => {
     fetchMessages();
-  }, [chatId, chatData]);
-
-  // Update messages immediately when chatData changes (from parent component)
-  useEffect(() => {
-    if (chatData && chatData.messages) {
-      console.log('ChatData updated from parent:', chatData.messages);
-      const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
-        messageId: msg.messageId,
-        content: msg.content,
-        agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
-      }));
-      setMessages(formattedMessages);
-      // Scroll to bottom when new data comes from parent
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [chatData]);
-
-  // Listen for chat refresh events
-  useEffect(() => {
-    const handleChatRefresh = () => {
-      fetchMessages();
-    };
-
-    window.addEventListener('chatRefresh', handleChatRefresh);
-    return () => {
-      window.removeEventListener('chatRefresh', handleChatRefresh);
-    };
-  }, []);
+  }, [chatId]);
 
   // Send new message
   const handleSendMessage = async () => {
@@ -165,7 +133,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
       // Add bot response to messages
       const botMessage: Message = {
         messageId: Date.now() + 1,
-        content: botResponse.message || botResponse.response || 'No response received',
+        content: botResponse.content || botResponse.response || 'No response received',
         agent: true
       };
 

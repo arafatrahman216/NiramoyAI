@@ -1,20 +1,18 @@
 package com.example.niramoy.controller;
 
 import com.example.niramoy.customExceptions.AgentProcessingException;
-import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.dto.*;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
-import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Messages;
-import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.service.*;
 import com.example.niramoy.service.AIServices.AIService;
-import com.example.niramoy.dto.HealthLogRecord;
 import com.example.niramoy.service.AIServices.AIService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,10 +24,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.example.niramoy.utils.JsonParser.objectMapper;
 
 @Slf4j
 @RestController
@@ -133,8 +134,10 @@ public class UserController {
             return ResponseEntity.ok(response);
         }
         User user = (User) authentication.getPrincipal();
-        List<ChatSessions> chatSessionsList = user.getChatSession();
-        response.put("chatSessions", chatSessionsList);
+        List<ChatSessionDTO> chatSessionDTOs = messageService.getChatSessionDtoByUser(user);
+
+//        response.put("chatSessions", chatSessionsList);
+        response.put("chatSessions", chatSessionDTOs);
         return ResponseEntity.ok(response);
 
     }
@@ -152,7 +155,7 @@ public class UserController {
         
         try {
             User user = (User) authentication.getPrincipal();
-            ChatSessions newChatSession = messageService.createNewChatSession(user);
+            ChatSessionDTO newChatSession = messageService.createNewChatSession(user);
             
             response.put("success", true);
             response.put("message", "New chat session created successfully");
@@ -232,6 +235,12 @@ public class UserController {
         } catch (Exception e) {
             log.error("Error processing message: ", e);
             response.put("success", false);
+            response.put("aiResponse", Map.of(
+                    "messageId", null,
+                    "content", "Failed to get response: " + e.getMessage(),
+                    "isAgent", true,
+                    "chatId", body.get("chatId")
+            ));
             response.put("message", "Failed to process message: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
@@ -251,8 +260,8 @@ public class UserController {
         Long chatId = Long.parseLong(query.get("chatId") );
         response.put("success", true );
         System.out.println(chatId);
-        ChatSessions chatSession = messageService.getMessagesByChatId(chatId); // get the single chat session by chatId
-        response.put("data", chatSession.getMessages()); // messages of the distinct chat session(this is what is required)
+        List<Messages> messages = messageService.getMessagesByChatId(chatId); // get the single chat session by chatId
+        response.put("data", messages); // messages of the distinct chat session(this is what is required)
 //        List<ChatSessions> chatSessionsList = new ArrayList<>();
 //        for (ChatSessions cs: chatSession.getUser().getChatSession()){ // all chat sessions of the user(no use for now)
 //            if (cs.getMessages().size() >0){

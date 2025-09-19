@@ -1,6 +1,9 @@
 package com.example.niramoy.service;
+import com.example.niramoy.entity.User;
 
 
+import com.example.niramoy.dto.ChatSessionDTO;
+import com.example.niramoy.dto.MessageDTO;
 import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.Messages;
 import com.example.niramoy.repository.ChatSessionRepository;
@@ -11,8 +14,12 @@ import com.example.niramoy.utils.JsonParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.example.niramoy.customExceptions.AgentProcessingException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,9 +35,9 @@ public class MessageService {
 
 
 
-    public ChatSessions getMessagesByChatId(Long chatId) {
+    public List<Messages> getMessagesByChatId(Long chatId) {
         ChatSessions chatSessions = chatSessionRepository.findChatSessionsByChatId(chatId);
-        return chatSessions;
+        return chatSessions.getMessages();
     }
 
     public boolean addMessageToChat(Long chatId, String message ) {
@@ -45,6 +52,7 @@ public class MessageService {
         }
     }
 
+
     public boolean addMessageToChat(Long chatId, String message, boolean isAgent ) {
         try {
             ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
@@ -57,7 +65,18 @@ public class MessageService {
         }
     }
 
-    public ChatSessions createNewChatSession(com.example.niramoy.entity.User user) {
+    @Cacheable(value = "chatSessions", key = "#user.id")
+    public List<ChatSessionDTO> getChatSessionDtoByUser(User user)     {
+        List<ChatSessions> chatSessionsList = user.getChatSession();
+        List<ChatSessionDTO> chatSessionDTOs =new ArrayList<>();
+        for (ChatSessions cs: chatSessionsList){
+            chatSessionDTOs.add(new ChatSessionDTO(cs));
+        }
+        return chatSessionDTOs;
+    }
+
+    @CacheEvict(value = "chatSessions", key = "#user.id")
+    public ChatSessionDTO createNewChatSession(User user) {
         try {
             ChatSessions newChatSession = ChatSessions.builder()
                     .user(user)
@@ -66,7 +85,7 @@ public class MessageService {
                     .build();
             
             ChatSessions savedSession = chatSessionRepository.save(newChatSession);
-            return savedSession;
+            return new ChatSessionDTO(savedSession);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create new chat session: " + e.getMessage());
         }
@@ -108,6 +127,7 @@ public class MessageService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to process message: " + e.getMessage());
         }
+
     }
 
 

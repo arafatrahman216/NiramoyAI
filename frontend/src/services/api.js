@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:8000/api';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 20000, // 20 seconds timeout
+  timeout: 60000, // 60 seconds timeout
 });
 
 // Add request interceptor to include auth token and debug logging
@@ -96,6 +96,10 @@ export const chatbotAPI = {
   // Get user's chat sessions
   getChatSessions: () => 
     api.get('/user/chat-sessions'),
+  
+  // Get messages for a specific chat
+  getMessages: (chatId) => 
+    api.post('/user/message', { chatId: chatId.toString() }),
 };
 
 

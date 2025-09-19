@@ -51,97 +51,77 @@ const DiagnosisInterface = () => {
       console.log('Message content:', query);
       console.log('Auth token exists:', !!localStorage.getItem('token'));
       
-      // Add user message immediately to local state
+      const messageToSend = query.trim();
+      setQuery(''); // Clear input immediately
+      
+      // Create user message for immediate UI update
       const userMessage = {
         messageId: Date.now(),
-        content: query.trim(),
+        content: messageToSend,
         isAgent: false,
         timestamp: new Date().toISOString()
       };
       
-      // Update local chat data immediately to show user message
-      if (selectedChatData) {
-        const updatedChatData = {
-          ...selectedChatData,
-          messages: [...(selectedChatData.messages || []), userMessage]
-        };
-        setSelectedChatData(updatedChatData);
-      }
+      // Add user message immediately to chat
+      window.dispatchEvent(new CustomEvent('addMessage', { detail: userMessage }));
       
-      const messageToSend = query.trim();
-      setQuery(''); // Clear input immediately
-      
+      var aiMessage;
       try {
         // Send message to current chat using chatbotAPI
         const response = await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode);
         
         console.log('API Response:', response);
         
-        if (response.data.success) {
+        if (response.data.success && response.data.aiResponse) {
           console.log('Message sent successfully:', response.data);
           
-          // Add AI reply to local state
-          const aiReply = {
-            messageId: response.data.aiResponse.messageId || Date.now() + 1,
+          // Add AI response directly from API response
+          aiMessage = {
+            messageId: response.data.aiResponse.messageId,
             content: response.data.aiResponse.content,
-            isAgent: true,
+            isAgent: response.data.aiResponse.isAgent,
             timestamp: new Date().toISOString()
           };
           
-          // Update local chat data with AI reply
-          if (selectedChatData) {
-            const updatedChatData = {
-              ...selectedChatData,
-              messages: [...(selectedChatData.messages || []), userMessage, aiReply]
-            };
-            setSelectedChatData(updatedChatData);
-          }
-          
-          // Force a refresh of the chat conversation component
-          window.dispatchEvent(new CustomEvent('chatRefresh'));
+          // Add AI message to chat
+          window.dispatchEvent(new CustomEvent('addMessage', { detail: aiMessage }));
           
         } else {
-          console.error('Failed to send message:');
-          alert('Failed to send message: ' + response.data.message);
-          
-
-          if (selectedChatData) {
-            const errorMessage = {
-              messageId: Date.now() + 2,
-              content: "Something went wrong. Please try again.",
-              isAgent: true,
-              timestamp: new Date().toISOString()
-            };
-            setSelectedChatData({
-              ...selectedChatData,
-              messages: [...(selectedChatData.messages || []), errorMessage]
-            });
-          }
-
-
+          console.error('Failed to send message:', response.data);
+          // alert('Failed to send message: ' + (response.data.message || 'Unknown error'));
+          // Restore the query if sending failed
+          // setQuery(messageToSend);
         }
       } catch (error) {
         console.error('Full error object:', error);
         console.error('Error response:', error.response);
         console.error('Error status:', error.response?.status);
         console.error('Error data:', error.response?.data);
-      
         
-          if (error.response?.status === 401) {
-            alert('Authentication failed. Please log in again.');
-          } else if (error.response?.status === 403) {
-            alert('Access denied. You don\'t have permission to send messages.');
-          } else if (error.response?.status === 500) {
-            alert('Server error. Please try again later.');
-          } else if (error.response == 400){
-            alert('Bad request. Please check your message and try again.');
-          } else if (error.response?.status === 429) {
-            alert('Too many requests. Please slow down.');
-          } else if (error.response?.status === 503) {
-            alert('Service unavailable. Try again.');
-          } else {
-            alert('Error sending message. Please try again.');
-          }
+        // Restore the query if sending failed
+        setQuery(messageToSend);
+        
+        if (error.response?.status === 401) {
+          alert('Authentication failed. Please log in again.');
+        } else if (error.response?.status === 403) {
+          alert('Access denied. You don\'t have permission to send messages.');
+        } else if (error.response?.status === 500) {
+          window.dispatchEvent(new CustomEvent('addMessage', { detail: {
+            messageId: Date.now() + 1,
+            isAgent: true,
+            content: 'Sorry, there was a server error. Please try again later.',
+
+          } }));
+          alert('Server error. Please try again later.');
+        } else if (error.response?.status === 400) {
+          alert('Bad request. Please check your message and try again.');
+        } else if (error.response?.status === 429) {
+          alert('Too many requests. Please slow down.');
+        } else if (error.response?.status === 503) {
+          alert('Service unavailable. Try again.');
+        } else {
+          alert('Error sending message. Please try again.');
+        }
       }
     } else {
       // If not in chat mode, create new chat (default search behavior)
@@ -153,11 +133,6 @@ const DiagnosisInterface = () => {
         
         if (newChatId) {
           setSelectedChatId(newChatId);
-          setSelectedChatData({
-            chatId: newChatId,
-            title: 'New Chat',
-            messages: []
-          });
           
           // Don't clear query here - let user send it as first message
           console.log('New chat created, user can now send their query');
@@ -192,12 +167,6 @@ const DiagnosisInterface = () => {
     console.log('Returning to search interface');
   };
 
-  // HANDLE SELECTED CHAT DATA
-  const handleSelectedChat = (chatData) => {
-    setSelectedChatData(chatData);
-    console.log('Selected full chat data:', chatData);
-  };
-
   // HANDLE NEW CHAT CREATION
   const handleNewChat = async () => {
     try {
@@ -211,11 +180,6 @@ const DiagnosisInterface = () => {
       if (newChatId) {
         // Set the new chat as selected
         setSelectedChatId(newChatId);
-        setSelectedChatData({
-          chatId: newChatId,
-          title: 'New Chat',
-          messages: []
-        });
         
         // Clear any existing query
         setQuery('');
@@ -244,7 +208,6 @@ const DiagnosisInterface = () => {
         isOpen={isChatsSidebarOpen}
         onClose={() => setIsChatsSidebarOpen(false)}
         setChatid={handleChatSelection}
-        setSelectedChat={handleSelectedChat}
       />
 
       {/* VISITS SIDEBAR */}
@@ -272,10 +235,10 @@ const DiagnosisInterface = () => {
                 </button>
                 <div>
                   <h2 className="text-lg font-semibold text-white">
-                    {selectedChatData?.title || 'Chat Conversation'}
+                    Chat Conversation
                   </h2>
                   <p className="text-sm text-zinc-400">
-                    {selectedChatData?.messages?.length || 0} messages
+                    Active chat
                   </p>
                 </div>
               </>
@@ -306,7 +269,6 @@ const DiagnosisInterface = () => {
                 <ChatConversation 
                   chatId={selectedChatId}
                   onBack={handleBackToSearch}
-                  chatData={selectedChatData}
                   embedded={true}
                 />
               </div>
