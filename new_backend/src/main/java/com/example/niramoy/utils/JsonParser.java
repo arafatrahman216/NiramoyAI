@@ -1,17 +1,30 @@
 package com.example.niramoy.utils;
 
 import com.example.niramoy.dto.HealthLogRecord;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class JsonParser {
+    public static  ObjectMapper objectMapper = null;
+
+    static{
+        objectMapper= new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    }
 
     private static String cleanJsonResponse(String jsonResponse) {
         if (jsonResponse == null || jsonResponse.isEmpty()) {
@@ -111,7 +124,7 @@ public class JsonParser {
 
     public static HealthLogRecord parseHealthLog(String geminiResponse) {
         try {
-            HealthLogRecord healthLogRecord = new ObjectMapper().readValue(geminiResponse, HealthLogRecord.class);
+            HealthLogRecord healthLogRecord = objectMapper.readValue(geminiResponse, HealthLogRecord.class);
             return healthLogRecord;
         }
         catch (Exception e) {
@@ -120,6 +133,38 @@ public class JsonParser {
                     otherSymptoms(new ArrayList<>()).note("")
                     .weight("").build();
         }
+    }
+
+    public static Map<String,Object> parseCityAndSpecialty(String response){
+        try{
+            JsonNode node = objectMapper.readTree(response);
+
+            String specialty = node.get("specialty").asText();
+            String cityName = node.get("cityName").asText();
+            Map<String,Object> returnMap = new HashMap<>();
+            returnMap.put("specialty", specialty);
+            returnMap.put("cityName", cityName);
+            return returnMap;
+
+        }
+        catch (Exception e){
+
+            return Collections.emptyMap();
+
+        }
+
+    }
+
+    public static JsonNode parseDoctorSuggestions ( String doctorSuggestions){
+        Map<String,Object> returnMap = new HashMap<>();
+        try {
+            JsonNode root = objectMapper.readTree(doctorSuggestions);
+            return root;
+        }
+        catch (Exception e){
+            return null;
+        }
+
     }
 
 

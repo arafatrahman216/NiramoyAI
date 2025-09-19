@@ -102,9 +102,11 @@ const LandingPage = () => {
         let searchResults = [];
         
         if (searchType === 'doctors') {
+          if (searchTerm== null || searchTerm.trim()=="") return;
+          console.log(searchTerm);
           const response = await doctorAPI.searchDoctors(searchTerm);
-          if (response.data && response.data.success) {
-            searchResults = response.data.data || [];
+          if (response.data && response.data) {
+            searchResults = response.data || [];
           }
         } else {
           const response = await testCenterAPI.searchTestCenters(searchTerm);
@@ -395,21 +397,46 @@ const LandingPage = () => {
                 >
                   {/* Doctor/Test Center Card Content */}
                   <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
+                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mr-4 overflow-hidden flex-shrink-0">
                       {searchType === 'doctors' || searchType === 'symptoms' ? (
-                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
+                        item.image ? (
+                          <>
+                            <img 
+                              src={item.image}
+                              alt={item.name || 'Doctor'}
+                              className="w-full h-full object-cover rounded-full"
+                              onError={(e) => {
+                                console.log('Image failed to load:', item.image);
+                                e.target.style.display = 'none';
+                                e.target.parentNode.querySelector('.fallback-icon').style.display = 'block';
+                              }}
+                              onLoad={() => {
+                                console.log('Image loaded successfully:', item.image);
+                              }}
+                            />
+                            <svg className="w-8 h-8 text-white fallback-icon" style={{display: 'none'}} fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                          </>
+                        ) : (
+                          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                          </svg>
+                        )
                       ) : (
-                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
                         </svg>
                       )}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white">{item.name}</h3>
-                      {item.degree && (
-                        <p className="text-sm text-gray-400">{item.degree}</p>
+                      <h3 className="text-lg font-semibold text-white">{item.name 
+                      || item?.doctor?.name
+                        
+                        }</h3>
+                      {(item.degree || item?.doctor?.degree) && (
+                        <p className="text-sm text-gray-400">{item.degree
+                        || item?.doctor?.degree}</p>
                       )}
                       {item.rating && (
                         <div className="flex items-center mt-1">
@@ -427,10 +454,10 @@ const LandingPage = () => {
                   </div>
 
                   {/* Specialty/Services */}
-                  {item.specialty && (
+                  {(item.specialty || item?.doctor?.specialization) && (
                     <div className="mb-3">
                       <span className="inline-block bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-sm">
-                        {item.specialty}
+                        {item.specialty || item?.doctor?.specialization}
                       </span>
                     </div>
                   )}
@@ -451,16 +478,16 @@ const LandingPage = () => {
                   )}
 
                   {/* Hospital/Location */}
-                  {item.hospital && (
-                    <p className="text-sm text-gray-300 mb-2">🏥 {item.hospital}</p>
+                  {(item.hospital || item?.doctor?.hospitalName)&& (
+                    <p className="text-sm text-gray-300 mb-2">🏥 {item.hospital || item?.doctor?.hospitalName}</p>
                   )}
                   {item.location && (
                     <p className="text-sm text-gray-400 mb-2">📍 {item.location}</p>
                   )}
 
                   {/* Experience */}
-                  {item.experience && (
-                    <p className="text-sm text-gray-400 mb-3">⏱️ {item.experience} experience</p>
+                  {(item.experience|| item?.doctor?.experience) && (
+                    <p className="text-sm text-gray-400 mb-3">⏱️ {item.experience || (item?.doctor?.experience + " years of")} experience</p>
                   )}
 
                   {/* Contact Info */}
