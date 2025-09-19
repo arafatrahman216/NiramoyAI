@@ -357,7 +357,7 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import SearchInput from './SearchInput';
 import MainLogo from './MainLogo';
@@ -366,7 +366,7 @@ import ChatsSidebar from './ChatsSidebar';
 import UploadVisitModal from './UploadVisitModal';
 import ChatConversation from './ChatConversation';
 
-import { chatbotAPI, doctorAPI } from '../../services/api'
+import { chatbotAPI, doctorAPI, userInfoAPI } from '../../services/api'
 
 // ==============================================
 // DIAGNOSIS INTERFACE MAIN CONTAINER
@@ -394,6 +394,33 @@ const DiagnosisInterface = () => {
   
   // PROCESSING STATE - tracks when AI is generating response
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // RECENT VISITS STATE - for Timeline component
+  const [recentVisits, setRecentVisits] = useState([]);
+
+  // FETCH RECENT VISITS ON COMPONENT MOUNT
+  useEffect(() => {
+    const fetchRecentVisits = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('No token found, skipping visit fetch');
+          return;
+        }
+        
+        const response = await userInfoAPI.getRecentVisits();
+        
+        if (response.data.success) {
+          console.log('Recent visits fetched:', response.data.recentVisits);
+          setRecentVisits(response.data.recentVisits);
+        }
+      } catch (error) {
+        console.error('Failed to fetch recent visits:', error);
+      }
+    };
+    
+    fetchRecentVisits();
+  }, []);
 
   // MAIN SEARCH HANDLER
   // Handles search/message sending based on current context
@@ -625,6 +652,7 @@ const DiagnosisInterface = () => {
       <VisitsSidebar 
         isOpen={isVisitsSidebarOpen}
         onClose={() => setIsVisitsSidebarOpen(false)}
+        visits={recentVisits}
       />
 
       {/* MAIN CONTENT AREA - WITH LEFT MARGIN FOR FIXED SIDEBAR */}

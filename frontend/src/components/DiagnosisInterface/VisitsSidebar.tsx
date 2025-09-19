@@ -10,9 +10,19 @@ import Timeline from '../Timeline/Timeline';
 interface VisitsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  visits?: Array<{
+    visitId: number;
+    appointmentDate: string;
+    doctorName: string;
+    doctorId: number;
+    patientName?: string;
+    symptoms?: string;
+    prescription?: string;
+    prescriptionFileUrl?: string;
+  }>; // Recent visits data to display in timeline
 }
 
-const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose }) => {
+const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, visits = [] }) => {
   if (!isOpen) return null;
 
   return (
@@ -33,7 +43,9 @@ const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose }) => {
       
       {/* SIDEBAR CONTENT - Timeline */}
       <div className="flex-1 overflow-hidden">
-        <Timeline />
+        <div className="h-full overflow-y-scroll scrollbar-hide p-2">
+          <Timeline visits={visits as any} />
+        </div>
       </div>
     </div>
   );

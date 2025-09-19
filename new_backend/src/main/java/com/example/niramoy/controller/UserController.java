@@ -492,9 +492,16 @@ public class UserController {
         List<VisitDTO> recentVisits = visitService.getRecentVisits(user, 10);
         response.put("success", true);
         response.put("recentVisits", recentVisits);
+
         return ResponseEntity.ok(response);
-        
     }
 
-
+    @GetMapping("/HELLO")
+    public ResponseEntity<String> hello(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication token is null. Please login to upload profile image");
+        }
+        return ResponseEntity.ok("Hello, Niramoy User!");
+    }
 }
