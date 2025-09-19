@@ -20,9 +20,10 @@ interface VisitsSidebarProps {
     prescription?: string;
     prescriptionFileUrl?: string;
   }>; // Recent visits data to display in timeline
+  isLoading?: boolean; // Loading state from parent
 }
 
-const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, visits = [] }) => {
+const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, visits = [], isLoading = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -44,7 +45,15 @@ const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, visits =
       {/* SIDEBAR CONTENT - Timeline */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-scroll scrollbar-hide p-2">
-          <Timeline visits={visits as any} />
+          {isLoading ? (
+            /* Loading State */
+            <div className="text-center text-zinc-400 py-8">
+              <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full mx-auto mb-4"></div>
+              <p className="text-sm">Loading visits timeline...</p>
+            </div>
+          ) : (
+            <Timeline visits={visits as any} />
+          )}
         </div>
       </div>
     </div>

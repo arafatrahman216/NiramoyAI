@@ -397,6 +397,11 @@ const DiagnosisInterface = () => {
   
   // RECENT VISITS STATE - for Timeline component
   const [recentVisits, setRecentVisits] = useState([]);
+  const [visitsLoading, setVisitsLoading] = useState(true);
+  
+  // CHAT SESSIONS STATE - for ChatsSidebar component
+  const [chatSessions, setChatSessions] = useState([]);
+  const [chatSessionsLoading, setChatSessionsLoading] = useState(true);
 
   // FETCH RECENT VISITS ON COMPONENT MOUNT
   useEffect(() => {
@@ -405,6 +410,7 @@ const DiagnosisInterface = () => {
         const token = localStorage.getItem('token');
         if (!token) {
           console.log('No token found, skipping visit fetch');
+          setVisitsLoading(false);
           return;
         }
         
@@ -416,10 +422,35 @@ const DiagnosisInterface = () => {
         }
       } catch (error) {
         console.error('Failed to fetch recent visits:', error);
+      } finally {
+        setVisitsLoading(false);
+      }
+    };
+    
+    const fetchChatSessions = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('No token found, skipping chat sessions fetch');
+          setChatSessionsLoading(false);
+          return;
+        }
+        
+        const response = await chatbotAPI.getChatSessions();
+        
+        if (response.data && response.data.chatSessions) {
+          console.log('Chat sessions fetched:', response.data.chatSessions);
+          setChatSessions(response.data.chatSessions);
+        }
+      } catch (error) {
+        console.error('Failed to fetch chat sessions:', error);
+      } finally {
+        setChatSessionsLoading(false);
       }
     };
     
     fetchRecentVisits();
+    fetchChatSessions();
   }, []);
 
   // MAIN SEARCH HANDLER
@@ -646,6 +677,9 @@ const DiagnosisInterface = () => {
         onClose={() => setIsChatsSidebarOpen(false)}
         setChatid={handleChatSelection}
         setSelectedChat={handleSelectedChat}
+        chatSessions={chatSessions}
+        setChatSessions={setChatSessions}
+        isLoading={chatSessionsLoading}
       />
 
       {/* VISITS SIDEBAR */}
@@ -653,6 +687,7 @@ const DiagnosisInterface = () => {
         isOpen={isVisitsSidebarOpen}
         onClose={() => setIsVisitsSidebarOpen(false)}
         visits={recentVisits}
+        isLoading={visitsLoading}
       />
 
       {/* MAIN CONTENT AREA - WITH LEFT MARGIN FOR FIXED SIDEBAR */}
