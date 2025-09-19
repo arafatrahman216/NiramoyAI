@@ -220,7 +220,7 @@ public class UserController {
                 "content", aiReply.getContent(),
                 "isAgent", aiReply.isAgent(),
                 "chatId", chatId,
-                "isPlan", aiReply.getIsPlan()
+                "isPlan", aiReply.isPlan()
             ));
             
             return ResponseEntity.ok(response);

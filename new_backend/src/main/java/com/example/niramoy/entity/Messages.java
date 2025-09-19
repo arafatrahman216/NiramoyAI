@@ -28,5 +28,5 @@ public class Messages {
     private boolean isAgent;
 
     @Column(name = "is_plan", nullable = true)
-    private Boolean isPlan;    
+    private boolean isPlan;    
 }

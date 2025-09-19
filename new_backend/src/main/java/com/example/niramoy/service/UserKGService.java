@@ -586,8 +586,35 @@ public class UserKGService {
         } catch (Exception e) {
             log.error("Error fetching patient summary: {}", e.getMessage(), e);
             return "Error fetching patient summary.";
-        }
-                
+        }  
+    }
+
+
+    public String getLatestTestNames(Long patientID) {
+        String cypherQuery = """
+            MATCH (p:Patient {patientID: $patientID})-[:HAS_VISIT]->(v:Visit)
+            WITH v
+            ORDER BY v.date DESC
+            LIMIT 1
+            MATCH (v)-[ht:HAS_TEST]->(t:Test)
+            RETURN t.test_name as testName, t.test_report_summary as testReportSummary, t.test_report_severity as testReportSeverity
+        """;
+
+        try{
+            List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, Map.of("patientID", patientID));
+            if (results == null || results.isEmpty()) {
+                return "No patient data found.";
+            }
+
+            StringBuilder testNames = new StringBuilder("Latest Test Names for Patient " + patientID + ":\n");
+            for (Map<String, Object> result : results) {
+                testNames.append("- ").append(result.getOrDefault("testName", "Unknown Test")).append("\n");
+            }
+            return testNames.toString();
+        } catch (Exception e) {
+            log.error("Error fetching patient summary: {}", e.getMessage(), e);
+            return "Error fetching patient summary.";
+        }  
     }
 
 
