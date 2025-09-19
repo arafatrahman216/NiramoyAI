@@ -90,14 +90,15 @@ const DiagnosisInterface = () => {
             isPlan: response.data.aiResponse.isPlan || false
           };
           
-          // Update local chat data with AI reply
-          if (selectedChatData) {
+          // Update local chat data with AI reply (user message should already be there)
+          setSelectedChatData(prevData => {
             const updatedChatData = {
-              ...selectedChatData,
-              messages: [...(selectedChatData.messages || []), userMessage, aiReply]
+              ...prevData,
+              messages: [...(prevData.messages || []), aiReply]
             };
-            setSelectedChatData(updatedChatData);
-          }
+            console.log('DiagnosisInterface: Setting updated chat data:', updatedChatData);
+            return updatedChatData;
+          });
           
           // Force a refresh of the chat conversation component
           window.dispatchEvent(new CustomEvent('chatRefresh'));
@@ -107,18 +108,17 @@ const DiagnosisInterface = () => {
           alert('Failed to send message: ' + response.data.message);
           
 
-          if (selectedChatData) {
-            const errorMessage = {
-              messageId: Date.now() + 2,
-              content: "Something went wrong. Please try again.",
-              isAgent: true,
-              timestamp: new Date().toISOString()
-            };
-            setSelectedChatData({
-              ...selectedChatData,
-              messages: [...(selectedChatData.messages || []), errorMessage]
-            });
-          }
+          const errorMessage = {
+            messageId: Date.now() + 2,
+            content: "Something went wrong. Please try again.",
+            isAgent: true,
+            timestamp: new Date().toISOString(),
+            isPlan: false
+          };
+          setSelectedChatData(prevData => ({
+            ...prevData,
+            messages: [...(prevData.messages || []), errorMessage]
+          }));
 
 
         }
@@ -309,6 +309,7 @@ const DiagnosisInterface = () => {
                   chatId={selectedChatId}
                   onBack={handleBackToSearch}
                   chatData={selectedChatData}
+
                   embedded={true}
                 />
               </div>

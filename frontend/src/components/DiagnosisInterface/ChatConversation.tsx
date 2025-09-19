@@ -59,7 +59,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     
     // If we have chatData with messages, use it directly
     if (chatData && chatData.messages) {
-      console.log('Using chatData messages:', chatData.messages);
+      console.log('ChatConversation: Using chatData messages:', chatData.messages);
+      console.log('ChatConversation: chatData object:', chatData);
       const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
         messageId: msg.messageId,
         content: msg.content,
@@ -67,6 +68,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         timestamp: msg.timestamp,
         isPlan: msg.isPlan === true
       }));
+      console.log('ChatConversation: Formatted messages:', formattedMessages);
       setMessages(formattedMessages);
       setLoading(false);
       return;
@@ -115,6 +117,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
 
   // Fetch conversation messages
   useEffect(() => {
+    console.log('ChatConversation: useEffect triggered - chatId:', chatId, 'chatData:', chatData);
     fetchMessages();
   }, [chatId, chatData]);
 
@@ -166,6 +169,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     try {
       const response = await chatbotAPI.sendMessage(messageToSend, chatId as any);
       const botResponse = response.data;
+      // console.log('Full sendMessage API response:', response);
+      // console.log('Bot response from API:', botResponse);
 
       // Add bot response to messages - extract from aiResponse object
       const aiResponseData = botResponse.aiResponse || botResponse;

@@ -190,36 +190,33 @@ const CarePlanTimeline = ({ careData }) => {
           
           return (
             <div key={index} className="relative" style={{ marginBottom: index === allSteps.length - 1 ? '2rem' : '4rem' }}>
-              {/* Timeline node - bigger and glowy */}
-                {/* <div className={`absolute left-1/2 transform -translate-x-1/2 w-10 h-10 rounded-2xl hover:rounded-full border-0 ${colors.bg} z-20 flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-500 ease-in-out hover:scale-105 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-lg ring-1 ring-gradient-to-r ring-from-transparent ring-to-white/10 ${colors.glow}`}> */}
-                {/* <div className={`absolute left-1/2 transform -translate-x-1/2 w-11 h-11 rounded-2xl border-0 ${colors.bg} z-20 flex items-center justify-center transition-all duration-500 ease-out hover:scale-110 hover:-translate-y-1 shadow-lg hover:shadow-xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-transparent to-black/5 ring-1 ring-white/10 hover:ring-white/25 ${colors.glow} group-hover:animate-spin-slow`}> */}
-              <div className={`absolute left-1/2 transform -translate-x-1/2 w-11 h-11 rounded-3xl border-0 ${colors.bg} z-20 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 ease-out hover:scale-105 hover:-translate-y-0.5 ring-1 ring-black/5 backdrop-blur-sm ${colors.glow} group`}>
-
-                {/* <div className="w-3 h-3 bg-white rounded-full shadow-inner"></div> */}
+              {/* Timeline node - smaller and optimized */}
+              <div className={`absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-2xl border-0 ${colors.bg} z-20 flex items-center justify-center shadow-lg transition-all duration-300 ease-out hover:scale-105 ring-1 ring-black/5 backdrop-blur-sm ${colors.glow}`}>
+                <div className="w-2 h-2 bg-white rounded-full shadow-inner"></div>
               </div>
               
               {/* Dotted line from node to content - emerald green */}
               <div 
-                className={`absolute top-5 ${
+                className={`absolute top-4 ${
                   isRight 
-                    ? 'left-1/2 w-20' 
-                    : 'right-1/2 w-20'
+                    ? 'left-1/2 w-16' 
+                    : 'right-1/2 w-16'
                 }`}
                 style={{
-                  borderTop: '3px dotted rgba(52, 211, 153, 0.6)',
-                  height: '4px',
-                  transform: isRight ? 'translateX(40px)' : 'translateX(-40px)'
+                  borderTop: '2px dotted rgba(52, 211, 153, 0.6)',
+                  height: '2px',
+                  transform: isRight ? 'translateX(16px)' : 'translateX(-16px)'
                 }}
               ></div>
               
-              {/* Content card - positioned to start from midpoint of previous card */}
+              {/* Content card - wider and more compact */}
               <div 
-                className={`w-5/12 ${isRight ? 'ml-auto pl-20' : 'mr-auto pr-20'}`}
+                className={`w-[45%] ${isRight ? 'ml-auto pl-20' : 'mr-auto pr-20'}`}
                 style={{ 
-                  marginTop: index === 0 ? '0' : '-12rem' // Start from midpoint of previous card
+                  marginTop: index === 0 ? '0' : '-8rem' // Reduced overlap for better space usage
                 }}
               >
-                                <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/60 backdrop-blur-sm hover:bg-zinc-900/70 hover:border-zinc-700/70 transition-all duration-300 shadow-lg hover:shadow-emerald-500/10">
+                <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/60 backdrop-blur-sm hover:bg-zinc-900/70 hover:border-zinc-700/70 transition-all duration-300 shadow-lg hover:shadow-emerald-500/10">
                   {/* Action title */}
                   <h3 className="text-base font-semibold text-zinc-100 mb-3 leading-tight">
                     {step.action}
@@ -232,29 +229,26 @@ const CarePlanTimeline = ({ careData }) => {
                     </p>
                   </div>
 
-                  {/* Details grid */}
-                  <div className="grid grid-cols-1 gap-2 text-sm mb-3">
-                    {/* Where */}
+                  {/* Details in horizontal layout for better space usage */}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm mb-3">
                     {step.where && (
-                      <div className="flex items-center text-zinc-300">
+                      <div className="flex items-center text-zinc-400">
                         <MapPin className="w-4 h-4 mr-2 text-emerald-400" />
-                        <span className="text-zinc-400">{step.where}</span>
+                        <span>{step.where}</span>
                       </div>
                     )}
                     
-                    {/* Cost */}
                     {step.cost && (
-                      <div className="flex items-center text-zinc-300">
+                      <div className="flex items-center text-zinc-400">
                         <DollarSign className="w-4 h-4 mr-2 text-emerald-400" />
-                        <span className="text-zinc-400">${step.cost}</span>
+                        <span>${step.cost}</span>
                       </div>
                     )}
                     
-                    {/* Timeframe */}
                     {step.timeframe && (
-                      <div className="flex items-center text-zinc-300">
+                      <div className="flex items-center text-zinc-400">
                         <Clock className="w-4 h-4 mr-2 text-emerald-400" />
-                        <span className="text-zinc-400">{step.timeframe}</span>
+                        <span>{step.timeframe}</span>
                       </div>
                     )}
                   </div>
@@ -288,7 +282,7 @@ const CarePlanTimeline = ({ careData }) => {
 
                   {/* Importance indicator */}
                   <div className="mt-3">
-                    <span className={`inline-block px-2 py-1 rounded-full text-white text-xs font-medium ${colors.bg} ${colors.glow} opacity-90`}>
+                    <span className={`inline-block px-2 py-1 rounded-full text-white text-xs font-medium ${colors.bg} opacity-90`}>
                       {step.this_step_importance?.toUpperCase()} PRIORITY
                     </span>
                   </div>
@@ -306,7 +300,7 @@ const CarePlanTimeline = ({ careData }) => {
             <CheckCircle className="w-4 h-4 mr-2 text-emerald-400" />
             <h2 className="text-base font-medium text-zinc-200">Action Items</h2>
           </div>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {planData.ActionChecklist.map((item, index) => (
               <label key={index} className="flex items-start p-2 rounded-lg hover:bg-zinc-800/30 transition-colors cursor-pointer group">
                 <input 
@@ -320,49 +314,52 @@ const CarePlanTimeline = ({ careData }) => {
         </div>
       )}
 
-      {/* Cost Estimate */}
-      {planData?.EstimatedTotalCost && (
-        <div className="mt-4 bg-zinc-900/30 rounded-2xl p-4 border border-zinc-800/40 backdrop-blur-sm">
-          <div className="flex items-center mb-3 pb-2 border-b border-zinc-800/50">
-            <DollarSign className="w-4 h-4 mr-2 text-emerald-400" />
-            <h2 className="text-base font-medium text-zinc-200">Cost Estimate</h2>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
-              <div className="text-emerald-400 font-medium text-xs mb-1">Low</div>
-              <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.low}</div>
+      {/* Bottom sections in horizontal layout for better space usage */}
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Cost Estimate */}
+        {planData?.EstimatedTotalCost && (
+          <div className="bg-zinc-900/30 rounded-2xl p-4 border border-zinc-800/40 backdrop-blur-sm">
+            <div className="flex items-center mb-3 pb-2 border-b border-zinc-800/50">
+              <DollarSign className="w-4 h-4 mr-2 text-emerald-400" />
+              <h2 className="text-base font-medium text-zinc-200">Cost Estimate</h2>
             </div>
-            <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
-              <div className="text-blue-400 font-medium text-xs mb-1">Typical</div>
-              <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.typical}</div>
-            </div>
-            <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
-              <div className="text-amber-400 font-medium text-xs mb-1">High</div>
-              <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.high}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Assumptions */}
-      {planData?.Assumptions && planData.Assumptions.length > 0 && (
-        <div className="mt-4 bg-zinc-900/20 rounded-2xl p-4 border border-zinc-800/30 backdrop-blur-sm">
-          <div className="flex items-center mb-3 pb-2 border-b border-zinc-800/40">
-            <div className="w-4 h-4 mr-2 bg-zinc-600 rounded-full flex items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full"></div>
-            </div>
-            <h2 className="text-base font-medium text-zinc-200">Plan Assumptions</h2>
-          </div>
-          <div className="space-y-2">
-            {planData.Assumptions.map((assumption, index) => (
-              <div key={index} className="flex items-start text-sm">
-                <span className="text-emerald-400 mr-2 mt-1.5 text-xs">•</span>
-                <span className="text-zinc-300 leading-relaxed">{assumption}</span>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
+                <div className="text-emerald-400 font-medium text-xs mb-1">Low</div>
+                <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.low}</div>
               </div>
-            ))}
+              <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
+                <div className="text-blue-400 font-medium text-xs mb-1">Typical</div>
+                <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.typical}</div>
+              </div>
+              <div className="text-center p-2 bg-zinc-800/30 rounded-lg">
+                <div className="text-amber-400 font-medium text-xs mb-1">High</div>
+                <div className="text-zinc-200 text-sm font-medium">{planData.EstimatedTotalCost.high}</div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Assumptions */}
+        {planData?.Assumptions && planData.Assumptions.length > 0 && (
+          <div className="bg-zinc-900/20 rounded-2xl p-4 border border-zinc-800/30 backdrop-blur-sm">
+            <div className="flex items-center mb-3 pb-2 border-b border-zinc-800/40">
+              <div className="w-4 h-4 mr-2 bg-zinc-600 rounded-full flex items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full"></div>
+              </div>
+              <h2 className="text-base font-medium text-zinc-200">Plan Assumptions</h2>
+            </div>
+            <div className="space-y-2">
+              {planData.Assumptions.map((assumption, index) => (
+                <div key={index} className="flex items-start text-sm">
+                  <span className="text-emerald-400 mr-2 mt-1.5 text-xs">•</span>
+                  <span className="text-zinc-300 leading-relaxed">{assumption}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
