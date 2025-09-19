@@ -21,14 +21,15 @@ public class Neo4jTestRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println("=== Neo4j Connection Test ===");
 
-        String ans1 = UserKGService.getVisitSummaryLastThree(2L);
-        log.info("Patient Summary: {}", ans1);
-        String ans2 = UserKGService.getDoctorAdvice(2L);
-        log.info("Patient Visit History: {}", ans2);
-        String ans3 = UserKGService.getPatientSummary(2L);
-        log.info("Patient Summary: {}", ans3);
-
-
+        // Test with patient ID P002 (converting to Long)
+        Long patientId = 999L; // P002 corresponds to patientID 2
+        
+        System.out.println("Testing getLatestTestNames with patient ID: P002 (patientID: " + patientId + ")");
+        
+        // Test the getLatestTestNames method
+        String testNamesResult = UserKGService.getLatestTestNames(patientId);
+        log.info("Latest Test Names for Patient P002: {}", testNamesResult);
+        System.out.println("Latest Test Names Result: " + testNamesResult);
         System.out.println("=== End Neo4j Test ===");
     }
 }
