@@ -87,14 +87,34 @@ public class JsonParser {
 
         try {
             JSONObject json = new JSONObject(cleanedResponse);
+            JSONObject result = new JSONObject();
+
             if (json.has("Plan")) {
                 Object plan = json.get("Plan");
-                return new JSONObject().put("Plan", plan);
+                result.put("Plan", plan);
             } else {
-                return new JSONObject().put("Plan", "No plan available.");
+                result.put("Plan", "No plan available.");
             }
+
+            // Preserve the is_plan field if it exists
+            if (json.has("is_plan")) {
+                result.put("is_plan", json.getBoolean("is_plan"));
+            } else {
+                result.put("is_plan", false);
+            }
+
+            // Preserve the Explanation field if it exists
+            if (json.has("Explanation")) {
+                result.put("Explanation", json.getString("Explanation"));
+            }
+
+            return result;
         } catch (Exception e) {
-            return new JSONObject().put("Plan", "Error parsing plan: " + e.getMessage());
+            JSONObject errorResult = new JSONObject();
+            errorResult.put("Plan", "Error parsing plan: " + e.getMessage());
+            errorResult.put("is_plan", false);
+            errorResult.put("Explanation", "Error parsing explanation: " + e.getMessage());
+            return errorResult;
         }
     }
 

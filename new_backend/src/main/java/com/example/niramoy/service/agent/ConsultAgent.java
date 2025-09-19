@@ -63,7 +63,7 @@ public class ConsultAgent implements Agent {
 
             Example Response Structure
             json{
-            \"Consultation\": \"Based on your recent visit, [explain condition]. Your doctor recommended [key advice] because [simple reason]. Here's what you should do: [actionable steps]. Watch for [warning signs] and seek immediate care if they occur. Follow up with your doctor [timeframe] to monitor progress. This is manageable with proper care.\"
+            \"Explanation\": \"Based on your recent visit, [explain condition]. Your doctor recommended [key advice] because [simple reason]. Here's what you should do: [actionable steps]. Watch for [warning signs] and seek immediate care if they occur. Follow up with your doctor [timeframe] to monitor progress. This is manageable with proper care.\"
             }
             Also track user intent. If intent is not relevant at all, politely refuse to answer and suggest consulting a healthcare professional.
             If intent is somewhat relevant answer the question with basic knowledge

@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
-@Component
+// @Component
 @RequiredArgsConstructor
 public class AgentDemoRunner implements CommandLineRunner {
     private final LangChain4jAgentService  agentService;

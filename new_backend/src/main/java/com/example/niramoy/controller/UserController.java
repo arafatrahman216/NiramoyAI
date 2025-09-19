@@ -27,8 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -220,7 +218,7 @@ public class UserController {
                 "content", aiReply.getContent(),
                 "isAgent", aiReply.isAgent(),
                 "chatId", chatId,
-                "isPlan", aiReply.isPlan()
+                "isPlan", aiReply.getIsPlan()
             ));
             
             return ResponseEntity.ok(response);
