@@ -146,7 +146,6 @@ public class MessageService {
                 throw new AgentProcessingException("AI Service is currently unavailable. Please try again later.", e);
             }
 
-            log.info("Raw AI Reply: \n" + aiReply);
             JSONObject parsedAiReplyJson = JsonParser.parseResponseJson(aiReply, mode);
             
             Messages aiMessage;
@@ -160,7 +159,6 @@ public class MessageService {
                 // For plan messages, store the entire JSON so frontend can parse it
                 log.info("Plan Message detected");
                 parsedAiReply = parsedAiReplyJson.toString();
-                log.info("Storing full JSON: " + parsedAiReply);
             } else {
                 // For non-plan messages, extract just the explanation
                 parsedAiReply = parsedAiReplyJson.optString("Explanation", "No explanation available.");

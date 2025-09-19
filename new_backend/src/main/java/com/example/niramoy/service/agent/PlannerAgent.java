@@ -51,7 +51,7 @@ public class PlannerAgent implements Agent {
             - Include only relevant phases; leave empty arrays if not applicable.
             - "EstimatedTime": estimated duration of each phase in days/weeks.
             - "EstimatedTotalCost": Low/Typical/High ranges.
-            - "ActionChecklist": 5–10 practical, copyable steps for the patient.
+            - "ActionChecklist": 4–10 practical, copyable steps for the patient.
             - "Urgency": "Routine", "Within 1 week", "Urgent (24–48h)", "Emergency — go to ER now".
 
             Behavior:
