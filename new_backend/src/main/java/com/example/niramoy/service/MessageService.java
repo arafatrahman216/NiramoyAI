@@ -34,7 +34,7 @@ public class MessageService {
     public boolean addMessageToChat(Long chatId, String message ) {
         try {
             ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
-            Messages newMessage = Messages.builder().content(message).isAgent(false).chatSession(chatSession).build();
+            Messages newMessage = Messages.builder().content(message).isAgent(false).isPlan(false).chatSession(chatSession).build();
             messageRepository.save(newMessage);
             return true;
         }
@@ -46,7 +46,7 @@ public class MessageService {
     public boolean addMessageToChat(Long chatId, String message, boolean isAgent ) {
         try {
             ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
-            Messages newMessage = Messages.builder().content(message).isAgent(isAgent).chatSession(chatSession).build();
+            Messages newMessage = Messages.builder().content(message).isAgent(isAgent).isPlan(false).chatSession(chatSession).build();
             messageRepository.save(newMessage);
             return true;
         }
@@ -130,6 +130,7 @@ public class MessageService {
             Messages userMessage = Messages.builder()
                     .content(message)
                     .isAgent(false)
+                    .isPlan(false)
                     .chatSession(chatSession)
                     .build();
             messageRepository.save(userMessage);
@@ -145,14 +146,25 @@ public class MessageService {
                 throw new AgentProcessingException("AI Service is currently unavailable. Please try again later.", e);
             }
 
+            log.info("Raw AI Reply: \n" + aiReply);
             JSONObject parsedAiReplyJson = JsonParser.parseResponseJson(aiReply, mode);
-            String parsedAiReply = parsedAiReplyJson.toString();
             
             Messages aiMessage;
             // Check if this is planner mode AND LLM explicitly set is_plan to true
-            boolean isPlanMessage = "planner".equals(mode) && 
+            Boolean isPlanMessage = "plan".equals(mode) && 
                                    parsedAiReplyJson.has("is_plan") && 
                                    parsedAiReplyJson.getBoolean("is_plan");
+
+            String parsedAiReply;
+            if(isPlanMessage){
+                // For plan messages, store the entire JSON so frontend can parse it
+                log.info("Plan Message detected");
+                parsedAiReply = parsedAiReplyJson.toString();
+                log.info("Storing full JSON: " + parsedAiReply);
+            } else {
+                // For non-plan messages, extract just the explanation
+                parsedAiReply = parsedAiReplyJson.optString("Explanation", "No explanation available.");
+            }
             
             aiMessage = Messages.builder()
                     .content(parsedAiReply)

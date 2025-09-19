@@ -65,7 +65,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
         timestamp: msg.timestamp,
-        isPlan: msg.isPlan || false
+        isPlan: msg.isPlan === true
       }));
       setMessages(formattedMessages);
       setLoading(false);
@@ -97,7 +97,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
         timestamp: msg.timestamp,
-        isPlan: msg.isPlan || false
+        isPlan: msg.isPlan === true
       }));
       
       console.log('Formatted Messages:', formattedMessages);
@@ -127,7 +127,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
         timestamp: msg.timestamp,
-        isPlan: msg.isPlan || false
+        isPlan: msg.isPlan === true
       }));
       setMessages(formattedMessages);
       // Scroll to bottom when new data comes from parent
@@ -167,13 +167,16 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
       const response = await chatbotAPI.sendMessage(messageToSend, chatId as any);
       const botResponse = response.data;
 
-      // Add bot response to messages
+      // Add bot response to messages - extract from aiResponse object
+      const aiResponseData = botResponse.aiResponse || botResponse;
       const botMessage: Message = {
-        messageId: Date.now() + 1,
-        content: botResponse.message || botResponse.response || 'No response received',
-        agent: true
+        messageId: aiResponseData.messageId || Date.now() + 1,
+        content: aiResponseData.content || botResponse.message || botResponse.response || 'No response received',
+        agent: true,
+        isPlan: aiResponseData.isPlan === true
       };
 
+      // console.log('Created bot message:', botMessage);
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -215,35 +218,57 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
 
   // Parse care plan data from JSON content
   const parseCarePlanData = (content: string) => {
-    console.log('Parsing content for care plan data:', content);
+    console.log('=== PARSING CARE PLAN DATA ===');
+    console.log('Content type:', typeof content);
+    console.log('Content length:', content.length);
+    console.log('First 200 chars:', content.substring(0, 200));
     
     try {
       // Try to parse as JSON first
       const parsed = JSON.parse(content);
-      console.log('Parsed JSON:', parsed);
-      if (parsed.Plan && (parsed.Plan.PreTreatment_Phase || parsed.Plan.Treatment_Phase || parsed.Plan.PostTreatment_Phase)) {
-        console.log('Found valid care plan data');
-        return parsed;
+      console.log('✅ JSON parsing successful');
+      console.log('Parsed object keys:', Object.keys(parsed));
+      
+      if (parsed.Plan) {
+        console.log('✅ Found Plan object');
+        console.log('Plan keys:', Object.keys(parsed.Plan));
+        console.log('PreTreatment_Phase exists:', !!parsed.Plan.PreTreatment_Phase);
+        console.log('Treatment_Phase exists:', !!parsed.Plan.Treatment_Phase);
+        console.log('PostTreatment_Phase exists:', !!parsed.Plan.PostTreatment_Phase);
+        
+        if (parsed.Plan.PreTreatment_Phase || parsed.Plan.Treatment_Phase || parsed.Plan.PostTreatment_Phase) {
+          console.log('✅ Valid care plan structure found, returning parsed data');
+          return parsed;
+        } else {
+          console.log('❌ Plan object exists but no treatment phases found');
+        }
+      } else {
+        console.log('❌ No Plan object found in parsed JSON');
       }
     } catch (error) {
-      console.log('JSON parsing failed, trying regex match');
+      console.log('❌ JSON parsing failed:', error instanceof Error ? error.message : String(error));
+      console.log('Trying regex match...');
+      
       // If JSON parsing fails, look for JSON-like structure in the content
       const jsonMatch = content.match(/\{[\s\S]*"Plan"[\s\S]*\}/);
       if (jsonMatch) {
+        console.log('Found JSON pattern with regex');
         try {
           const extracted = JSON.parse(jsonMatch[0]);
-          console.log('Extracted JSON from regex:', extracted);
+          console.log('✅ Regex extraction successful');
           if (extracted.Plan && (extracted.Plan.PreTreatment_Phase || extracted.Plan.Treatment_Phase || extracted.Plan.PostTreatment_Phase)) {
-            console.log('Found valid care plan data from regex');
+            console.log('✅ Valid care plan data from regex');
             return extracted;
           }
         } catch (nestedError) {
-          console.log('Nested parsing failed');
+          console.log('❌ Nested parsing failed:', nestedError instanceof Error ? nestedError.message : String(nestedError));
         }
+      } else {
+        console.log('❌ No JSON pattern found with regex');
       }
     }
-    console.log('No care plan data found, using fallback');
-    // Return null - the CarePlanTimeline component will handle fallback data
+    
+    console.log('❌ No valid care plan data found, returning null');
     return null;
   };
 
@@ -285,7 +310,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                       <div className="flex-1">
                         {(() => {
                           // Check if this is a plan message from backend
+                          console.log("Msg Plan : " + message.isPlan);
                           if (message.isPlan) {
+                            console.log("=== RENDERING CARE PLAN ===");
                             const carePlanData = parseCarePlanData(message.content);
                             return (
                               <div className="w-full">
@@ -294,6 +321,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                             );
                           } else {
                             // Render regular text message
+                            console.log("=== RENDERING REGULAR AI MESSAGE ===");
                             return (
                               <>
                               <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">

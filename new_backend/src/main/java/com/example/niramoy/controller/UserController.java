@@ -212,13 +212,15 @@ public class UserController {
             response.put("userMessage", Map.of(
                 "content", message,
                 "isAgent", false,
-                "chatId", chatId
+                "chatId", chatId,
+                "isPlan", false
             ));
             response.put("aiResponse", Map.of(
                 "messageId", aiReply.getMessageId(),
                 "content", aiReply.getContent(),
                 "isAgent", aiReply.isAgent(),
-                "chatId", chatId
+                "chatId", chatId,
+                "isPlan", aiReply.getIsPlan()
             ));
             
             return ResponseEntity.ok(response);

@@ -22,9 +22,21 @@ public class PlannerAgent implements Agent {
     private final UserKGService userKGService;
 
     private static final String planningPrompt = """
-            You are a professional Health Assistant.
+            You are a professional Health Assistant + Normal chatter if needed.
+            First,
+            - Detect User intent. If user if asking for a plan or guideline or timeline then make "is_plan": true in the json response. Then response in "Plan" and Keep "Explanation" empty.
+            - If user is not asking for a plan or guideline or timeline then make "is_plan": false in the json response. Then response in "Explanation" and Keep "Plan" empty.
+            - If intent is not relevant at all, politely refuse to answer and suggest consulting a healthcare
+            - If intent is somewhat relevent answer the question with basic knowledge
+            - If the question type doesnot match PLANNER mode, refer to use other Modes
+              like QnA,Consult, Next Move Planner
 
-            Goal:
+            If is_plan is false then do these:
+            Normal chat with the user. Keep "Plan" empty and respond in "Explanation".
+
+
+            If is_plan is true then do these:
+            Keep "Explanation" empty and respond in "Plan".
             Generate a clear, empathetic, actionable care plan based on the patient’s context, visit notes, and query. Your plan should be practical, in plain language, and use second-person ("you"). Adapt to the situation: some cases may not require Pre-Treatment or Post-Treatment phases. If urgent/unsafe, highlight it immediately with concrete steps.
 
             Output requirements (MANDATORY):
@@ -58,12 +70,6 @@ public class PlannerAgent implements Agent {
             User Query: {{query}}
 
             Important Instructions:
-            - Detect User intent. If user if asking for a plan or guideline or timeline then make "is_plan": true in the json response. Then response in "Plan" and Keep "Explanation" empty.
-            - If user is not asking for a plan or guideline or timeline then make "is_plan": false in the json response. Then response in "Explanation" and Keep "Plan" empty.
-            - If intent is not relevant at all, politely refuse to answer and suggest consulting a healthcare
-            - If intent is somewhat relevent answer the question with basic knowledge
-            - If the question type doesnot match PLANNER mode, refer to use other Modes
-              like QnA,Consult, Next Move Planner
             - Keep PreTreatment, Treatment, PostTreatment phases empty if not applicable.
             - Include EstimatedTime for each relevant phase.
             - Include step-specific importance ("this_step_importance") for every step.
@@ -99,17 +105,7 @@ public class PlannerAgent implements Agent {
                         "cost": "300",
                         "timeframe": "Within 24 hours – this is vital.",
                         "this_step_importance" : "low"
-                    },
-                    {
-                        "step": 2,
-                        "action": "Complete all pre-operative tests and assessments as directed by your surgeon.",
-                        "why": "These tests help determine your overall health and readiness for surgery, ensuring a safer procedure.",
-                        "where": "Your doctor's office or a designated testing facility.",
-                        "cost": "Varies greatly depending on tests ordered (blood work, EKG, chest X-ray, etc.).  Expect $200-$1000.",
-                        "timeframe": "As soon as possible, following your consultation.",
-                        "this_step_importance" : "high"
                     }
-                    
                     ],
                     "Treatment_Phase": [
                     {
@@ -135,17 +131,6 @@ public class PlannerAgent implements Agent {
                         "red_flags": ["Excessive bleeding", "Chest pain", "Shortness of breath", "High fever", "Swelling in legs"]
                         "this_step_importance" : "high"
                 
-                    },
-                    {
-                        "step": 2,
-                        "action": "Follow-up appointments",
-                        "when": "Scheduled by your cardiologist or surgeon.",
-                        "where" : "Max Hospital",
-                        "cost" : "1000",
-                        "why" : "checkup",
-                        "timeframe" : "come after 10 days",
-                        "red_flags": ["Unexplained weight gain", "Fatigue", "Persistent cough"]
-                        "this_step_importance" : "moderate"
                     }
                     ],
                     "EstimatedTime" : {

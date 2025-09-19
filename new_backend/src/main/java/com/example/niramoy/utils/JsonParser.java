@@ -103,11 +103,17 @@ public class JsonParser {
                 result.put("is_plan", false);
             }
             
+            // Preserve the Explanation field if it exists
+            if (json.has("Explanation")) {
+                result.put("Explanation", json.getString("Explanation"));
+            }
+            
             return result;
         } catch (Exception e) {
             JSONObject errorResult = new JSONObject();
             errorResult.put("Plan", "Error parsing plan: " + e.getMessage());
             errorResult.put("is_plan", false);
+            errorResult.put("Explanation", "Error parsing explanation: " + e.getMessage());
             return errorResult;
         }
     }

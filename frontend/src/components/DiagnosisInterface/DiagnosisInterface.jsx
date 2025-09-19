@@ -56,7 +56,8 @@ const DiagnosisInterface = () => {
         messageId: Date.now(),
         content: query.trim(),
         isAgent: false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        isPlan: false
       };
       
       // Update local chat data immediately to show user message
@@ -85,7 +86,8 @@ const DiagnosisInterface = () => {
             messageId: response.data.aiResponse.messageId || Date.now() + 1,
             content: response.data.aiResponse.content,
             isAgent: true,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            isPlan: response.data.aiResponse.isPlan || false
           };
           
           // Update local chat data with AI reply
