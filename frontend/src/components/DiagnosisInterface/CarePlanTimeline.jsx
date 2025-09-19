@@ -117,6 +117,7 @@ const CarePlanTimeline = ({ careData }) => {
 
   // Get color based on importance with glowing effects
   const getImportanceColor = (importance) => {
+    importance = importance?.toLowerCase();
     switch (importance) {
       case 'high': 
         return {
@@ -163,11 +164,11 @@ const CarePlanTimeline = ({ careData }) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-8 bg-black min-h-screen text-gray-100">
+    <div className="max-w-7xl mx-auto p-6 text-gray-100">
       {/* Urgency Banner */}
       {planData?.Urgency && (
-        <div className={`mb-12 p-6 rounded-xl border-2 text-center font-bold text-xl ${getUrgencyStyle(planData.Urgency)}`}>
-          <AlertTriangle className="inline-block mr-3 w-8 h-8" />
+        <div className={`mb-8 p-4 rounded-xl border-2 text-center font-bold text-lg ${getUrgencyStyle(planData.Urgency)}`}>
+          <AlertTriangle className="inline-block mr-3 w-6 h-6" />
           URGENCY: {planData.Urgency}
         </div>
       )}
@@ -182,18 +183,18 @@ const CarePlanTimeline = ({ careData }) => {
           const colors = getImportanceColor(step.this_step_importance);
           
           return (
-            <div key={index} className="relative mb-4">
-              {/* Timeline node - bigger and more vibrant */}
-              <div className={`absolute left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full border-4 border-black ${colors.bg} ${colors.glow} z-20 flex items-center justify-center`}>
-                <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+            <div key={index} className="relative mb-6">
+              {/* Timeline node - smaller and cleaner */}
+              <div className={`absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full border-2 ${colors.bg} ${colors.glow} z-20 flex items-center justify-center`}>
+                <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
               
               {/* Dotted line from node to content */}
               <div 
-                className={`absolute top-6 ${
+                className={`absolute top-4 ${
                   isRight 
-                    ? 'left-1/2 ml-6 w-20' 
-                    : 'right-1/2 mr-6 w-20'
+                    ? 'left-1/2 ml-4 w-16' 
+                    : 'right-1/2 mr-4 w-16'
                 }`}
                 style={{
                   borderTop: '2px dotted rgba(74, 222, 128, 0.6)',
@@ -202,8 +203,8 @@ const CarePlanTimeline = ({ careData }) => {
               ></div>
               
               {/* Content card */}
-              <div className={`w-5/12 ${isRight ? 'ml-auto pl-24' : 'mr-auto pr-24'}`}>
-                <div className="bg-gray-900/80 rounded-2xl shadow-2xl p-8 border border-gray-700/50 backdrop-blur-sm hover:bg-gray-800/80 transition-all duration-300 hover:shadow-green-500/20">
+              <div className={`w-5/12 ${isRight ? 'ml-auto pl-20' : 'mr-auto pr-20'}`}>
+                <div className="bg-gray-900/60 rounded-xl shadow-lg p-6 border border-gray-700/30 backdrop-blur-sm hover:bg-gray-800/60 transition-all duration-300">
                   {/* Action title */}
                   <h3 className="text-lg font-bold text-green-300 mb-3 leading-tight">
                     {step.action}
@@ -282,9 +283,9 @@ const CarePlanTimeline = ({ careData }) => {
 
       {/* Action Checklist */}
       {planData?.ActionChecklist && planData.ActionChecklist.length > 0 && (
-        <div className="mt-16 bg-gray-900/80 rounded-2xl shadow-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
-          <h2 className="text-xl font-bold text-green-300 mb-6 flex items-center">
-            <CheckCircle className="w-6 h-6 mr-3 text-green-400" />
+        <div className="mt-8 bg-gray-900/60 rounded-xl shadow-lg p-5 border border-gray-700/30 backdrop-blur-sm">
+          <h2 className="text-lg font-bold text-green-300 mb-4 flex items-center">
+            <CheckCircle className="w-5 h-5 mr-2 text-green-400" />
             Action Checklist
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -303,8 +304,8 @@ const CarePlanTimeline = ({ careData }) => {
 
       {/* Cost Estimate */}
       {planData?.EstimatedTotalCost && (
-        <div className="mt-8 bg-gray-900/80 rounded-xl p-4 border border-gray-700/50">
-          <h2 className="text-lg font-bold text-green-300 mb-3">Estimated Cost</h2>
+        <div className="mt-6 bg-gray-900/60 rounded-xl p-4 border border-gray-700/30">
+          <h2 className="text-base font-bold text-green-300 mb-3">Estimated Cost</h2>
           <div className="flex justify-between text-center text-sm">
             <div>
               <div className="text-green-400 font-semibold">Low</div>
@@ -324,8 +325,8 @@ const CarePlanTimeline = ({ careData }) => {
 
       {/* Assumptions */}
       {planData?.Assumptions && planData.Assumptions.length > 0 && (
-        <div className="mt-8 bg-gray-800/60 rounded-xl p-4 border border-gray-600/40">
-          <h2 className="text-lg font-bold text-green-300 mb-4">Assumptions</h2>
+        <div className="mt-6 bg-gray-800/50 rounded-xl p-4 border border-gray-600/30">
+          <h2 className="text-base font-bold text-green-300 mb-3">Assumptions</h2>
           <div className="text-gray-300 leading-relaxed text-sm">
             {planData.Assumptions.map((assumption, index) => (
               <p key={index} className="mb-2 flex items-start">
