@@ -51,6 +51,11 @@ public class PublicController {
         return searchService.getDoctors("Find the best cardiologist in Netrakona");
     }
 
+    @GetMapping("/health")
+    public String healthCheck(){
+        return "Service is up and running.";
+    }
+
     @GetMapping("/search")
     public String searchEndpoint(
             @RequestParam(required = false) String cityName,

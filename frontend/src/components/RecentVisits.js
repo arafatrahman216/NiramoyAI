@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Image } from 'lucide-react';
+import { vi } from 'date-fns/locale';
 
 const RecentVisits = ({ 
   visits = [], 
@@ -28,7 +29,9 @@ const RecentVisits = ({
   };
 
   const onclick = (userid) => {
-    navigate('/patient/profile?id=' + userid);
+    if (viewerType === "doctor" && userid) {
+      navigate('/patient/profile?id=' + userid);
+    }
   };
 
   const formatDate = (dateString) => {
