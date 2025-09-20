@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [recentVisits, setRecentVisits] = useState(fallbackDashboardVisits);
   const [healthProfile, setHealthProfile] = useState(fallbackDashboardProfile);
   const [medications, setMedications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const profile = user || fallbackDashboardUser;
 
@@ -33,55 +34,56 @@ const Dashboard = () => {
     document.title = "Dashboard - NiramoyAI";
 
     const dashboardStats = async () =>{
-
-    try
-    {
-        const response= await axios.get(`${API_BASE_URL}/user/dashboard`, {
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-      const fetchedProfile = response.data.healthProfile;
-      console.log("Fetched profile data:", fetchedProfile);
-        const bloodPressure = fetchedProfile.bloodPressure;
-        const systolicPressure = bloodPressure.split('/')[0];
-        const diastolicPressure = bloodPressure.split('/')[1];
-        console.log(systolicPressure, diastolicPressure);
-      const profile = {
-        allergies: fetchedProfile.allergies,
-        bloodGroup:fetchedProfile.bloodType,
-        height: fetchedProfile.height,
-        weight: fetchedProfile.weight,
-        chronicDiseases: fetchedProfile.chronicDiseases,
-        systolic: systolicPressure,
-        diastolic: diastolicPressure,
-        heartRate: fetchedProfile.heartRate,
-        majorEvents : fetchedProfile.majorEvents,
-        majorHealthEvents: fetchedProfile.majorHealthEvents,
-        lifestyle: fetchedProfile.lifestyle,
+      setLoading(true);
+      
+      try
+      {
+          const response= await axios.get(`${API_BASE_URL}/user/dashboard`, {
+          headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+          });
+        const fetchedProfile = response.data.healthProfile;
+        console.log("Fetched profile data:", fetchedProfile);
+          const bloodPressure = fetchedProfile.bloodPressure;
+          const systolicPressure = bloodPressure.split('/')[0];
+          const diastolicPressure = bloodPressure.split('/')[1];
+          console.log(systolicPressure, diastolicPressure);
+        const profile = {
+          allergies: fetchedProfile.allergies,
+          bloodGroup:fetchedProfile.bloodType,
+          height: fetchedProfile.height,
+          weight: fetchedProfile.weight,
+          chronicDiseases: fetchedProfile.chronicDiseases,
+          systolic: systolicPressure,
+          diastolic: diastolicPressure,
+          heartRate: fetchedProfile.heartRate,
+          majorEvents : fetchedProfile.majorEvents,
+          majorHealthEvents: fetchedProfile.majorHealthEvents,
+          lifestyle: fetchedProfile.lifestyle,
+        }
+        setHealthProfile(profile);
+        setHealthVitals(response.data.vitals);
+        setMedications(response.data.medications || []);
+        setRecentVisits(response.data.recentVisits || fallbackDashboardVisits);
+        console.log("Fetched profile:", response.data.medications);
+        }
+      catch(error){
+          console.error("Error fetching dashboard stats:", error);
       }
-      setHealthProfile(profile);
-      setHealthVitals(response.data.vitals);
-      setMedications(response.data.medications || []);
-      setRecentVisits(response.data.recentVisits || fallbackDashboardVisits);
-      console.log("Fetched profile:", response.data.medications);
-      }
-    catch(error){
-        console.error("Error fetching dashboard stats:", error);
-        return null;
-    }
 
-    try{
-      const response = await userInfoAPI.getRecentVisits();
-      setRecentVisits(response.data.recentVisits || fallbackDashboardVisits);
-      console.log("Fetched recent visits:", response.data);
+      try{
+        const response = await userInfoAPI.getRecentVisits();
+        setRecentVisits(response.data.recentVisits || fallbackDashboardVisits);
+        console.log("Fetched recent visits:", response.data);
+      }
+      catch(error){
+          console.error("Error fetching recent visits:", error);
+      }
+      
+      setLoading(false);
     }
-    catch(error){
-        console.error("Error fetching recent visits:", error);
-        return null;
-    }
-  }
-  dashboardStats();
+    dashboardStats();
 
   }, []);
 
@@ -128,9 +130,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="min-h-screen bg-zinc-900 text-zinc-100">
       {/* Navbar */}
-      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+      <nav className="bg-zinc-800 border-b border-zinc-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -142,7 +144,7 @@ const Dashboard = () => {
             {/* Navigation Links */}
             <div className="flex items-center space-x-6">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/')}
                 className="flex items-center px-3 py-2 text-emerald-400 hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <Home className="w-4 h-4 mr-2" />
@@ -150,7 +152,7 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={() => navigate('/profile')}
-                className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                className="flex items-center px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
               >
                 <User className="w-4 h-4 mr-2" />
                 Profile
@@ -168,27 +170,37 @@ const Dashboard = () => {
       </nav>
 
       <div className="p-6">
-      {/* Header */}
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
-        <button
-          onClick={() => navigate("/healthlog")}
-          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
-        >
-          + Add Health Log
-        </button>
-      </header>
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-400 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-white mb-2">Loading Dashboard</h2>
+            <p className="text-zinc-400">Please wait while we fetch your health data...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Header */}
+          <header className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
+            <button
+              onClick={() => navigate("/healthlog")}
+              className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg font-medium"
+            >
+              + Add Health Log
+            </button>
+          </header>
 
       <div className="space-y-6">
         {/* User Info - Elegant & Classy Design */}
-       <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-700 relative overflow-hidden">
+       <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl p-6 shadow-2xl border border-zinc-700 relative overflow-hidden">
   {/* Decorative background element */}
-  <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-emerald-500/10 to-blue-500/10 rounded-full blur-2xl"></div>
+  <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 rounded-full blur-2xl"></div>
   
   <div className="relative z-10">
     {/* Profile Avatar */}
     <div className="flex items-center mb-4">
-      <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center text-xl font-bold text-white shadow-lg">
+      <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center text-xl font-bold text-white shadow-lg">
         {profile.name?.charAt(0)}
       </div>
       <div className="ml-4">
@@ -203,22 +215,22 @@ const Dashboard = () => {
   {/* Email */}
   <div className="flex items-center space-x-2"
   style={{paddingRight: '40px'}}>
-    <div className="w-7 h-7 bg-gray-700 rounded-lg flex items-center justify-center">
+    <div className="w-7 h-7 bg-zinc-700 rounded-lg flex items-center justify-center">
       <span className="text-xs">📧</span>
     </div>
     <div>
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Email</p>
+      <p className="text-[10px] text-zinc-400 uppercase tracking-wide">Email</p>
       <p className="text-sm font-medium text-white">{profile.email}</p>
     </div>
   </div>
 
   {/* Phone */}
   <div className="flex items-center space-x-2">
-    <div className="w-7 h-7 bg-gray-700 rounded-lg flex items-center justify-center">
+    <div className="w-7 h-7 bg-zinc-700 rounded-lg flex items-center justify-center">
       <span className="text-xs">📱</span>
     </div>
     <div>
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Phone</p>
+      <p className="text-[10px] text-zinc-400 uppercase tracking-wide">Phone</p>
       <p className="text-sm font-medium text-white">{profile.phoneNumber}</p>
     </div>
   </div>
@@ -227,12 +239,12 @@ const Dashboard = () => {
 </div>
 
     {/* Status & Role */}
-    <div className="flex items-center justify-between mt-5 pt-3 border-t border-gray-700">
+    <div className="flex items-center justify-between mt-5 pt-3 border-t border-zinc-700">
       <div className="flex items-center space-x-2">
-        <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
-        <span className="text-green-400 text-sm font-medium">{profile.status}</span>
+        <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></div>
+        <span className="text-emerald-400 text-sm font-medium">{profile.status}</span>
       </div>
-      <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-full shadow-md">
+      <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full shadow-md">
         {profile.role}
       </span>
     </div>
@@ -243,7 +255,7 @@ const Dashboard = () => {
         {/* Health Profile and Medication Timeline - Side by Side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Health Profile - Static Information Cards */}
-          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
+          <div className="bg-zinc-800 rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Health Profile</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {Object.entries(healthProfile).map(([key, value]) => {
@@ -286,7 +298,7 @@ const Dashboard = () => {
         </div>
 
         {/* Current Vitals - Speedometer Cards */}
-        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
+        <div className="bg-zinc-800 rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-semibold mb-4">Current Vitals</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {Object.entries(healthProfile).map(([key, value]) => {
@@ -380,9 +392,15 @@ const Dashboard = () => {
           showPrescriptionImage={true}
         />
       </div>
+      </>
+      )}
       </div>
     </div>
   );
 };
 
 export default Dashboard;
+
+
+/*
+*/

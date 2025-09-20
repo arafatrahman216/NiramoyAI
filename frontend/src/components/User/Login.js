@@ -22,7 +22,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, logout, loading, error } = useAuth();
+  const { login, logout, loading, loginLoading, error } = useAuth();
   const navigate = useNavigate();
 
   // Dark theme styles for form inputs
@@ -80,7 +80,7 @@ const Login = () => {
           navigate('/doctor/dashboard', { replace: true });
           return;
         }
-        navigate('/dashboard', { replace: true });
+        navigate('/', { replace: true });
         return;
         
         // redirectBasedOnRole(userData, navigate);
@@ -136,7 +136,7 @@ const Login = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 margin="normal"
                 required
-                disabled={loading}
+                disabled={loginLoading}
                 sx={darkTextFieldStyle}
                 InputProps={{
                   startAdornment: (
@@ -155,7 +155,7 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 margin="normal"
                 required
-                disabled={loading}
+                disabled={loginLoading}
                 sx={darkTextFieldStyle}
                 InputProps={{
                   startAdornment: (
@@ -168,7 +168,7 @@ const Login = () => {
                       <IconButton
                         onClick={togglePasswordVisibility}
                         edge="end"
-                        disabled={loading}
+                        disabled={loginLoading}
                         sx={{ color: '#a1a1aa' }}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -183,7 +183,7 @@ const Login = () => {
                 fullWidth
                 variant="contained"
                 size="large"
-                disabled={loading || !username.trim() || !password.trim()}
+                disabled={loginLoading || !username.trim() || !password.trim()}
                 sx={{ 
                   mt: 3, 
                   mb: 2, 
@@ -204,7 +204,7 @@ const Login = () => {
                   transition: "all 0.2s ease-in-out"
                 }}
               >
-                {loading ? (
+                {loginLoading ? (
                   <CircularProgress size={24} color="inherit" />
                 ) : (
                   'Sign In'

@@ -406,52 +406,54 @@ const DiagnosisInterface = () => {
   const [chatSessions, setChatSessions] = useState([]);
   const [chatSessionsLoading, setChatSessionsLoading] = useState(true);
 
-  // FETCH RECENT VISITS ON COMPONENT MOUNT
-  useEffect(() => {
-    const fetchRecentVisits = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.log('No token found, skipping visit fetch');
-          setVisitsLoading(false);
-          return;
-        }
-        
-        const response = await userInfoAPI.getRecentVisits();
-        
-        if (response.data.success) {
-          console.log('Recent visits fetched:', response.data.recentVisits);
-          setRecentVisits(response.data.recentVisits);
-        }
-      } catch (error) {
-        console.error('Failed to fetch recent visits:', error);
-      } finally {
+  // FETCH RECENT VISITS FUNCTION
+  const fetchRecentVisits = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('No token found, skipping visit fetch');
         setVisitsLoading(false);
+        return;
       }
-    };
-    
-    const fetchChatSessions = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.log('No token found, skipping chat sessions fetch');
-          setChatSessionsLoading(false);
-          return;
-        }
-        
-        const response = await chatbotAPI.getChatSessions();
-        
-        if (response.data && response.data.chatSessions) {
-          console.log('Chat sessions fetched:', response.data.chatSessions);
-          setChatSessions(response.data.chatSessions);
-        }
-      } catch (error) {
-        console.error('Failed to fetch chat sessions:', error);
-      } finally {
+      
+      const response = await userInfoAPI.getRecentVisits();
+      
+      if (response.data.success) {
+        console.log('Recent visits fetched:', response.data.recentVisits);
+        setRecentVisits(response.data.recentVisits);
+      }
+    } catch (error) {
+      console.error('Failed to fetch recent visits:', error);
+    } finally {
+      setVisitsLoading(false);
+    }
+  };
+  
+  // FETCH CHAT SESSIONS FUNCTION
+  const fetchChatSessions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('No token found, skipping chat sessions fetch');
         setChatSessionsLoading(false);
+        return;
       }
-    };
-    
+      
+      const response = await chatbotAPI.getChatSessions();
+      
+      if (response.data && response.data.chatSessions) {
+        console.log('Chat sessions fetched:', response.data.chatSessions);
+        setChatSessions(response.data.chatSessions);
+      }
+    } catch (error) {
+      console.error('Failed to fetch chat sessions:', error);
+    } finally {
+      setChatSessionsLoading(false);
+    }
+  };
+
+  // FETCH DATA ON COMPONENT MOUNT
+  useEffect(() => {
     fetchRecentVisits();
     fetchChatSessions();
   }, []);
@@ -637,10 +639,15 @@ const DiagnosisInterface = () => {
   // HANDLE NEW CHAT CREATION
   const handleNewChat = async () => {
     try {
-      // Import chatbotAPI dynamically
-      const { chatbotAPI } = await import('../../services/api');
-      
       console.log('Starting new chat...');
+      
+      // Check if user is authenticated
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in to start a new chat.');
+        return;
+      }
+      
       const response = await chatbotAPI.startConversation();
       const newChatId = response.data.conversationId || response.data.chatId;
       
@@ -648,13 +655,23 @@ const DiagnosisInterface = () => {
         // Set the new chat as selected
         setSelectedChatId(newChatId);
         
+        // Initialize empty chat data
+        setSelectedChatData({ messages: [] });
+        
         // Clear any existing query
         setQuery('');
         
+        // Refresh chat sessions to show the new chat in the sidebar
+        await fetchChatSessions();
+        
         console.log('New chat created and selected:', newChatId);
+      } else {
+        console.error('No chat ID received from API');
+        alert('Failed to create new chat. Please try again.');
       }
     } catch (error) {
       console.error('Error creating new chat:', error);
+      alert('Failed to create new chat. Please check your connection and try again.');
     }
   };
 

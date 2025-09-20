@@ -15,7 +15,8 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Start with loading = true
+  const [loading, setLoading] = useState(true); // Start with loading = true for initial auth check
+  const [loginLoading, setLoginLoading] = useState(false); // Separate loading state for login
   const [error, setError] = useState(null);
 
   // Configure axios defaults and check if user is already logged in when the app starts
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (username, password) => {
-    setLoading(true);
+    setLoginLoading(true);
     setError(null);
     
     try {
@@ -76,7 +77,7 @@ export const AuthProvider = ({ children }) => {
       setError(errorMessage);
       return false;
     } finally {
-      setLoading(false);
+      setLoginLoading(false);
     }
   };
 
@@ -210,6 +211,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     loading,
+    loginLoading,
     error,
   };
 

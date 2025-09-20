@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // ==============================================
 // SIDEBAR COMPONENT
@@ -7,10 +8,14 @@ import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
 // Contains: Logo, New Chat, Navigation, Sign In
 // Edit handleNavigation() to add routing/page changes
 const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSidebarOpen, onNewChat }) => {
-  // TODO: Add navigation logic here
+  const navigate = useNavigate();
+  
+  // Navigation logic using React Router
   const handleNavigation = (section) => {
     console.log(`Navigate to: ${section}`);
-    // Add your routing logic here (React Router, Next.js router, etc.)
+    if (section === 'home') {
+      navigate('/');
+    }
   };
 
   // Handle visits/appointments sidebar
@@ -31,16 +36,19 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
 
   // NEW CHAT FUNCTIONALITY
   const handleNewChat = () => {
-    console.log('Start new chat from sidebar');
+    console.log('New chat button clicked in sidebar');
     if (onNewChat) {
+      console.log('Calling parent onNewChat function');
       onNewChat();
+    } else {
+      console.warn('onNewChat prop not provided to Sidebar');
     }
   };
 
-  // TODO: Add sign in functionality
+  // Navigate to profile/dashboard
   const handleSignIn = () => {
-    console.log('Sign in clicked');
-    // Add authentication logic here
+    console.log('Profile clicked');
+    navigate('/dashboard');
   };
 
   return (
@@ -123,12 +131,12 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
         </div>
       </div>
       
-      {/* SIGN IN BUTTON */}
-      {/* Edit handleSignIn() to add authentication */}
+      {/* PROFILE BUTTON */}
+      {/* Navigate to dashboard/profile */}
       <button 
         onClick={handleSignIn}
         className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-        title="Sign In"
+        title="Profile"
       >
         <User size={20} className="text-emerald-400 group-hover:text-emerald-300" />
       </button>
