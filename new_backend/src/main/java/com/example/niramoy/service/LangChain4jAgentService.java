@@ -32,25 +32,14 @@ public class LangChain4jAgentService {
                 .build();
     }
 
-    /**
-     * AI Assistant interface for LangChain4j
-     */
     interface Assistant {
         String chat(String message);
     }
 
-    /**
-     * Process a query using the AI agent with access to search tools
-     * Equivalent to agent.run() in Python LangChain
-     */
     public String processQuery(String query) {
-        return assistant.chat(query);
+        return assistant.chat("you have a search tool named searchWeb. Use that to answer." + query);
     }
 
-    /**
-     * Search tool for the AI agent
-     * This will be automatically available to the AI when needed
-     */
     @Tool("Search the web for current information on any topic")
     public String searchWeb(String query) {
         try {
@@ -73,22 +62,6 @@ public class LangChain4jAgentService {
         }
     }
 
-    /**
-     * Medical search tool specifically for health-related queries
-     */
-    @Tool("Search for medical and health information")
-    public String searchMedical(String medicalQuery) {
-        try {
-            String enhancedQuery = "medical health " + medicalQuery + " site:mayoclinic.org OR site:webmd.com OR site:nih.gov";
-            return searchWeb(enhancedQuery);
-        } catch (Exception e) {
-            return "Medical search failed: " + e.getMessage();
-        }
-    }
-
-    /**
-     * Check if the agent service is fully configured
-     */
     public boolean isConfigured() {
         return chatModel != null && serpApiService.isConfigured();
     }

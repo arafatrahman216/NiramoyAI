@@ -29,8 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.example.niramoy.utils.JsonParser.objectMapper;
@@ -208,22 +206,25 @@ public class UserController {
             }
             
             Long chatId = Long.parseLong(chatIdStr);
+            Long userId = user.getId();
             
             // Process message and get AI reply (synchronous for now, but DB saves are async internally)
-            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message, mode);
+            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message, mode, userId);
 
             response.put("success", true);
             response.put("message", "Message sent and processed successfully");
             response.put("userMessage", Map.of(
                 "content", message,
                 "isAgent", false,
-                "chatId", chatId
+                "chatId", chatId,
+                "isPlan", false
             ));
             response.put("aiResponse", Map.of(
                 "messageId", aiReply.getMessageId(),
                 "content", aiReply.getContent(),
                 "isAgent", aiReply.isAgent(),
-                "chatId", chatId
+                "chatId", chatId,
+                "isPlan", aiReply.getIsPlan()
             ));
             
             return ResponseEntity.ok(response);
@@ -525,8 +526,8 @@ public class UserController {
         List<VisitDTO> recentVisits = visitService.getRecentVisits(user, 10);
         response.put("success", true);
         response.put("recentVisits", recentVisits);
+
         return ResponseEntity.ok(response);
-        
     }
 
     @PostMapping(value = "/tts", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -545,5 +546,14 @@ public class UserController {
 
     }
 
+
+    @GetMapping("/HELLO")
+    public ResponseEntity<String> hello(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication token is null. Please login to upload profile image");
+        }
+        return ResponseEntity.ok("Hello, Niramoy User!");
+    }
 
 }

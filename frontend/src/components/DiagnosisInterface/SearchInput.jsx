@@ -7,7 +7,7 @@ import { chatbotAPI } from '../../services/api';
 // ==============================================
 // Contains: Input field and all action buttons
 // Edit individual button handlers to add functionality
-const SearchInput = forwardRef(({ query, setQuery, onSearch, placeholder = "Ask anything..." }, ref) => {
+const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...", disabled = false }) => {
   const [activeMode, setActiveMode] = useState('explain');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -168,70 +168,34 @@ const SearchInput = forwardRef(({ query, setQuery, onSearch, placeholder = "Ask 
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !disabled) {
       handleModeAction(activeMode);
       onSearch(activeMode, attachment);
     }
   };
 
   const handleSearchWithMode = () => {
-    handleModeAction(activeMode);
-    onSearch(activeMode, attachment);
+    if (!disabled) {
+      handleModeAction(activeMode);
+      onSearch(activeMode);
+    }
   };
 
   return (
     <div className="w-full max-w-3xl">
-      {/* Hidden file input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileSelect}
-        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
-        className="hidden"
-      />
-      
-      {/* Attachment preview */}
-      {attachment && (
-        <div className="mb-3 p-3 bg-zinc-800 border border-zinc-700 rounded-lg flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-zinc-700 rounded flex items-center justify-center">
-              {attachment.type.startsWith('image/') ? (
-                <span className="text-xs text-zinc-300">IMG</span>
-              ) : (
-                <span className="text-xs text-zinc-300">PDF</span>
-              )}
-            </div>
-            <div>
-              <p className="text-sm text-zinc-200 font-medium">{attachment.name}</p>
-              <p className="text-xs text-zinc-500">
-                {(attachment.size / 1024 / 1024).toFixed(1)} MB
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={removeAttachment}
-            className="p-1 hover:bg-zinc-700 rounded text-zinc-400 hover:text-zinc-200"
-            title="Remove attachment"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
-      
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600">
+      <div className={`bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
         {/* MAIN INPUT FIELD */}
         {/* Edit placeholder text, styling here */}
         <input
           type="text"
-          placeholder={`Ask anything in ${activeMode} mode...`}
+          placeholder={disabled ? "AI is processing..." : `Ask anything in ${activeMode} mode...`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyPress={handleKeyPress}
           onFocus={handleFocus}
           ref={textBoxRef}
-          className="w-full bg-transparent text-white placeholder-zinc-500 outline-none text-lg font-light"
+          disabled={disabled}
+          className="w-full bg-transparent text-white placeholder-zinc-500 outline-none text-lg font-light disabled:cursor-not-allowed"
         />
         
         {/* ACTION BUTTONS ROW */}
@@ -344,11 +308,15 @@ const SearchInput = forwardRef(({ query, setQuery, onSearch, placeholder = "Ask 
             {/* This button calls the main search function with mode context */}
             <button 
               onClick={handleSearchWithMode}
-              disabled={!query.trim()}
+              disabled={!query.trim() || disabled}
               className="bg-emerald-500 p-2 rounded-lg hover:bg-emerald-600 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors group"
-              title={`Search in ${activeMode} mode`}
+              title={disabled ? "Processing..." : `Search in ${activeMode} mode`}
             >
-              <ArrowUp size={18} className="text-white group-disabled:text-zinc-500" />
+              {disabled ? (
+                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+              ) : (
+                <ArrowUp size={18} className="text-white group-disabled:text-zinc-500" />
+              )}
             </button>
           </div>
         </div>

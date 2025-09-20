@@ -1,35 +1,13 @@
-
-
-
-
-
-
 import React, { useMemo } from 'react';
 
-const VisitGraph = () => {
-  // ------------------------------
-  // Sample visit data
-  // ------------------------------
-  const visits = [
-    { "visit_id": 1, "visit_time": "2025-09-01T09:00:00Z", "doctor_id": 101 },
-    { "visit_id": 2, "visit_time": "2025-09-01T11:30:00Z", "doctor_id": 102 },
-    { "visit_id": 3, "visit_time": "2025-09-01T15:15:00Z", "doctor_id": 103 },
-    { "visit_id": 4, "visit_time": "2025-09-02T08:45:00Z", "doctor_id": 101 },
-    { "visit_id": 5, "visit_time": "2025-09-02T13:20:00Z", "doctor_id": 104 },
-    { "visit_id": 6, "visit_time": "2025-09-02T17:10:00Z", "doctor_id": 102 },
-    { "visit_id": 7, "visit_time": "2025-09-03T09:30:00Z", "doctor_id": 105 },
-    // { "visit_id": 8, "visit_time": "2025-09-03T14:00:00Z", "doctor_id": 106 },
-    { "visit_id": 9, "visit_time": "2025-09-04T10:15:00Z", "doctor_id": 103 },
-    { "visit_id": 10, "visit_time": "2025-09-04T16:40:00Z", "doctor_id": 104 }
-  ];
-
+const VisitGraph = ({ visits = [] }) => {
   // ------------------------------
   // Colors for each doctor/track
   // ------------------------------
   const colors = [
   "#4ADE80", // bright green
   "#A7F3D0", // mint
-  "#FACC15", // yellow
+  "#FACC95", // yellow
   "#60A5FA", // blue
   "#F472B6", // pink
   "#F87171", // red
@@ -39,13 +17,19 @@ const VisitGraph = () => {
   // Process visits to assign tracks, colors, and branch connections
   // ------------------------------
   const graphData = useMemo(() => {
+    // Handle empty visits case inside useMemo
+    if (!visits || visits.length === 0) {
+      return { processedVisits: [], totalTracks: 0, branchConnections: [] };
+    }
     const doctorTracks = new Map(); // track index per doctor
     const processedVisits = [];     // visits with track info
     const branchConnections = [];   // connections between new tracks
     let trackCounter = 0;
 
     visits.forEach((visit, index) => {
-      if (!doctorTracks.has(visit.doctor_id)) {
+      // Handle both old format (doctor_id) and new format (doctorId)
+      const doctorId = visit.doctorId || visit.doctor_id;
+      if (!doctorTracks.has(doctorId)) {
         // New doctor → assign a track
         if (trackCounter > 0) {
           // Connect previous track to this new track
@@ -59,21 +43,23 @@ const VisitGraph = () => {
           });
         }
 
-        doctorTracks.set(visit.doctor_id, {
+        doctorTracks.set(doctorId, {
           trackIndex: trackCounter++,
           color: colors[(trackCounter - 1) % colors.length],
           lastVisitIndex: index
         });
       } else {
         // Existing doctor → update last visit index
-        doctorTracks.get(visit.doctor_id).lastVisitIndex = index;
+        doctorTracks.get(doctorId).lastVisitIndex = index;
       }
 
       // Add track info to the visit
       processedVisits.push({
         ...visit,
-        trackIndex: doctorTracks.get(visit.doctor_id).trackIndex,
-        color: doctorTracks.get(visit.doctor_id).color,
+        trackIndex: doctorTracks.get(doctorId).trackIndex,
+        color: doctorTracks.get(doctorId).color,
+        doctorId, // Normalize the doctor ID field
+        visitId: visit.visitId || visit.visit_id, // Normalize the visit ID field
         index
       });
     });
@@ -94,10 +80,19 @@ const VisitGraph = () => {
   const svgWidth = graphData.totalTracks * TRACK_WIDTH + GRAPH_PADDING * 2;
   const svgHeight = visits.length * ROW_HEIGHT + GRAPH_PADDING * 2;
 
+  // Handle empty visits case
+  if (!visits || visits.length === 0) {
+    return (
+      <div className="text-center text-zinc-400 py-8">
+        <p>No visits data available</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full bg-zinc-900 overflow-auto">
-      <div className="p-2">
-        <div className="bg-zinc-900 rounded-lg p-3 overflow-auto border border-zinc-800">
+    <div className="h-full bg-zinc-900">
+      <div>
+        <div className="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
           <svg width={svgWidth} height={svgHeight} className="bg-zinc-900">
           <defs>
             <marker
@@ -161,7 +156,7 @@ const VisitGraph = () => {
               OFFSET applied: startY and endY are raised by START_OFFSET
           ------------------------------ */}
           {graphData.processedVisits.map((visit, index) => {
-            const nextVisit = graphData.processedVisits.slice(index + 1).find(v => v.doctor_id === visit.doctor_id);
+            const nextVisit = graphData.processedVisits.slice(index + 1).find(v => v.doctorId === visit.doctorId);
             if (nextVisit) {
               const startX = GRAPH_PADDING + visit.trackIndex * TRACK_WIDTH + TRACK_WIDTH/2;
               const startY = GRAPH_PADDING + index * ROW_HEIGHT - START_OFFSET;
@@ -173,7 +168,7 @@ const VisitGraph = () => {
 
               return (
                 <path
-                  key={`connection-${visit.visit_id}-${nextVisit.visit_id}`}
+                  key={`connection-${visit.visitId}-${nextVisit.visitId}`}
                   d={`M ${startX} ${startY} Q ${controlX} ${controlY}, ${endX} ${endY}`}
                   stroke={visit.color}
                   strokeWidth="2"
@@ -194,7 +189,7 @@ const VisitGraph = () => {
             const y = GRAPH_PADDING + index * ROW_HEIGHT;
 
             return (
-              <g key={visit.visit_id}>
+              <g key={visit.visitId}>
                 <circle
                   cx={x}
                   cy={y}
@@ -215,7 +210,7 @@ const VisitGraph = () => {
                   textAnchor="middle"
                   className="text-xs font-bold fill-zinc-200"
                 >
-                  {visit.visit_id}
+                  {visit.visitId}
                 </text>
               </g>
             );
@@ -229,13 +224,13 @@ const VisitGraph = () => {
         <div className="mt-3 bg-zinc-900 rounded-lg p-2 border border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-200 mb-2">Doctors</h3>
           <div className="flex flex-wrap gap-2">
-            {[...new Set(visits.map(v => v.doctor_id))].map((doctorId, index) => (
+            {[...new Map(visits.map(v => [v.doctorId || v.doctor_id, v.doctorName])).entries()].map(([doctorId, doctorName], index) => (
               <div key={doctorId} className="flex items-center gap-1">
                 <div 
                   className="w-3 h-3 rounded-full border border-zinc-700"
                   style={{ backgroundColor: colors[index % colors.length] }}
                 />
-                <span className="text-zinc-400 text-xs">Dr {doctorId}</span>
+                <span className="text-zinc-400 text-xs">Dr. {doctorName}</span>
               </div>
             ))}
           </div>
@@ -245,4 +240,6 @@ const VisitGraph = () => {
   );
 };
 
-export default VisitGraph;
+// Export as Timeline for better naming consistency
+const Timeline = VisitGraph;
+export default Timeline;

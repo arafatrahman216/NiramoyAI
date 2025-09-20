@@ -9,15 +9,23 @@ import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.VisitsRepository;
+import com.example.niramoy.service.AIServices.AIService;
+import com.example.niramoy.utils.JsonParser;
+
+import dev.langchain4j.model.input.PromptTemplate;
+
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.service.AIServices.AIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -28,6 +36,7 @@ public class VisitService {
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorProfileRepository doctorProfileRepository;
+    private final UserKGService userKGService;
 
     public UploadVisitReqDTO saveVisitData(
             Long userId,
@@ -37,8 +46,8 @@ public class VisitService {
             String symptoms,
             String prescription,
             String prescriptionFileUrl,
-            List<String> testReportFileUrls) {
-
+            List<String> testReportFileUrls)
+    {
         try {
             log.info("Saving visit data for user ID: {}", userId);
 
@@ -48,14 +57,17 @@ public class VisitService {
 
             // Parse appointment date (HTML date input sends yyyy-MM-dd format)
             LocalDate parsedAppointmentDate = LocalDate.parse(appointmentDate);
+
+            //Fetching doctor
             Doctor doctor = null ;
-            Long fetchedDoctorId = null;
+            Long fetchedDoctorId = -1L;
             try {
                 fetchedDoctorId = Long.parseLong(doctorId);
                 doctor = doctorRepository.findByDoctorId(fetchedDoctorId).get();
             } catch (Exception e) {
                 log.warn("Doctor with ID {} not found. Proceeding without linking to a doctor entity.", fetchedDoctorId);
             }
+
             // Create and save visit entity
             Visits visit = Visits.builder()
                     .appointmentDate(parsedAppointmentDate)
@@ -68,11 +80,17 @@ public class VisitService {
                     .user(user)
                     .build();
 
+        
             Visits savedVisit = visitsRepository.save(visit);
 
-
-
+            // Extrct the entity and relationships and save it to KG
+            Boolean kgSavedStatus = userKGService.saveVisitDetails(savedVisit, userId, fetchedDoctorId);
+            if(!kgSavedStatus){
+                log.error("Failed to save visit data to Knowledge Graph for visit ID: {}", savedVisit.getVisitId());
+                throw new RuntimeException("Failed to save visit data to Knowledge Graph");
+            }
             log.info("Visit saved successfully with ID: {}", savedVisit.getVisitId());
+
 
             // Return DTO with saved data for confirmation
             return UploadVisitReqDTO.builder()
@@ -87,6 +105,7 @@ public class VisitService {
             throw new RuntimeException("Failed to save visit data: " + e.getMessage());
         }
     }
+
 
     public List<Visits> getAllVisitsByUser(Long userId) {
         return visitsRepository.findByUserIdOrderByAppointmentDateDesc(userId);

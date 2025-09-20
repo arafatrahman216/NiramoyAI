@@ -29,5 +29,7 @@ public class Messages {
 
     @Column(name = "attachment_link", nullable = true)
     private String attachmentLink;
-
+  
+    @Column(name = "is_plan", nullable = true)
+    private Boolean isPlan;    
 }

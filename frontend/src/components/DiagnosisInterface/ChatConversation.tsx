@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { chatbotAPI, ttsAPI } from '../../services/api';
+import CarePlanTimeline from './CarePlanTimeline';
 
 // ==============================================
 // CHAT CONVERSATION COMPONENT
@@ -12,12 +13,7 @@ interface Message {
   content: string;
   agent: boolean;
   timestamp?: string;
-  attachment?: {
-    name: string;
-    type: string;
-    size: number;
-    url?: string;
-  } | null;
+  isPlan?: boolean;
 }
 
 interface ChatConversationProps {
@@ -25,9 +21,11 @@ interface ChatConversationProps {
   onBack: () => void;
   chatData?: any;
   embedded?: boolean;
+  isProcessing?: boolean;
 }
 
-const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, embedded = false }) => {
+
+const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false, isProcessing = false }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
@@ -99,7 +97,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
     
     setLoading(true);
     
-    // Always fetch from API since chatData from sidebar doesn't contain messages
+
+
     try {
       console.log('Fetching messages for chat ID:', chatId);
       
@@ -115,7 +114,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
         messageId: msg.messageId,
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp,
+        isPlan: msg.isPlan === true
       }));
       
       console.log('Formatted Messages:', formattedMessages);
@@ -133,6 +133,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
 
   // Fetch conversation messages
   useEffect(() => {
+    console.log('ChatConversation: useEffect triggered - chatId:', chatId, 'chatData:', chatData);
     fetchMessages();
   }, [chatId]);
 
@@ -155,14 +156,20 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
     try {
       const response = await chatbotAPI.sendMessage(messageToSend, chatId as any);
       const botResponse = response.data;
+      // console.log('Full sendMessage API response:', response);
+      // console.log('Bot response from API:', botResponse);
 
-      // Add bot response to messages
+      // Add bot response to messages - extract from aiResponse object
+      const aiResponseData = botResponse.aiResponse || botResponse;
       const botMessage: Message = {
-        messageId: Date.now() + 1,
-        content: botResponse.content || botResponse.response || 'No response received',
-        agent: true
+
+        messageId: aiResponseData.messageId || Date.now() + 1,
+        content: aiResponseData.content || botResponse.message || botResponse.response || 'No response received',
+        agent: true,
+        isPlan: aiResponseData.isPlan === true
       };
 
+      // console.log('Created bot message:', botMessage);
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -301,6 +308,60 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
         alert('Unexpected error occurred. Please try again.');
       }
     }
+  // Parse care plan data from JSON content
+  const parseCarePlanData = (content: string) => {
+    console.log('=== PARSING CARE PLAN DATA ===');
+    console.log('Content type:', typeof content);
+    console.log('Content length:', content.length);
+    console.log('First 200 chars:', content.substring(0, 200));
+    
+    try {
+      // Try to parse as JSON first
+      const parsed = JSON.parse(content);
+      console.log('✅ JSON parsing successful');
+      console.log('Parsed object keys:', Object.keys(parsed));
+      
+      if (parsed.Plan) {
+        console.log('✅ Found Plan object');
+        console.log('Plan keys:', Object.keys(parsed.Plan));
+        console.log('PreTreatment_Phase exists:', !!parsed.Plan.PreTreatment_Phase);
+        console.log('Treatment_Phase exists:', !!parsed.Plan.Treatment_Phase);
+        console.log('PostTreatment_Phase exists:', !!parsed.Plan.PostTreatment_Phase);
+        
+        if (parsed.Plan.PreTreatment_Phase || parsed.Plan.Treatment_Phase || parsed.Plan.PostTreatment_Phase) {
+          console.log('✅ Valid care plan structure found, returning parsed data');
+          return parsed;
+        } else {
+          console.log('❌ Plan object exists but no treatment phases found');
+        }
+      } else {
+        console.log('❌ No Plan object found in parsed JSON');
+      }
+    } catch (error) {
+      console.log('❌ JSON parsing failed:', error instanceof Error ? error.message : String(error));
+      console.log('Trying regex match...');
+      
+      // If JSON parsing fails, look for JSON-like structure in the content
+      const jsonMatch = content.match(/\{[\s\S]*"Plan"[\s\S]*\}/);
+      if (jsonMatch) {
+        console.log('Found JSON pattern with regex');
+        try {
+          const extracted = JSON.parse(jsonMatch[0]);
+          console.log('✅ Regex extraction successful');
+          if (extracted.Plan && (extracted.Plan.PreTreatment_Phase || extracted.Plan.Treatment_Phase || extracted.Plan.PostTreatment_Phase)) {
+            console.log('✅ Valid care plan data from regex');
+            return extracted;
+          }
+        } catch (nestedError) {
+          console.log('❌ Nested parsing failed:', nestedError instanceof Error ? nestedError.message : String(nestedError));
+        }
+      } else {
+        console.log('❌ No JSON pattern found with regex');
+      }
+    }
+    
+    console.log('❌ No valid care plan data found, returning null');
+    return null;
   };
 
   if (embedded) {
@@ -355,51 +416,48 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
                         </p>
                       </div>
                     ) : (
-                      /* AI MESSAGE - Plain text with action buttons */
+                      /* AI MESSAGE - Check for care plan data or render plain text */
                       <div className="flex-1">
-                        {/* Attachment display for AI messages */}
-                        {message.attachment && (
-                          <div className="mb-3 p-3 bg-zinc-800 rounded-lg flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-zinc-700 rounded flex items-center justify-center">
-                              {message.attachment.type.startsWith('image/') ? (
-                                <span className="text-sm text-zinc-300">📷</span>
-                              ) : (
-                                <span className="text-sm text-zinc-300">📄</span>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-zinc-200 font-medium truncate">{message.attachment.name}</p>
-                              <p className="text-xs text-zinc-400">
-                                {(message.attachment.size / 1024 / 1024).toFixed(1)} MB
+                        {(() => {
+                          // Check if this is a plan message from backend
+                          console.log("Msg Plan : " + message.isPlan);
+                          if (message.isPlan) {
+                            console.log("=== RENDERING CARE PLAN ===");
+                            const carePlanData = parseCarePlanData(message.content);
+                            return (
+                              <div className="w-full">
+                                <CarePlanTimeline careData={carePlanData} />
+                              </div>
+                            );
+                          } else {
+                            // Render regular text message
+                            console.log("=== RENDERING REGULAR AI MESSAGE ===");
+                            return (
+                              <>
+                              <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
+                                {message.content}
                               </p>
-                            </div>
-                          </div>
-                        )}
-                        
-                        <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
-                          {message.content}
-                        </p>
-                        
-                        {/* ACTION BUTTONS FOR AI RESPONSES */}
-                        <div className="flex items-center space-x-2 mt-2">
-                          {/* Copy functionality with visual feedback */}
-                          <button
-                            onClick={() => handleCopyMessage(message.messageId, message.content)}
-                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-                            title={copiedMessageId === message.messageId ? "Copied!" : "Copy response"}
-                          >
-                            {copiedMessageId === message.messageId ? (
-                              /* Checkmark icon when copied */
-                              <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              /* Copy icon default state */
-                              <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            )}
-                          </button>
+                              
+                              {/* ACTION BUTTONS FOR AI RESPONSES */}
+                              <div className="flex items-center space-x-2 mt-2">
+                                {/* Copy functionality with visual feedback */}
+                                <button
+                                onClick={() => handleCopyMessage(message.messageId, message.content)}
+                                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+                                title={copiedMessageId === message.messageId ? "Copied!" : "Copy response"}
+                                >
+                                {copiedMessageId === message.messageId ? (
+                                  /* Checkmark icon when copied */
+                                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                ) : (
+                                  /* Copy icon default state */
+                                  <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      </svg>
+                                    )}
+                                  </button>
 
                           {/* Read aloud functionality with TTS */}
                           <button
@@ -424,6 +482,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
                             )}
                           </button>
                         </div>
+
                       </div>
                     )}
                   </div>
@@ -432,6 +491,27 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
             </div>
           ))
         )}
+        
+        {/* PROCESSING INDICATOR - Show when AI is generating response */}
+        {isProcessing && (
+          <div className="w-full py-6">
+            <div className="max-w-3xl mx-auto px-6">
+              <div className="flex justify-start">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 text-zinc-400">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                    <span className="text-sm">AI is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
     );
@@ -474,25 +554,41 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
             <p className="text-xs text-zinc-600 mt-1">Start the conversation by sending a message</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.messageId}
-              className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  !message.agent
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-zinc-800 text-zinc-100'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-                <p className="text-xs mt-1 opacity-70">
-                  {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
-                </p>
-              </div>
-            </div>
-          ))
+          messages.map((message) => {
+            // Check if this is a plan message from backend
+            if (message.agent && message.isPlan) {
+              // Parse the JSON content for care plan data
+              const carePlanData = parseCarePlanData(message.content);
+              
+              // Render care plan timeline in full width
+              return (
+                <div key={message.messageId} className="w-full">
+                  <CarePlanTimeline careData={carePlanData} />
+                </div>
+              );
+            } else {
+              // Render regular chat bubble
+              return (
+                <div
+                  key={message.messageId}
+                  className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      !message.agent
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-zinc-800 text-zinc-100'
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                    <p className="text-xs mt-1 opacity-70">
+                      {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
