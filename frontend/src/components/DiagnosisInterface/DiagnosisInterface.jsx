@@ -515,8 +515,10 @@ const DiagnosisInterface = () => {
             messageId: response.data.aiResponse.messageId,
             content: response.data.aiResponse.content,
             isAgent: true,
+            agent: true, // For ChatConversation compatibility
             timestamp: new Date().toISOString(),
-            isPlan: response.data.aiResponse.isPlan || false
+            isPlan: response.data.aiResponse.isPlan || false,
+            attachmentLink: response.data.aiResponse.imageLink || response.data.aiResponse.image_link || response.data.aiResponse.imageUrl || null
           };
           
           // Update local chat data with AI reply (user message should already be there)
@@ -529,8 +531,8 @@ const DiagnosisInterface = () => {
             return updatedChatData;
           });
           
-          // Force a refresh of the chat conversation component
-          window.dispatchEvent(new CustomEvent('chatRefresh'));
+          // Send AI message to ChatConversation component
+          window.dispatchEvent(new CustomEvent('addMessage', { detail: aiMessage }));
           
         } else {
           console.error('Failed to send message:');
