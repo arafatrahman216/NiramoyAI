@@ -12,6 +12,12 @@ interface Message {
   content: string;
   agent: boolean;
   timestamp?: string;
+  attachment?: {
+    name: string;
+    type: string;
+    size: number;
+    url?: string;
+  } | null;
 }
 
 interface ChatConversationProps {
@@ -326,6 +332,24 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
                     {!message.agent ? (
                       /* USER MESSAGE - Wrapped in leaner, rounder box */
                       <div className="bg-zinc-800 rounded-3xl px-3 py-2 inline-block">
+                        {/* Attachment display for user messages */}
+                        {message.attachment && (
+                          <div className="mb-2 p-2 bg-zinc-700 rounded-lg flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-zinc-600 rounded flex items-center justify-center">
+                              {message.attachment.type.startsWith('image/') ? (
+                                <span className="text-xs text-zinc-300">📷</span>
+                              ) : (
+                                <span className="text-xs text-zinc-300">📄</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-zinc-200 font-medium truncate">{message.attachment.name}</p>
+                              <p className="text-xs text-zinc-400">
+                                {(message.attachment.size / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap">
                           {message.content}
                         </p>
@@ -333,6 +357,25 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
                     ) : (
                       /* AI MESSAGE - Plain text with action buttons */
                       <div className="flex-1">
+                        {/* Attachment display for AI messages */}
+                        {message.attachment && (
+                          <div className="mb-3 p-3 bg-zinc-800 rounded-lg flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-zinc-700 rounded flex items-center justify-center">
+                              {message.attachment.type.startsWith('image/') ? (
+                                <span className="text-sm text-zinc-300">📷</span>
+                              ) : (
+                                <span className="text-sm text-zinc-300">📄</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-zinc-200 font-medium truncate">{message.attachment.name}</p>
+                              <p className="text-xs text-zinc-400">
+                                {(message.attachment.size / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        
                         <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
                           {message.content}
                         </p>

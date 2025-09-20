@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -33,11 +34,10 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ChatSessionRepository chatSessionRepository;
     private final AgentSelector agentSelector;
+    private final ImageService imageService;
 
 
-
-
-//    @Cacheable(value = "messages", key = "#chatId")
+    //    @Cacheable(value = "messages", key = "#chatId")
     public List<Messages> getMessagesByChatId(Long chatId) {
         ChatSessions chatSessions = chatSessionRepository.findChatSessionsByChatId(chatId);
         return chatSessions.getMessages().stream().sorted(Comparator.comparing(Messages::getMessageId)).toList();
@@ -131,6 +131,27 @@ public class MessageService {
             throw new RuntimeException("Failed to process message: " + e.getMessage());
         }
 
+    }
+
+    public Messages sendAttachmentAndGetReply(Long chatId, String message, MultipartFile attachment, String mode){
+        try {
+            // 1. Save user message to database
+
+            String url = imageService.uploadImage(attachment);
+
+            ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
+            Messages userMessage = Messages.builder()
+                    .content(message)
+                    .isAgent(false)
+                    .chatSession(chatSession).attachmentLink(url)
+                    .build();
+            messageRepository.save(userMessage);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+            return null;
     }
 
 

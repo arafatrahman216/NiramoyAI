@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe, MessageSquare, HelpCircle, UserCheck, Calendar, Square } from 'lucide-react';
 import { chatbotAPI } from '../../services/api';
 
@@ -7,12 +7,14 @@ import { chatbotAPI } from '../../services/api';
 // ==============================================
 // Contains: Input field and all action buttons
 // Edit individual button handlers to add functionality
-const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything..." }) => {
+const SearchInput = forwardRef(({ query, setQuery, onSearch, placeholder = "Ask anything..." }, ref) => {
   const [activeMode, setActiveMode] = useState('explain');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [attachment, setAttachment] = useState(null);
   const mediaRecorderRef = useRef(null);
   const textBoxRef = useRef(null);
+  const fileInputRef = useRef(null);
   const chunksRef = useRef([]);
 
   const modes = [
@@ -21,6 +23,16 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
     { id: 'consult', label: 'Consult', icon: UserCheck },
     { id: 'plan', label: 'Plan', icon: Calendar }
   ];
+
+  // Expose clearAttachment function to parent
+  useImperativeHandle(ref, () => ({
+    clearAttachment: () => {
+      setAttachment(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }));
   // TODO: Add focus functionality
   const handleFocus = () => {
     console.log('Search input focused');
@@ -30,7 +42,37 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
   // TODO: Add attachment functionality
   const handleAttachment = () => {
     console.log('Attachment clicked');
-    // Add file upload, image attachment logic here
+    fileInputRef.current?.click();
+  };
+
+  // Handle file selection
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type (PDF or images)
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        alert('Please select a PDF or image file (JPEG, PNG, GIF, WebP)');
+        return;
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      
+      setAttachment(file);
+      console.log('File selected:', file.name, file.type, file.size);
+    }
+  };
+
+  // Remove attachment
+  const removeAttachment = () => {
+    setAttachment(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   // TODO: Add focus mode functionality
@@ -128,17 +170,56 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleModeAction(activeMode);
-      onSearch(activeMode);
+      onSearch(activeMode, attachment);
     }
   };
 
   const handleSearchWithMode = () => {
     handleModeAction(activeMode);
-    onSearch(activeMode);
+    onSearch(activeMode, attachment);
   };
 
   return (
     <div className="w-full max-w-3xl">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+        className="hidden"
+      />
+      
+      {/* Attachment preview */}
+      {attachment && (
+        <div className="mb-3 p-3 bg-zinc-800 border border-zinc-700 rounded-lg flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-zinc-700 rounded flex items-center justify-center">
+              {attachment.type.startsWith('image/') ? (
+                <span className="text-xs text-zinc-300">IMG</span>
+              ) : (
+                <span className="text-xs text-zinc-300">PDF</span>
+              )}
+            </div>
+            <div>
+              <p className="text-sm text-zinc-200 font-medium">{attachment.name}</p>
+              <p className="text-xs text-zinc-500">
+                {(attachment.size / 1024 / 1024).toFixed(1)} MB
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={removeAttachment}
+            className="p-1 hover:bg-zinc-700 rounded text-zinc-400 hover:text-zinc-200"
+            title="Remove attachment"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
       <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600">
         {/* MAIN INPUT FIELD */}
         {/* Edit placeholder text, styling here */}
@@ -216,9 +297,14 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
             {/* Secondary Attachment Button */}
             <button 
               onClick={handleAttachment}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+              className={`p-2 rounded-lg transition-colors group ${
+                attachment 
+                  ? 'bg-emerald-500/20 text-emerald-400' 
+                  : 'hover:bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
+              }`}
+              title={attachment ? `Attached: ${attachment.name}` : "Attach file (PDF, Image)"}
             >
-              <Paperclip size={18} className="text-zinc-500 group-hover:text-zinc-300" />
+              <Paperclip size={18} className={attachment ? "text-emerald-400" : ""} />
             </button>
             
             {/* Voice Input Button with recording states */}
@@ -269,7 +355,7 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
       </div>
     </div>
   );
-};
+});
 
 export default SearchInput;
 

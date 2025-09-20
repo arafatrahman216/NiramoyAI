@@ -85,6 +85,22 @@ export const chatbotAPI = {
   sendMessage: (message, chatId, mode = 'explain') => 
     api.post('/user/chat', { message, chatId: chatId.toString(), mode }),
   
+  // Send message with attachment to AI chatbot
+  sendMessageWithAttachment: (message, chatId, attachment, mode = 'explain') => {
+    const formData = new FormData();
+    formData.append('message', message || '');
+    formData.append('chatId', chatId.toString());
+    formData.append('mode', mode);
+    if (attachment) {
+      formData.append('attachment', attachment);
+    }
+    return api.post('/user/chat-attachment', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  
   // Get conversation history
   getConversation: (conversationId) => 
     api.get(`/chatbot/conversation/${conversationId}`),
@@ -218,6 +234,7 @@ export const userInfoAPI = {
 export const ttsAPI = {
   generateSpeech: (text) => {
     console.log(text.length);
+    text = text.replace(/'/g, "\\'").replace(/"/g, '\\"');
     return api.post('/user/tts', text, {
       responseType: 'blob', // Important: tells axios to expect binary data
       headers: {

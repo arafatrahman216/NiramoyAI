@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Sidebar from './Sidebar';
 import SearchInput from './SearchInput';
 import MainLogo from './MainLogo';
@@ -18,6 +18,9 @@ const DiagnosisInterface = () => {
   // SEARCH STATE
   const [query, setQuery] = useState('');
   
+  // SEARCH INPUT REF for clearing attachments
+  const searchInputRef = useRef(null);
+  
   // VISITS SIDEBAR STATE
   const [isVisitsSidebarOpen, setIsVisitsSidebarOpen] = useState(false);
   
@@ -35,8 +38,8 @@ const DiagnosisInterface = () => {
 
   // MAIN SEARCH HANDLER
   // Handles search/message sending based on current context
-  const handleSearch = async (mode = 'explain') => {
-    if (!query.trim()) return;
+  const handleSearch = async (mode = 'explain', attachment = null) => {
+    if (!query.trim() && !attachment) return;
     
     // Check if user is authenticated
     const token = localStorage.getItem('token');
@@ -49,6 +52,7 @@ const DiagnosisInterface = () => {
     if (selectedChatId) {
       console.log('Sending message to current chat:', selectedChatId);
       console.log('Message content:', query);
+      console.log('Attachment:', attachment?.name);
       console.log('Auth token exists:', !!localStorage.getItem('token'));
       
       const messageToSend = query.trim();
@@ -59,7 +63,12 @@ const DiagnosisInterface = () => {
         messageId: Date.now(),
         content: messageToSend,
         isAgent: false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        attachment: attachment ? {
+          name: attachment.name,
+          type: attachment.type,
+          size: attachment.size
+        } : null
       };
       
       // Add user message immediately to chat
@@ -67,13 +76,20 @@ const DiagnosisInterface = () => {
       
       var aiMessage;
       try {
-        // Send message to current chat using chatbotAPI
-        const response = await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode);
+        // Choose API method based on whether we have attachment
+        const response = attachment 
+          ? await chatbotAPI.sendMessageWithAttachment(messageToSend, selectedChatId, attachment, mode)
+          : await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode);
         
         console.log('API Response:', response);
         
         if (response.data.success && response.data.aiResponse) {
           console.log('Message sent successfully:', response.data);
+          
+          // Clear attachment after successful send
+          if (attachment && searchInputRef.current) {
+            searchInputRef.current.clearAttachment();
+          }
           
           // Add AI response directly from API response
           aiMessage = {
@@ -277,6 +293,7 @@ const DiagnosisInterface = () => {
               <div className={`fixed bottom-0 ${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'left-96' : 'left-16'} right-0 py-4 bg-gradient-to-t from-zinc-950 via-zinc-950 to-zinc-950/80 backdrop-blur-sm z-40 transition-all duration-300`}>
                 <div className="max-w-4xl mx-auto px-6">
                   <SearchInput 
+                    ref={searchInputRef}
                     query={query} 
                     setQuery={setQuery} 
                     onSearch={handleSearch}
@@ -293,6 +310,7 @@ const DiagnosisInterface = () => {
 
               {/* SEARCH SECTION */}
               <SearchInput 
+                ref={searchInputRef}
                 query={query} 
                 setQuery={setQuery} 
                 onSearch={handleSearch} 
