@@ -1,5 +1,6 @@
 package com.example.niramoy.service;
 import com.example.niramoy.utils.MultipartInputStreamFileResource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -8,13 +9,17 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileOutputStream;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class ElevenLabService {
 
 @Value("${elevenlabs.api.key}")
 private String apiKey;
+private static final String TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/";
+
 
 private static final String ELEVENLABS_URL = "https://api.elevenlabs.io/v1/speech-to-text";
 
@@ -47,6 +52,33 @@ private static final String ELEVENLABS_URL = "https://api.elevenlabs.io/v1/speec
             return result != null ? result.get("text").toString() : null;
         } else {
             throw new RuntimeException("Failed transcription: " + response.getStatusCode());
+        }
+    }
+
+    public byte[] generateTextToSpeech(String text) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        String body = "{ \"text\": \"" + text + "\" }";
+        String voiceId = "21m00Tcm4TlvDq8ikWAM";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("xi-api-key", apiKey);
+
+        HttpEntity<String> entity = new HttpEntity<>(body, headers);
+
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                TTS_URL + voiceId,
+                HttpMethod.POST,
+                entity,
+                byte[].class
+        );
+        log.info("Response: {}", response);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            return response.getBody(); // return audio directly
+        } else {
+            throw new RuntimeException("Failed to generate speech: " + response.getStatusCode());
         }
     }
 

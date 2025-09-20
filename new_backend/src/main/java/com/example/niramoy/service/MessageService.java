@@ -18,8 +18,10 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -35,9 +37,10 @@ public class MessageService {
 
 
 
+//    @Cacheable(value = "messages", key = "#chatId")
     public List<Messages> getMessagesByChatId(Long chatId) {
         ChatSessions chatSessions = chatSessionRepository.findChatSessionsByChatId(chatId);
-        return chatSessions.getMessages();
+        return chatSessions.getMessages().stream().sorted(Comparator.comparing(Messages::getMessageId)).toList();
     }
 
     public boolean addMessageToChat(Long chatId, String message ) {

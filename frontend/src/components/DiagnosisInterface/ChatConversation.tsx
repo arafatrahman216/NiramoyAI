@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { chatbotAPI } from '../../services/api';
+import { chatbotAPI, ttsAPI } from '../../services/api';
 
 // ==============================================
 // CHAT CONVERSATION COMPONENT
@@ -21,12 +21,13 @@ interface ChatConversationProps {
   embedded?: boolean;
 }
 
-const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false }) => {
+const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, embedded = false }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null);
+  const [speakingMessageId, setSpeakingMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages update
@@ -176,6 +177,88 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     }
   };
 
+  // Handle text-to-speech functionality using backend API
+  const handleReadAloud = async (messageId: number, content: string) => {
+    console.log('Read aloud clicked for message:', messageId);
+    
+    // Stop any currently playing audio
+    if (speakingMessageId) {
+      const currentAudio = document.getElementById(`audio-${speakingMessageId}`) as HTMLAudioElement;
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.remove();
+      }
+      setSpeakingMessageId(null);
+      
+      // If clicking on the same message, just stop
+      if (speakingMessageId === messageId) {
+        console.log('Same message clicked, stopping');
+        return;
+      }
+    }
+
+    try {
+      console.log('Requesting TTS from backend for content:', content.substring(0, 50) + '...');
+      setSpeakingMessageId(messageId);
+      
+      // Call backend TTS API
+      const response = await ttsAPI.generateSpeech(content);
+      console.log('TTS response received:', response);
+      
+      // Create blob URL from the audio data
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Create and configure audio element
+      const audio = new Audio(audioUrl);
+      audio.id = `audio-${messageId}`;
+      
+      // Handle audio events
+      audio.onloadstart = () => {
+        console.log('Audio loading started');
+      };
+      
+      audio.oncanplay = () => {
+        console.log('Audio can start playing');
+      };
+      
+      audio.onplay = () => {
+        console.log('Audio playback started');
+      };
+      
+      audio.onended = () => {
+        console.log('Audio playback ended');
+        setSpeakingMessageId(null);
+        URL.revokeObjectURL(audioUrl); // Clean up blob URL
+      };
+      
+      audio.onerror = (error) => {
+        console.error('Audio playback error:', error);
+        setSpeakingMessageId(null);
+        URL.revokeObjectURL(audioUrl); // Clean up blob URL
+        alert('Error playing audio. Please try again.');
+      };
+      
+      // Start playing the audio
+      await audio.play();
+      
+    } catch (error: any) {
+      console.error('TTS error:', error);
+      setSpeakingMessageId(null);
+      
+      if (error.response) {
+        console.error('TTS API error response:', error.response.data);
+        alert(`TTS service error: ${error.response.status}. Please try again.`);
+      } else if (error.request) {
+        console.error('TTS network error:', error.request);
+        alert('Network error. Please check your connection and try again.');
+      } else {
+        console.error('TTS unexpected error:', error.message);
+        alert('Unexpected error occurred. Please try again.');
+      }
+    }
+  };
+
   if (embedded) {
     // Embedded mode - ChatGPT style with full-width messages
     return (
@@ -237,19 +320,27 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                             )}
                           </button>
 
-                          {/* TODO: Read aloud functionality - implement text-to-speech */}
+                          {/* Read aloud functionality with TTS */}
                           <button
-                            onClick={() => {
-                              // TODO: Implement text-to-speech functionality
-                              // Use Web Speech API or external TTS service
-                              console.log('Read aloud functionality - TODO');
-                            }}
-                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-                            title="Read aloud"
+                            onClick={() => handleReadAloud(message.messageId, message.content)}
+                            className={`p-2 rounded-lg transition-colors group ${
+                              speakingMessageId === message.messageId 
+                                ? 'bg-emerald-500/20 text-emerald-400' 
+                                : 'hover:bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
+                            }`}
+                            title={speakingMessageId === message.messageId ? "Stop reading" : "Read aloud"}
                           >
-                            <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
-                            </svg>
+                            {speakingMessageId === message.messageId ? (
+                              /* Stop icon when speaking */
+                              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6h12v12H6z" />
+                              </svg>
+                            ) : (
+                              /* Speaker icon default state */
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>

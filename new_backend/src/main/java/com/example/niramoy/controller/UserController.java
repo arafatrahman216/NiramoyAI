@@ -16,10 +16,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -486,6 +489,28 @@ public class UserController {
         }
     }
 
+    @PostMapping("/audio")
+    public ResponseEntity<Map<String, Object>> uploadAudioAndSaveLog(@ModelAttribute MultipartFile audio) {
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        try {
+            String transcription = elevenLabService.transcribeAudio(audio);
+            response.put("success", true);
+            response.put("text", transcription);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to transcribe audio: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     @GetMapping("/recent-visits")
     public ResponseEntity<Map<String, Object>> getRecentVisits(){
         Map<String, Object> response = new HashMap<>();
@@ -502,6 +527,22 @@ public class UserController {
         response.put("recentVisits", recentVisits);
         return ResponseEntity.ok(response);
         
+    }
+
+    @PostMapping(value = "/tts", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<byte[]> getSpeech(@RequestBody String text) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new RuntimeException("Authentication token is null. Please login to get speech");
+        }
+        User user = (User) authentication.getPrincipal();
+        byte[] audio = elevenLabService.generateTextToSpeech( text);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"speech.mp3\"")
+                .contentType(MediaType.valueOf("audio/mpeg"))
+                .body(audio);
+
     }
 
 

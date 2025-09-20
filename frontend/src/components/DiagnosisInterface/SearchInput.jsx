@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe, MessageSquare, HelpCircle, UserCheck, Calendar } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe, MessageSquare, HelpCircle, UserCheck, Calendar, Square } from 'lucide-react';
+import { chatbotAPI } from '../../services/api';
 
 // ==============================================
 // SEARCH INPUT COMPONENT
@@ -8,6 +9,11 @@ import { Search, Paperclip, Mic, ArrowUp, MoreHorizontal, Globe, MessageSquare, 
 // Edit individual button handlers to add functionality
 const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything..." }) => {
   const [activeMode, setActiveMode] = useState('explain');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const textBoxRef = useRef(null);
+  const chunksRef = useRef([]);
 
   const modes = [
     { id: 'explain', label: 'Explain', icon: MessageSquare },
@@ -33,10 +39,63 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
     // Add focus mode toggle (academic, web, etc.)
   };
 
-  // TODO: Add voice input functionality
-  const handleVoiceInput = () => {
-    console.log('Voice input clicked');
-    // Add speech recognition, voice recording logic here
+  // Voice input functionality with recording
+  const handleVoiceInput = async () => {
+    if (isRecording) {
+      // Stop recording
+      setIsRecording(false);
+      setIsProcessing(true);
+      
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+        textBoxRef.current.focus();
+
+      }
+    } else {
+      // Start recording
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        chunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          chunksRef.current.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
+          
+          try {
+            console.log('Sending audio to API...');
+            const response = await chatbotAPI.getVoiceMessage(audioBlob);
+            
+            if (response.data && response.data.text) {
+              console.log('Voice transcription successful:', response.data.text);
+              setQuery(response.data.text);
+            } else {
+              console.error('No text in response:', response.data);
+              alert('Failed to transcribe audio. Please try again.');
+            }
+          } catch (error) {
+            console.error('Error transcribing audio:', error);
+            alert('Error processing voice message. Please try again.');
+          } finally {
+            setIsProcessing(false);
+            // Stop all tracks to free up microphone
+            stream.getTracks().forEach(track => track.stop());
+          }
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+        console.log('Voice recording started');
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+        alert('Unable to access microphone. Please check permissions.');
+        setIsProcessing(false);
+      }
+    }
   };
 
   // TODO: Add more options functionality
@@ -90,6 +149,7 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
           onChange={(e) => setQuery(e.target.value)}
           onKeyPress={handleKeyPress}
           onFocus={handleFocus}
+          ref={textBoxRef}
           className="w-full bg-transparent text-white placeholder-zinc-500 outline-none text-lg font-light"
         />
         
@@ -161,13 +221,37 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
               <Paperclip size={18} className="text-zinc-500 group-hover:text-zinc-300" />
             </button>
             
-            {/* Voice Input Button - edit handleVoiceInput() */}
+            {/* Voice Input Button with recording states */}
             <button 
               onClick={handleVoiceInput}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-              title="Voice input"
+              disabled={isProcessing}
+              className={`p-2 rounded-lg transition-all duration-300 group relative ${
+                isRecording 
+                  ? 'bg-red-500 text-white animate-pulse' 
+                  : isProcessing 
+                  ? 'bg-zinc-700 text-zinc-300'
+                  : 'hover:bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
+              }`}
+              title={
+                isRecording 
+                  ? 'Click to stop recording' 
+                  : isProcessing 
+                  ? 'Processing audio...' 
+                  : 'Voice input'
+              }
             >
-              <Mic size={18} className="text-zinc-500 group-hover:text-zinc-300" />
+              {isProcessing ? (
+                <div className="animate-spin w-4.5 h-4.5 border-2 border-zinc-300 border-t-transparent rounded-full" />
+              ) : isRecording ? (
+                <Square size={18} className="text-white" />
+              ) : (
+                <Mic size={18} />
+              )}
+              
+              {/* Recording animation ring */}
+              {isRecording && (
+                <div className="absolute inset-0 rounded-lg border-2 border-red-400 animate-ping opacity-75"></div>
+              )}
             </button>
             
             {/* SUBMIT BUTTON - Main search trigger */}

@@ -504,7 +504,7 @@ const LandingPage = () => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
-                      onClick={() => navigate('/signup')}
+                      onClick={() => navigate('/dashboard')}
                     >
                       Contact
                     </motion.button>

@@ -27,4 +27,7 @@ public class Messages {
     @Column(name = "is_agent", nullable = false)
     private boolean isAgent;
 
+    @Column(name = "attachment_link", nullable = false)
+    private String attachmentLink;
+
 }
