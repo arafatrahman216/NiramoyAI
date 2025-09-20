@@ -11,6 +11,8 @@ import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.VisitsRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,11 +35,13 @@ public class DoctorProfileService {
     private final VisitsRepository visitsRepository;
     private final HealthService healthService;
 
-    public DoctorProfile findDoctorByUsername(String username){
-        return doctorProfileRepository.findByUsername(username);
+    @Cacheable(value = "doctorProfiles")
+    public List<DoctorProfile> findAllDoctor(){
+        return doctorProfileRepository.findAll();
     }
 
     @Transactional
+    @CacheEvict(value = "doctorProfiles", allEntries = true)
     public DoctorProfile createDoctorProfile(Map<String, String> newDoctor, Doctor doctor, User user) {
         try{
             newDoctor = makeDoctorProfileNotNull(newDoctor);
@@ -55,11 +59,12 @@ public class DoctorProfileService {
         catch (DuplicateUserException e){
             throw new DuplicateUserException("User already exists");
         }
-        
+
     }
 
 
     @Transactional
+    @CacheEvict(value = "doctorProfiles", allEntries = true)
     public Doctor createDoctor(Map<String, String> doctorMap){
         String name = (String) doctorMap.get("name");
         DoctorSource dc = DoctorSource.REGISTERED;
@@ -94,6 +99,7 @@ public class DoctorProfileService {
 
 
     }
+
 
 
     public DoctorProfileDTO getDoctorProfile(User user) {
@@ -194,6 +200,11 @@ public class DoctorProfileService {
 
 
 
+    }
+
+    @Cacheable(value = "doctorProfile", key = "#query")
+    public List<DoctorProfile> findDoctorBy(String query){
+        return doctorProfileRepository.findByDoctor_NameContainingIgnoreCaseOrDoctor_SpecializationContainingIgnoreCase(query, query);
     }
 
 

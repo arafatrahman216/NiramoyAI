@@ -96,6 +96,16 @@ export const chatbotAPI = {
   // Get user's chat sessions
   getChatSessions: () => 
     api.get('/user/chat-sessions'),
+
+  getVoiceMessage : (audioBlob) => {
+    const formData = new FormData();
+    formData.append('audio', audioBlob);
+    return api.post('/user/audio', formData);
+  },
+
+  // Get messages for a specific chat
+  getMessages: (chatId) => 
+    api.post('/user/message', { chatId: chatId.toString() }),
 };
 
 
@@ -180,6 +190,12 @@ export const diagnosisAPI = {
 
 }
 
+// Symptoms-based doctor search API
+export const symptomsAPI = {
+  searchDoctorsBySymptoms: (query) =>
+    api.post('/public/query', { query }),
+};
+
 
 
 
@@ -196,6 +212,19 @@ export const userInfoAPI = {
 
   getRecentVisits : () => api.get('/user/recent-visits')
 
+};
+
+// Text-to-Speech API
+export const ttsAPI = {
+  generateSpeech: (text) => {
+    console.log(text.length);
+    return api.post('/user/tts', text, {
+      responseType: 'blob', // Important: tells axios to expect binary data
+      headers: {
+        'Content-Type': 'text/plain' // Send as plain text, not JSON
+      }
+    })
+  }
 };
 
 export default api;

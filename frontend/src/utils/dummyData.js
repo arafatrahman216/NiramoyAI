@@ -710,22 +710,7 @@ export const fallbackDashboardVitals = {
   heartRate: [],
 };
 
-export const fallbackDashboardVisits = [
-  { 
-    appointmentDate: "2025-08-20", 
-    doctorName: "Dr. Smith", 
-    symptoms: "General Checkup",
-    prescription: "Continue current medications",
-    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Prescription+Image"
-  },
-  { 
-    appointmentDate: "2025-09-01", 
-    doctorName: "Dr. Brown", 
-    symptoms: "Blood Test Follow-up",
-    prescription: "Review lab results next visit",
-    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Lab+Results"
-  },
-];
+export const fallbackDashboardVisits = [];
 
 export const fallbackDashboardProfile = {
   allergies: "...",

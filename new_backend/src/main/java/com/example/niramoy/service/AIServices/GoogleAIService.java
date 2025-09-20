@@ -43,7 +43,11 @@ public class GoogleAIService implements AIService {
 
     @Override
     public String generateContent(String systemPrompt, String userPrompt) {
-        return generateContent(systemPrompt + "\n\nUser: " + userPrompt);
+        try {
+            return generateContent(systemPrompt + "\n\nUser: " + userPrompt);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate content with Google AI", e);
+        }
     }
 
     @Override

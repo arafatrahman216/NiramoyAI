@@ -471,42 +471,37 @@ const DiagnosisInterface = () => {
       console.log('Message content:', query);
       console.log('Auth token exists:', !!localStorage.getItem('token'));
       
+      const messageToSend = query.trim();
+      setQuery(''); // Clear input immediately
+
       // Set processing state to show loading indicator
       setIsProcessing(true);
       
       // Add user message immediately to local state
       const userMessage = {
         messageId: Date.now(),
-        content: query.trim(),
+        content: messageToSend,
         isAgent: false,
         timestamp: new Date().toISOString(),
         isPlan: false
       };
       
-      // Update local chat data immediately to show user message
-      if (selectedChatData) {
-        const updatedChatData = {
-          ...selectedChatData,
-          messages: [...(selectedChatData.messages || []), userMessage]
-        };
-        setSelectedChatData(updatedChatData);
-      }
+      // Add user message immediately to chat
+      window.dispatchEvent(new CustomEvent('addMessage', { detail: userMessage }));
       
-      const messageToSend = query.trim();
-      setQuery(''); // Clear input immediately
-      
+      var aiMessage;
       try {
         // Send message to current chat using chatbotAPI
         const response = await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode);
         
         console.log('API Response:', response);
         
-        if (response.data.success) {
+        if (response.data.success && response.data.aiResponse) {
           console.log('Message sent successfully:', response.data);
           
-          // Add AI reply to local state
-          const aiReply = {
-            messageId: response.data.aiResponse.messageId || Date.now() + 1,
+          // Add AI response directly from API response
+          aiMessage = {
+            messageId: response.data.aiResponse.messageId,
             content: response.data.aiResponse.content,
             isAgent: true,
             timestamp: new Date().toISOString(),
@@ -550,13 +545,20 @@ const DiagnosisInterface = () => {
         console.error('Error response:', error.response);
         console.error('Error status:', error.response?.status);
         console.error('Error data:', error.response?.data);
-      
         
+
+          setQuery(messageToSend);
           if (error.response?.status === 401) {
             alert('Authentication failed. Please log in again.');
           } else if (error.response?.status === 403) {
             alert('Access denied. You don\'t have permission to send messages.');
           } else if (error.response?.status === 500) {
+            window.dispatchEvent(new CustomEvent('addMessage', { detail: {
+            messageId: Date.now() + 1,
+            isAgent: true,
+            content: 'Sorry, there was a server error. Please try again later.',
+
+          } }));
             alert('Server error. Please try again later.');
           } else if (error.response == 400){
             alert('Bad request. Please check your message and try again.');
@@ -583,11 +585,6 @@ const DiagnosisInterface = () => {
         
         if (newChatId) {
           setSelectedChatId(newChatId);
-          setSelectedChatData({
-            chatId: newChatId,
-            title: 'New Chat',
-            messages: []
-          });
           
           // Don't clear query here - let user send it as first message
           console.log('New chat created, user can now send their query');
@@ -624,12 +621,6 @@ const DiagnosisInterface = () => {
     console.log('Returning to search interface');
   };
 
-  // HANDLE SELECTED CHAT DATA
-  const handleSelectedChat = (chatData) => {
-    setSelectedChatData(chatData);
-    console.log('Selected full chat data:', chatData);
-  };
-
   // HANDLE NEW CHAT CREATION
   const handleNewChat = async () => {
     try {
@@ -643,11 +634,6 @@ const DiagnosisInterface = () => {
       if (newChatId) {
         // Set the new chat as selected
         setSelectedChatId(newChatId);
-        setSelectedChatData({
-          chatId: newChatId,
-          title: 'New Chat',
-          messages: []
-        });
         
         // Clear any existing query
         setQuery('');
@@ -709,10 +695,10 @@ const DiagnosisInterface = () => {
                 </button>
                 <div>
                   <h2 className="text-lg font-semibold text-white">
-                    {selectedChatData?.title || 'Chat Conversation'}
+                    Chat Conversation
                   </h2>
                   <p className="text-sm text-zinc-400">
-                    {selectedChatData?.messages?.length || 0} messages
+                    Active chat
                   </p>
                 </div>
               </>

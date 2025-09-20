@@ -11,6 +11,9 @@ import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.MedicineRepository;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.HealthProfileRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +44,7 @@ public class UserService implements UserDetailsService {
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
     // until then the query result will be stored in persistence context
     @Transactional(readOnly = true)
+//    @Cacheable(value = "users", key = "'all'")
     public List<UserDTO> getAllUsers(){
         List<User> users = userRepository.getAll();
         return users.stream()
@@ -48,6 +53,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+//    @CacheEvict(value = "users", allEntries = true)
     public User createUser(Map<String, String> newUser) {
         String username = newUser.get("username");
         String email = newUser.get("email");
@@ -80,6 +86,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
+//    @Cacheable(value = "users", key = "'username:' + #username")
     public UserDTO findByUsername(String username) {
         System.out.println("hey");
         User user = userRepository.findByUsername(username);
@@ -87,6 +94,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
+//    @Cacheable(value = "users", key = "'email:' + #email")
     public UserDTO findByEmail(String email) {
         User user = userRepository.findByEmail(email);
         return convertToUserDTO(user);
@@ -105,6 +113,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
+//    @Cacheable(value = "users", key = "#userId")
     public User findByUserId(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
@@ -120,6 +129,7 @@ public class UserService implements UserDetailsService {
 
 
     @Transactional
+//    @CachePut(value = "users", key = "#id")
     public UserDTO updateUserProfile(Long id, Map<String, Object> updates) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         if (updates.containsKey("name")) {
@@ -222,10 +232,11 @@ public class UserService implements UserDetailsService {
     }
 
 
+//    @Cacheable(value = "dashboards", key = "#user.id")
     public HashMap<String, Object> createUserDashboardMap(User user) {
 
         HashMap<String,Object> healthDashboard = healthService.getHealthDashboardByUser(user);
-        List<Medicine> medications = medicineRepository.findMedicineByVisit_User(user);
+        List<Medicine> medications = new ArrayList<>(medicineRepository.findMedicineByVisit_User(user));
         healthDashboard.put("medications", medications);
         return healthDashboard;
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { chatbotAPI } from '../../services/api';
+import { chatbotAPI, ttsAPI } from '../../services/api';
 import CarePlanTimeline from './CarePlanTimeline';
 
 // ==============================================
@@ -24,13 +24,17 @@ interface ChatConversationProps {
   isProcessing?: boolean;
 }
 
+
 const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false, isProcessing = false }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null);
+  const [speakingMessageId, setSpeakingMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   // Scroll to bottom when messages update
   const scrollToBottom = () => {
@@ -41,16 +45,51 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     scrollToBottom();
   }, [messages]);
 
-  // Listen for chat updates from search input
+  // Listen for new messages to add locally (no refresh needed)
   useEffect(() => {
-    const handleChatUpdate = () => {
-      // Refetch messages when chat is updated
+    const handleAddMessage = (event: any) => {
+      const newMessage = event.detail;
+      console.log('Adding message locally:', newMessage);
+      
+      setMessages(prev => [...prev, {
+        messageId: newMessage.messageId,
+        content: newMessage.content,
+        agent: newMessage.isAgent,
+        timestamp: newMessage.timestamp
+      }]);
+    };
+
+    window.addEventListener('addMessage', handleAddMessage);
+    return () => window.removeEventListener('addMessage', handleAddMessage);
+  }, []);
+
+  // Listen for chat refresh events (only when needed)
+  useEffect(() => {
+    const handleChatRefresh = () => {
+      console.log('Chat refresh event received - fetching messages');
       fetchMessages();
     };
 
-    window.addEventListener('chatRefresh', handleChatUpdate);
-    return () => window.removeEventListener('chatRefresh', handleChatUpdate);
-  }, [chatId]);
+    window.addEventListener('chatRefresh', handleChatRefresh);
+    return () => window.removeEventListener('chatRefresh', handleChatRefresh);
+  }, []);
+
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('Component unmounting - cleaning up audio');
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.remove();
+        currentAudioRef.current = null;
+      }
+      
+      if (currentAudioUrlRef.current) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+        currentAudioUrlRef.current = null;
+      }
+    };
+  }, []);
 
   // Fetch messages function
   const fetchMessages = async () => {
@@ -58,37 +97,13 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     
     setLoading(true);
     
-    // If we have chatData with messages, use it directly
-    if (chatData && chatData.messages) {
-      console.log('ChatConversation: Using chatData messages:', chatData.messages);
-      console.log('ChatConversation: chatData object:', chatData);
-      const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
-        messageId: msg.messageId,
-        content: msg.content,
-        agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp,
-        isPlan: msg.isPlan === true
-      }));
-      console.log('ChatConversation: Formatted messages:', formattedMessages);
-      setMessages(formattedMessages);
-      setLoading(false);
-      return;
-    }
 
-    // Otherwise fetch from API
+
     try {
       console.log('Fetching messages for chat ID:', chatId);
       
-      const response = await fetch('/api/user/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ chatId: chatId.toString() })
-      });
-      
-      const conversationData = await response.json();
+      const response = await chatbotAPI.getMessages(chatId);
+      const conversationData = response.data;
       
       console.log('Full API Response:', response);
       console.log('Conversation Data:', conversationData);
@@ -120,36 +135,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
   useEffect(() => {
     console.log('ChatConversation: useEffect triggered - chatId:', chatId, 'chatData:', chatData);
     fetchMessages();
-  }, [chatId, chatData]);
-
-  // Update messages immediately when chatData changes (from parent component)
-  useEffect(() => {
-    if (chatData && chatData.messages) {
-      console.log('ChatData updated from parent:', chatData.messages);
-      const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
-        messageId: msg.messageId,
-        content: msg.content,
-        agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp,
-        isPlan: msg.isPlan === true
-      }));
-      setMessages(formattedMessages);
-      // Scroll to bottom when new data comes from parent
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [chatData]);
-
-  // Listen for chat refresh events
-  useEffect(() => {
-    const handleChatRefresh = () => {
-      fetchMessages();
-    };
-
-    window.addEventListener('chatRefresh', handleChatRefresh);
-    return () => {
-      window.removeEventListener('chatRefresh', handleChatRefresh);
-    };
-  }, []);
+  }, [chatId]);
 
   // Send new message
   const handleSendMessage = async () => {
@@ -176,6 +162,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
       // Add bot response to messages - extract from aiResponse object
       const aiResponseData = botResponse.aiResponse || botResponse;
       const botMessage: Message = {
+
         messageId: aiResponseData.messageId || Date.now() + 1,
         content: aiResponseData.content || botResponse.message || botResponse.response || 'No response received',
         agent: true,
@@ -222,6 +209,105 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     }
   };
 
+  // Function to stop any currently playing audio
+  const stopCurrentAudio = () => {
+    if (currentAudioRef.current) {
+      console.log('Stopping current audio playback');
+      currentAudioRef.current.pause();
+      currentAudioRef.current.remove();
+      currentAudioRef.current = null;
+    }
+    
+    if (currentAudioUrlRef.current) {
+      console.log('Cleaning up audio URL');
+      URL.revokeObjectURL(currentAudioUrlRef.current);
+      currentAudioUrlRef.current = null;
+    }
+    
+    setSpeakingMessageId(null);
+  };
+
+  // Handle text-to-speech functionality using backend API
+  const handleReadAloud = async (messageId: number, content: string) => {
+    console.log('Read aloud clicked for message:', messageId);
+    
+    // If clicking on the same message that's currently playing, just stop
+    if (speakingMessageId === messageId) {
+      console.log('Same message clicked, stopping audio');
+      stopCurrentAudio();
+      return;
+    }
+    
+    // Stop any currently playing audio before starting new one
+    if (speakingMessageId || currentAudioRef.current) {
+      console.log('Stopping previous audio before starting new one');
+      stopCurrentAudio();
+    }
+
+    try {
+      console.log('Requesting TTS from backend for content:', content.substring(0, 50) + '...');
+      setSpeakingMessageId(messageId);
+      
+      // Call backend TTS API
+      const response = await ttsAPI.generateSpeech(content);
+      console.log('TTS response received:', response);
+      
+      // Create blob URL from the audio data
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Store the URL for cleanup
+      currentAudioUrlRef.current = audioUrl;
+      
+      // Create and configure audio element
+      const audio = new Audio(audioUrl);
+      audio.id = `audio-${messageId}`;
+      
+      // Store the audio reference
+      currentAudioRef.current = audio;
+      
+      // Handle audio events
+      audio.onloadstart = () => {
+        console.log('Audio loading started');
+      };
+      
+      audio.oncanplay = () => {
+        console.log('Audio can start playing');
+      };
+      
+      audio.onplay = () => {
+        console.log('Audio playback started');
+      };
+      
+      audio.onended = () => {
+        console.log('Audio playback ended');
+        stopCurrentAudio();
+      };
+      
+      audio.onerror = (error) => {
+        console.error('Audio playback error:', error);
+        stopCurrentAudio();
+        alert('Error playing audio. Please try again.');
+      };
+      
+      // Start playing the audio
+      await audio.play();
+      
+    } catch (error: any) {
+      console.error('TTS error:', error);
+      stopCurrentAudio();
+      
+      if (error.response) {
+        console.error('TTS API error response:', error.response.data);
+        alert(`TTS service error: ${error.response.status}. Please try again.`);
+      } else if (error.request) {
+        console.error('TTS network error:', error.request);
+        alert('Network error. Please check your connection and try again.');
+      } else {
+        console.error('TTS unexpected error:', error.message);
+        alert('Unexpected error occurred. Please try again.');
+      }
+    }
   // Parse care plan data from JSON content
   const parseCarePlanData = (content: string) => {
     console.log('=== PARSING CARE PLAN DATA ===');
@@ -355,25 +441,30 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                                     )}
                                   </button>
 
-                                  {/* TODO: Read aloud functionality - implement text-to-speech */}
-                                  <button
-                                    onClick={() => {
-                                      // TODO: Implement text-to-speech functionality
-                                      // Use Web Speech API or external TTS service
-                                      console.log('Read aloud functionality - TODO');
-                                    }}
-                                    className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-                                    title="Read aloud"
-                                  >
-                                    <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              </>
-                            );
-                          }
-                        })()}
+                          {/* Read aloud functionality with TTS */}
+                          <button
+                            onClick={() => handleReadAloud(message.messageId, message.content)}
+                            className={`p-2 rounded-lg transition-colors group ${
+                              speakingMessageId === message.messageId 
+                                ? 'bg-emerald-500/20 text-emerald-400' 
+                                : 'hover:bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
+                            }`}
+                            title={speakingMessageId === message.messageId ? "Stop reading" : "Read aloud"}
+                          >
+                            {speakingMessageId === message.messageId ? (
+                              /* Stop icon when speaking */
+                              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6h12v12H6z" />
+                              </svg>
+                            ) : (
+                              /* Speaker icon default state */
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+
                       </div>
                     )}
                   </div>

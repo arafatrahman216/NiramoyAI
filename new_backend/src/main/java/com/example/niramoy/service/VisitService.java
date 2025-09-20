@@ -18,6 +18,7 @@ import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.service.AIServices.AIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -114,8 +115,9 @@ public class VisitService {
         return visitsRepository.findByUserOrderByAppointmentDateDesc(user);
     }
 
+//    @Cacheable(value = "visits", key = "'userId:' + #userId")
     public List<VisitDTO> getRecentVisits(User user, int i) {
-        
+
         List<Visits> visits = visitsRepository.findByUserOrderByAppointmentDateDesc(user);
         return visits.stream().limit(i).map(v -> {
             VisitDTO dto = new VisitDTO();

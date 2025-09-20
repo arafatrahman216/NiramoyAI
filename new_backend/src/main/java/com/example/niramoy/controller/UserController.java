@@ -1,33 +1,37 @@
 package com.example.niramoy.controller;
 
 import com.example.niramoy.customExceptions.AgentProcessingException;
-import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.dto.*;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
-import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Messages;
-import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.service.*;
 import com.example.niramoy.service.AIServices.AIService;
-import com.example.niramoy.dto.HealthLogRecord;
 import com.example.niramoy.service.AIServices.AIService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.example.niramoy.utils.JsonParser.objectMapper;
 
 @Slf4j
 @RestController
@@ -131,8 +135,10 @@ public class UserController {
             return ResponseEntity.ok(response);
         }
         User user = (User) authentication.getPrincipal();
-        List<ChatSessions> chatSessionsList = user.getChatSession();
-        response.put("chatSessions", chatSessionsList);
+        List<ChatSessionDTO> chatSessionDTOs = messageService.getChatSessionDtoByUser(user);
+
+//        response.put("chatSessions", chatSessionsList);
+        response.put("chatSessions", chatSessionDTOs);
         return ResponseEntity.ok(response);
 
     }
@@ -150,7 +156,7 @@ public class UserController {
         
         try {
             User user = (User) authentication.getPrincipal();
-            ChatSessions newChatSession = messageService.createNewChatSession(user);
+            ChatSessionDTO newChatSession = messageService.createNewChatSession(user);
             
             response.put("success", true);
             response.put("message", "New chat session created successfully");
@@ -233,6 +239,12 @@ public class UserController {
         } catch (Exception e) {
             log.error("Error processing message: ", e);
             response.put("success", false);
+            response.put("aiResponse", Map.of(
+                    "messageId", null,
+                    "content", "Failed to get response: " + e.getMessage(),
+                    "isAgent", true,
+                    "chatId", body.get("chatId")
+            ));
             response.put("message", "Failed to process message: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
@@ -252,8 +264,8 @@ public class UserController {
         Long chatId = Long.parseLong(query.get("chatId") );
         response.put("success", true );
         System.out.println(chatId);
-        ChatSessions chatSession = messageService.getMessagesByChatId(chatId); // get the single chat session by chatId
-        response.put("data", chatSession.getMessages()); // messages of the distinct chat session(this is what is required)
+        List<Messages> messages = messageService.getMessagesByChatId(chatId); // get the single chat session by chatId
+        response.put("data", messages); // messages of the distinct chat session(this is what is required)
 //        List<ChatSessions> chatSessionsList = new ArrayList<>();
 //        for (ChatSessions cs: chatSession.getUser().getChatSession()){ // all chat sessions of the user(no use for now)
 //            if (cs.getMessages().size() >0){
@@ -478,6 +490,28 @@ public class UserController {
         }
     }
 
+    @PostMapping("/audio")
+    public ResponseEntity<Map<String, Object>> uploadAudioAndSaveLog(@ModelAttribute MultipartFile audio) {
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        try {
+            String transcription = elevenLabService.transcribeAudio(audio);
+            response.put("success", true);
+            response.put("text", transcription);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to transcribe audio: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     @GetMapping("/recent-visits")
     public ResponseEntity<Map<String, Object>> getRecentVisits(){
         Map<String, Object> response = new HashMap<>();
@@ -496,6 +530,23 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping(value = "/tts", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<byte[]> getSpeech(@RequestBody String text) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new RuntimeException("Authentication token is null. Please login to get speech");
+        }
+        User user = (User) authentication.getPrincipal();
+        byte[] audio = elevenLabService.generateTextToSpeech( text);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"speech.mp3\"")
+                .contentType(MediaType.valueOf("audio/mpeg"))
+                .body(audio);
+
+    }
+
+
     @GetMapping("/HELLO")
     public ResponseEntity<String> hello(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -504,4 +555,5 @@ public class UserController {
         }
         return ResponseEntity.ok("Hello, Niramoy User!");
     }
+
 }

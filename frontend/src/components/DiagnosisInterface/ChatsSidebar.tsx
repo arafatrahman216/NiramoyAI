@@ -143,9 +143,8 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({
                 className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-colors"
                 onClick={() => {
                   setChatid(session.chatId);
-                  if (setSelectedChat) {
-                    setSelectedChat(session);
-                  }
+                  // Don't pass session data since it doesn't contain messages
+                  // Let ChatConversation fetch messages separately
                   onClose();
                 }}
               >
@@ -155,7 +154,7 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({
                       {session.title || 'Untitled Chat'}
                     </h3>
                     <p className="text-xs text-zinc-400 mt-1">
-                      {session.messages?.length ? `${session.messages.length} messages` : 'No messages yet...'}
+                      {session.messageCount !== undefined ? `${session.messageCount} messages` : 'No messages yet...'}
                     </p>
                   </div>
                   <span className="text-xs text-zinc-500 ml-2">
