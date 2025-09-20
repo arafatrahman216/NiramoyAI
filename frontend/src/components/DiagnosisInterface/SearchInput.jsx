@@ -7,7 +7,7 @@ import { chatbotAPI } from '../../services/api';
 // ==============================================
 // Contains: Input field and all action buttons
 // Edit individual button handlers to add functionality
-const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...", disabled = false }) => {
+const SearchInput = forwardRef(({ query, setQuery, onSearch, placeholder = "Ask anything...", disabled = false }, ref) => {
   const [activeMode, setActiveMode] = useState('explain');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -177,12 +177,45 @@ const SearchInput = ({ query, setQuery, onSearch, placeholder = "Ask anything...
   const handleSearchWithMode = () => {
     if (!disabled) {
       handleModeAction(activeMode);
-      onSearch(activeMode);
+      onSearch(activeMode, attachment);
     }
   };
 
   return (
     <div className="w-full max-w-3xl">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+        style={{ display: 'none' }}
+      />
+      
+      {/* Attachment preview */}
+      {attachment && (
+        <div className="mb-3 p-3 bg-zinc-800 border border-zinc-700 rounded-lg flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="text-emerald-400">
+              <Paperclip size={16} />
+            </div>
+            <div>
+              <p className="text-white text-sm font-medium">{attachment.name}</p>
+              <p className="text-zinc-400 text-xs">
+                {(attachment.size / 1024 / 1024).toFixed(2)} MB • {attachment.type}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={removeAttachment}
+            className="text-zinc-400 hover:text-red-400 transition-colors"
+            title="Remove attachment"
+          >
+            ×
+          </button>
+        </div>
+      )}
+      
       <div className={`bg-zinc-900 border border-zinc-700 rounded-2xl p-4 focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all hover:border-zinc-600 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
         {/* MAIN INPUT FIELD */}
         {/* Edit placeholder text, styling here */}

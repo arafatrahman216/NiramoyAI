@@ -357,7 +357,7 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './Sidebar';
 import SearchInput from './SearchInput';
 import MainLogo from './MainLogo';
@@ -390,7 +390,7 @@ const DiagnosisInterface = () => {
   const [selectedChatId, setSelectedChatId] = useState(null);
   
   // SELECTED CHAT DATA - tracks full chat data with messages
-  const [selectedChatData, setSelectedChatData] = useState(null);
+  const [selectedChatData, setSelectedChatData] = useState({ messages: [] });
   
   // UPLOAD VISIT MODAL STATE
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -523,7 +523,7 @@ const DiagnosisInterface = () => {
           setSelectedChatData(prevData => {
             const updatedChatData = {
               ...prevData,
-              messages: [...(prevData.messages || []), aiReply]
+              messages: [...(prevData.messages || []), aiMessage]
             };
             console.log('DiagnosisInterface: Setting updated chat data:', updatedChatData);
             return updatedChatData;
@@ -628,7 +628,7 @@ const DiagnosisInterface = () => {
   // BACK TO SEARCH HANDLER
   const handleBackToSearch = () => {
     setSelectedChatId(null);
-    setSelectedChatData(null);
+    setSelectedChatData({ messages: [] });
     console.log('Returning to search interface');
   };
 
@@ -673,7 +673,7 @@ const DiagnosisInterface = () => {
         isOpen={isChatsSidebarOpen}
         onClose={() => setIsChatsSidebarOpen(false)}
         setChatid={handleChatSelection}
-        setSelectedChat={handleSelectedChat}
+        setSelectedChat={handleChatSelection}
         chatSessions={chatSessions}
         setChatSessions={setChatSessions}
         isLoading={chatSessionsLoading}

@@ -14,6 +14,12 @@ interface Message {
   agent: boolean;
   timestamp?: string;
   isPlan?: boolean;
+  attachment?: {
+    name: string;
+    type: string;
+    size: number;
+    url?: string;
+  } | null;
 }
 
 interface ChatConversationProps {
@@ -308,6 +314,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         alert('Unexpected error occurred. Please try again.');
       }
     }
+  };
+
   // Parse care plan data from JSON content
   const parseCarePlanData = (content: string) => {
     console.log('=== PARSING CARE PLAN DATA ===');
@@ -418,71 +426,82 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                     ) : (
                       /* AI MESSAGE - Check for care plan data or render plain text */
                       <div className="flex-1">
-                        {(() => {
-                          // Check if this is a plan message from backend
-                          console.log("Msg Plan : " + message.isPlan);
-                          if (message.isPlan) {
-                            console.log("=== RENDERING CARE PLAN ===");
-                            const carePlanData = parseCarePlanData(message.content);
-                            return (
-                              <div className="w-full">
-                                <CarePlanTimeline careData={carePlanData} />
-                              </div>
-                            );
-                          } else {
-                            // Render regular text message
-                            console.log("=== RENDERING REGULAR AI MESSAGE ===");
-                            return (
-                              <>
-                              <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
-                                {message.content}
+                        {/* Attachment display for AI messages */}
+                        {message.attachment && (
+                          <div className="mb-3 p-3 bg-zinc-800 rounded-lg flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-zinc-700 rounded flex items-center justify-center">
+                              {message.attachment.type.startsWith('image/') ? (
+                                <span className="text-sm text-zinc-300">📷</span>
+                              ) : (
+                                <span className="text-sm text-zinc-300">📄</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-zinc-200 font-medium truncate">{message.attachment.name}</p>
+                              <p className="text-xs text-zinc-400">
+                                {(message.attachment.size / 1024 / 1024).toFixed(1)} MB
                               </p>
-                              
-                              {/* ACTION BUTTONS FOR AI RESPONSES */}
-                              <div className="flex items-center space-x-2 mt-2">
-                                {/* Copy functionality with visual feedback */}
-                                <button
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Check if this is a plan message from backend */}
+                        {message.isPlan ? (
+                          <div className="w-full">
+                            <CarePlanTimeline careData={parseCarePlanData(message.content)} />
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
+                              {message.content}
+                            </p>
+                            
+                            {/* ACTION BUTTONS FOR AI RESPONSES */}
+                            <div className="flex items-center space-x-2 mt-2">
+                              {/* Copy functionality with visual feedback */}
+                              <button
                                 onClick={() => handleCopyMessage(message.messageId, message.content)}
                                 className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
                                 title={copiedMessageId === message.messageId ? "Copied!" : "Copy response"}
-                                >
+                              >
                                 {copiedMessageId === message.messageId ? (
                                   /* Checkmark icon when copied */
                                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                   </svg>
                                 ) : (
                                   /* Copy icon default state */
                                   <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                      </svg>
-                                    )}
-                                  </button>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                )}
+                              </button>
 
-                          {/* Read aloud functionality with TTS */}
-                          <button
-                            onClick={() => handleReadAloud(message.messageId, message.content)}
-                            className={`p-2 rounded-lg transition-colors group ${
-                              speakingMessageId === message.messageId 
-                                ? 'bg-emerald-500/20 text-emerald-400' 
-                                : 'hover:bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
-                            }`}
-                            title={speakingMessageId === message.messageId ? "Stop reading" : "Read aloud"}
-                          >
-                            {speakingMessageId === message.messageId ? (
-                              /* Stop icon when speaking */
-                              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6h12v12H6z" />
-                              </svg>
-                            ) : (
-                              /* Speaker icon default state */
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-
+                              {/* Read aloud functionality with TTS */}
+                              <button
+                                onClick={() => handleReadAloud(message.messageId, message.content)}
+                                className={`p-2 rounded-lg transition-colors group ${
+                                  speakingMessageId === message.messageId 
+                                    ? 'bg-emerald-500/20 text-emerald-400' 
+                                    : 'hover:bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
+                                }`}
+                                title={speakingMessageId === message.messageId ? "Stop reading" : "Read aloud"}
+                              >
+                                {speakingMessageId === message.messageId ? (
+                                  /* Stop icon when speaking */
+                                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6h12v12H6z" />
+                                  </svg>
+                                ) : (
+                                  /* Speaker icon default state */
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
