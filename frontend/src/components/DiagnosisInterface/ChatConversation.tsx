@@ -169,16 +169,42 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
 
       // Add bot response to messages - extract from aiResponse object
       const aiResponseData = botResponse.aiResponse || botResponse;
+      
+      // Check if there's an image link in the AI response
+      const imageLink = aiResponseData.imageLink || aiResponseData.image_link || aiResponseData.imageUrl || null;
+      
       const botMessage: Message = {
-
         messageId: aiResponseData.messageId || Date.now() + 1,
         content: aiResponseData.content || botResponse.message || botResponse.response || 'No response received',
         agent: true,
-        isPlan: aiResponseData.isPlan === true
+        isPlan: aiResponseData.isPlan === true,
+        attachmentLink: imageLink
       };
 
-      // console.log('Created bot message:', botMessage);
-      setMessages(prev => [...prev, botMessage]);
+      // If there's an image link, also add it to the user's last message
+      if (imageLink) {
+        setMessages(prev => {
+          const updatedMessages = [...prev];
+          // Find the last user message (iterate backwards)
+          let lastUserMessageIndex = -1;
+          for (let i = updatedMessages.length - 1; i >= 0; i--) {
+            if (!updatedMessages[i].agent) {
+              lastUserMessageIndex = i;
+              break;
+            }
+          }
+          
+          if (lastUserMessageIndex !== -1) {
+            updatedMessages[lastUserMessageIndex] = {
+              ...updatedMessages[lastUserMessageIndex],
+              attachmentLink: imageLink
+            };
+          }
+          return [...updatedMessages, botMessage];
+        });
+      } else {
+        setMessages(prev => [...prev, botMessage]);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       // Add error message
@@ -357,33 +383,54 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     const fileInfo = getFileTypeFromUrl(attachmentLink);
     const filename = getFilenameFromUrl(attachmentLink);
     
+    // Check if the attachment is an image
+    const isImage = fileInfo.type === 'image';
+    
     return (
-      <div className={`mb-3 p-3 rounded-lg border border-dashed transition-colors hover:bg-zinc-800/50 ${
-        isUserMessage ? 'bg-zinc-700/50 border-zinc-600' : 'bg-zinc-800/50 border-zinc-700'
-      }`}>
-        <div className="flex items-center space-x-3">
-          <div className={`w-8 h-8 rounded flex items-center justify-center ${
-            isUserMessage ? 'bg-zinc-600' : 'bg-zinc-700'
-          }`}>
-            <span className="text-sm">{fileInfo.icon}</span>
+      <div className="mb-3">
+        {/* Image preview if it's an image */}
+        {isImage && (
+          <div className="mb-2">
+            <img
+              src={attachmentLink}
+              alt={filename}
+              className="max-w-xs max-h-48 rounded-lg object-cover border border-zinc-600/50"
+              onError={(e) => {
+                // Hide image if it fails to load
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2">
-              <p className="text-sm text-zinc-200 font-medium truncate">{filename}</p>
-              <a
-                href={attachmentLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors flex items-center space-x-1"
-                title="Open attachment in new tab"
-              >
-                <span>View</span>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
+        )}
+        
+        {/* Attachment info section - transparent background */}
+        <div className={`p-2 rounded-lg border border-dashed border-zinc-600/40 ${
+          isUserMessage ? 'bg-transparent' : 'bg-transparent hover:bg-zinc-800/20'
+        } transition-colors`}>
+          <div className="flex items-center space-x-2">
+            <div className={`w-6 h-6 rounded flex items-center justify-center ${
+              isUserMessage ? 'bg-zinc-600/50' : 'bg-zinc-700/50'
+            }`}>
+              <span className="text-xs">{fileInfo.icon}</span>
             </div>
-            <p className="text-xs text-zinc-400 capitalize">{fileInfo.type} attachment</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2">
+                <p className="text-xs text-zinc-200 font-medium truncate">{filename}</p>
+                <a
+                  href={attachmentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors flex items-center space-x-1"
+                  title="Open attachment in new tab"
+                >
+                  <span>View</span>
+                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+              <p className="text-xs text-zinc-400/70 capitalize">{fileInfo.type} attachment</p>
+            </div>
           </div>
         </div>
       </div>
