@@ -3,17 +3,17 @@ import { Clock, MapPin, DollarSign, AlertTriangle, CheckCircle } from 'lucide-re
 
 const CarePlanTimeline = ({ careData }) => {
   // Debug logging
-  console.log('=== CARE PLAN TIMELINE COMPONENT ===');
-  console.log('careData type:', typeof careData);
-  console.log('careData value:', careData);
-  console.log('careData is null:', careData === null);
-  console.log('careData is undefined:', careData === undefined);
-  if (careData) {
-    console.log('careData keys:', Object.keys(careData));
-    if (careData.Plan) {
-      console.log('Plan keys:', Object.keys(careData.Plan));
-    }
-  }
+  // console.log('=== CARE PLAN TIMELINE COMPONENT ===');
+  // console.log('careData type:', typeof careData);
+  // console.log('careData value:', careData);
+  // console.log('careData is null:', careData === null);
+  // console.log('careData is undefined:', careData === undefined);
+  // if (careData) {
+  //   console.log('careData keys:', Object.keys(careData));
+  //   if (careData.Plan) {
+  //     console.log('Plan keys:', Object.keys(careData.Plan));
+  //   }
+  // }
   
   // Default dummy data if no careData is provided
   const defaultCareData = {

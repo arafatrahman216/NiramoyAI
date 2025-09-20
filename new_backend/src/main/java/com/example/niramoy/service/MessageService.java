@@ -169,7 +169,7 @@ public class MessageService {
             Messages userMessage = Messages.builder()
                     .content(message)
                     .isAgent(false)
-                    .isPlan(false)
+                    .isPlan(false).attachmentLink(imageUrl)
                     .chatSession(chatSession)
                     .build();
             messageRepository.save(userMessage);
@@ -214,7 +214,7 @@ public class MessageService {
                     .content(parsedAiReply)
                     .isAgent(true)
                     .isPlan(isPlanMessage)
-                    .chatSession(chatSession)
+                    .chatSession(chatSession).attachmentLink(imageUrl)
                     .build();
             messageRepository.save(aiMessage);
             return aiMessage;

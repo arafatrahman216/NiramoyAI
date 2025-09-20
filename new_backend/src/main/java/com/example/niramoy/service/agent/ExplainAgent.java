@@ -62,7 +62,8 @@ public class ExplainAgent implements Agent {
 
         String imageText = aiService.getTextFromImageUrl(imageUrl);
         query = query +  ". Also analyze the image text provided and incorporate any relevant information from it"
-            + " into your explanation. The image contains the following text: " + imageText;
+            + " into your explanation. The image contains the following text (donot use \", use \\\" if needed): " + imageText;
+        System.out.println("query: " + query);
 
         Map<String, Object> chainVariables = Map.of(
             "visit_summary", userKGService.getVisitSummaryLastThree(userId),

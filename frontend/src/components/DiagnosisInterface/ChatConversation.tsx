@@ -14,6 +14,7 @@ interface Message {
   agent: boolean;
   timestamp?: string;
   isPlan?: boolean;
+  attachmentLink?: string;
   attachment?: {
     name: string;
     type: string;
@@ -121,7 +122,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
         timestamp: msg.timestamp,
-        isPlan: msg.isPlan === true
+        isPlan: msg.isPlan === true,
+        attachmentLink: msg.attachmentLink || msg.attachment_link || null
       }));
       
       console.log('Formatted Messages:', formattedMessages);
@@ -316,25 +318,97 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     }
   };
 
+  // Helper function to determine file type from URL
+  const getFileTypeFromUrl = (url: string) => {
+    const extension = url.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return { type: 'application/pdf', icon: '📄' };
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return { type: 'image', icon: '📷' };
+      case 'doc':
+      case 'docx':
+        return { type: 'document', icon: '📝' };
+      case 'txt':
+        return { type: 'text', icon: '📄' };
+      default:
+        return { type: 'file', icon: '📎' };
+    }
+  };
+
+  // Helper function to extract filename from URL
+  const getFilenameFromUrl = (url: string) => {
+    try {
+      const urlParts = url.split('/');
+      const filename = urlParts[urlParts.length - 1];
+      // Remove query parameters if any
+      return filename.split('?')[0] || 'Attachment';
+    } catch {
+      return 'Attachment';
+    }
+  };
+
+  // Helper function to render attachment link
+  const renderAttachmentLink = (attachmentLink: string, isUserMessage: boolean = false) => {
+    const fileInfo = getFileTypeFromUrl(attachmentLink);
+    const filename = getFilenameFromUrl(attachmentLink);
+    
+    return (
+      <div className={`mb-3 p-3 rounded-lg border border-dashed transition-colors hover:bg-zinc-800/50 ${
+        isUserMessage ? 'bg-zinc-700/50 border-zinc-600' : 'bg-zinc-800/50 border-zinc-700'
+      }`}>
+        <div className="flex items-center space-x-3">
+          <div className={`w-8 h-8 rounded flex items-center justify-center ${
+            isUserMessage ? 'bg-zinc-600' : 'bg-zinc-700'
+          }`}>
+            <span className="text-sm">{fileInfo.icon}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-zinc-200 font-medium truncate">{filename}</p>
+              <a
+                href={attachmentLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors flex items-center space-x-1"
+                title="Open attachment in new tab"
+              >
+                <span>View</span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+            <p className="text-xs text-zinc-400 capitalize">{fileInfo.type} attachment</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Parse care plan data from JSON content
   const parseCarePlanData = (content: string) => {
-    console.log('=== PARSING CARE PLAN DATA ===');
-    console.log('Content type:', typeof content);
-    console.log('Content length:', content.length);
-    console.log('First 200 chars:', content.substring(0, 200));
+    // console.log('=== PARSING CARE PLAN DATA ===');
+    // console.log('Content type:', typeof content);
+    // console.log('Content length:', content.length);
+    // console.log('First 200 chars:', content.substring(0, 200));
     
     try {
       // Try to parse as JSON first
       const parsed = JSON.parse(content);
-      console.log('✅ JSON parsing successful');
-      console.log('Parsed object keys:', Object.keys(parsed));
+      // console.log('✅ JSON parsing successful');
+      // console.log('Parsed object keys:', Object.keys(parsed));
       
       if (parsed.Plan) {
-        console.log('✅ Found Plan object');
-        console.log('Plan keys:', Object.keys(parsed.Plan));
-        console.log('PreTreatment_Phase exists:', !!parsed.Plan.PreTreatment_Phase);
-        console.log('Treatment_Phase exists:', !!parsed.Plan.Treatment_Phase);
-        console.log('PostTreatment_Phase exists:', !!parsed.Plan.PostTreatment_Phase);
+        // console.log('✅ Found Plan object');
+        // console.log('Plan keys:', Object.keys(parsed.Plan));
+        // console.log('PreTreatment_Phase exists:', !!parsed.Plan.PreTreatment_Phase);
+        // console.log('Treatment_Phase exists:', !!parsed.Plan.Treatment_Phase);
+        // console.log('PostTreatment_Phase exists:', !!parsed.Plan.PostTreatment_Phase);
         
         if (parsed.Plan.PreTreatment_Phase || parsed.Plan.Treatment_Phase || parsed.Plan.PostTreatment_Phase) {
           console.log('✅ Valid care plan structure found, returning parsed data');
@@ -347,7 +421,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
       }
     } catch (error) {
       console.log('❌ JSON parsing failed:', error instanceof Error ? error.message : String(error));
-      console.log('Trying regex match...');
+      // console.log('Trying regex match...');
       
       // If JSON parsing fails, look for JSON-like structure in the content
       const jsonMatch = content.match(/\{[\s\S]*"Plan"[\s\S]*\}/);
@@ -419,6 +493,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                             </div>
                           </div>
                         )}
+                        {/* Attachment link display for user messages */}
+                        {message.attachmentLink && renderAttachmentLink(message.attachmentLink, true)}
                         <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap">
                           {message.content}
                         </p>
@@ -444,6 +520,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                             </div>
                           </div>
                         )}
+                        {/* Attachment link display for AI messages */}
+                        {message.attachmentLink && renderAttachmentLink(message.attachmentLink, false)}
                         
                         {/* Check if this is a plan message from backend */}
                         {message.isPlan ? (

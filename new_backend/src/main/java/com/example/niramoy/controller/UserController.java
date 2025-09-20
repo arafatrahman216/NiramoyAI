@@ -592,7 +592,7 @@ public class UserController {
             "isAgent", false,
             "chatId", chatIdLong,
             "isPlan", false,
-            "attachmentLink", fileUrl
+            "attachmentLink", aiReply.getAttachmentLink()
         ));
         response.put("aiResponse", Map.of(
             "messageId", aiReply.getMessageId(),
