@@ -145,10 +145,17 @@ const Dashboard = () => {
             <div className="flex items-center space-x-6">
               <button
                 onClick={() => navigate('/')}
-                className="flex items-center px-3 py-2 text-emerald-400 hover:bg-gray-700 rounded-lg transition-colors"
+                className="flex items-center px-3 py-2 text-emerald-400 hover:bg-zinc-700 rounded-lg transition-colors"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Home
+              </button>
+              <button
+                onClick={() => navigate('/healthdataform')}
+                className="flex items-center px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+              >
+                <Activity className="w-4 h-4 mr-2" />
+                Health Form
               </button>
               <button
                 onClick={() => navigate('/profile')}
