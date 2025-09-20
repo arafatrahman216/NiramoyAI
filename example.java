@@ -1,15 +1,16 @@
+
+
 package com.example.niramoy.service.agent;
 
 import com.example.niramoy.service.UserKGService;
 import com.example.niramoy.service.AIServices.AIService;
-import com.example.niramoy.utils.JsonParser;
-import com.example.niramoy.service.agent.tools.PlannerAgentTools;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.checkerframework.checker.units.qual.s;
+import org.springframework.boot.actuate.health.Health;
 import org.springframework.stereotype.Service;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
+import dev.langchain4j.spi.prompt.PromptTemplateFactory.Input;
 
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 public class PlannerAgent implements Agent {
     private final AIService aiService;
     private final UserKGService userKGService;
-    private final PlannerAgentTools plannerAgentTools;
 
     private static final String planningPrompt = """
             You are a professional Health Assistant + Normal chatter if needed.
@@ -168,84 +168,15 @@ public class PlannerAgent implements Agent {
         planningPrompt
     );
 
-    private static final PromptTemplate EXTRACTION_PROMPT = PromptTemplate.from(
-        """
-            You are a extraction agent with professional Knowledge of medical field.
-            Now i have tools get information from web like Test costs, Test Time, Treatment costs, Doctor fees, Hospital fees, Hospital locations.
-            I have to generate natural  language query to search for these informations.
-            Given the user query, extract the relevant keywords and generate a concise search query that can be used to find the required information.
-            You can generate 0-5 search quaries if needed.
-            Also Extract location from user query if mentioned.
-            Must provide answer in a JSON.
-            
-            Example:
-            User Query: "What is the cost of an MRI scan in New York City?"
-            Output: {"location": "New York City", "queries": ["MRI scan cost New York City"]}
-
-            User Query: "How long does it take to get a blood test done?"
-            Output: {"location": "", "queries": ["blood test duration"]}
-
-            User Query: {{query}}
-        """
-    );
-
 
     @Override
     public String processQuery(String query, Long userId) {
-
-        String lastVisitTestNames = userKGService.getLatestTestNames(userId);
-        log.info("Latest Test Names: {}", lastVisitTestNames);  
-
-        Map<String, Object> extractionVariables = Map.of(
-            "query", query
-        );
-        Prompt extractionPrompt = EXTRACTION_PROMPT.apply(extractionVariables);
-        String extractionResponse = null;
-        try{
-            extractionResponse = aiService.generateContent(extractionPrompt.text() + " | " + lastVisitTestNames);
-        } catch (Exception e) {
-            log.error("Error generating content: {}", e.getMessage());
-        }
-
-        String searchResultsString = "";
-        if (extractionResponse == null) {
-            log.error("Extraction response is null, skipping web search");
-        } 
-        else 
-        {
-            JSONObject extractionJson = JsonParser.parseJsonToObject(extractionResponse);
-            if (extractionJson == null) {
-                log.error("Failed to parse extraction response to JSON.");
-            } 
-            else if (extractionJson.has("queries") && extractionJson.has("location")) {
-                JSONArray queriesArray = extractionJson.getJSONArray("queries");
-                String location = extractionJson.getString("location");
-                StringBuilder kgContextBuilder = new StringBuilder();
-
-                for (int i = 0; i < queriesArray.length(); i++) {
-                    String searchQuery = queriesArray.getString(i);
-                    String searchResult;
-                    if (location != null && !location.isEmpty()) {
-                        searchQuery += " User's location: " + location;
-                    }
-                    
-                    //Search web for results
-                    searchResult = plannerAgentTools.searchWeb(searchQuery);    
-                    kgContextBuilder.append("Q:    " + searchQuery + " A:     " + searchResult).append("\n");
-                }
-                log.info("KG Context: {}", kgContextBuilder.toString());
-                searchResultsString = kgContextBuilder.toString();
-            }
-        }
-
-
-        // Now real plan generation 
         Map<String, Object> chainVariables = Map.of(
             "visit_summary", userKGService.getVisitSummaryLastThree(userId),
             "doctor_advice", userKGService.getDoctorAdvice(userId),
             "patient_summary", userKGService.getPatientSummary(userId),
             "history_summary", userKGService.getHistorySummary(userId),
-            "kg_context", searchResultsString,
+            "kg_context", "",
             "query", query
         );
         

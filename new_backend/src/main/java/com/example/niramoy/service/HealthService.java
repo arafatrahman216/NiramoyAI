@@ -27,10 +27,8 @@ import static java.lang.Integer.parseInt;
 @Service
 @RequiredArgsConstructor
 public class HealthService {
-
     private final HealthLogRepository healthLogRepository;
     private final AIService AiService;
-
 
 
     public Page<HealthLog> findByUser(User user, Pageable pageable) {

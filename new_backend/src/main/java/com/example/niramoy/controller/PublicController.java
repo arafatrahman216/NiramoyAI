@@ -64,8 +64,8 @@ public class PublicController {
             e.printStackTrace();
             return "Error fetching data from Sasthya Seba.";
         }
-    }
 
+    }
 
     @PostMapping("/query")
     public ResponseEntity<Map<String, Object>> executeQuery(@RequestBody Map<String,String> query){

@@ -27,7 +27,9 @@ public class Messages {
     @Column(name = "is_agent", nullable = false)
     private boolean isAgent;
 
-    @Column(name = "attachment_link", nullable = false)
+    @Column(name = "attachment_link", nullable = true)
     private String attachmentLink;
-
+  
+    @Column(name = "is_plan", nullable = true)
+    private Boolean isPlan;    
 }
