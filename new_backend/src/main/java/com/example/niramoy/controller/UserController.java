@@ -556,4 +556,52 @@ public class UserController {
         return ResponseEntity.ok("Hello, Niramoy User!");
     }
 
+
+    @PostMapping("/chat-attachment")
+    public ResponseEntity<HashMap<String, Object>> sendMessageWithAttachment(
+            @RequestParam("message") String message,
+            @RequestParam("chatId") String chatId,
+            @RequestParam("mode") String mode,
+            @RequestParam(value = "attachment", required = false) MultipartFile attachment) {
+        
+        HashMap<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to send messages");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        User user = (User) authentication.getPrincipal();
+        Long userId = user.getId();
+        Long chatIdLong;
+        try {
+            chatIdLong = Long.parseLong(chatId);
+        } catch (NumberFormatException e) {
+            response.put("success", false);
+            response.put("message", "Invalid chat ID format");
+            return ResponseEntity.badRequest().body(response);
+        }
+        String fileUrl = null;
+        Messages aiReply = messageService.sendMessageAndGetReplyWithAttachment(chatIdLong, message, attachment, mode, userId);
+        response.put("success", true);
+        response.put("message", "Message with attachment sent and processed successfully");
+        response.put("userMessage", Map.of(
+            "content", message,
+            "isAgent", false,
+            "chatId", chatIdLong,
+            "isPlan", false,
+            "attachmentLink", fileUrl
+        ));
+        response.put("aiResponse", Map.of(
+            "messageId", aiReply.getMessageId(),
+            "content", aiReply.getContent(),
+            "isAgent", aiReply.isAgent(),
+            "chatId", chatIdLong,
+            "isPlan", aiReply.getIsPlan()
+        ));
+        return ResponseEntity.ok(response);
+
+    }
 }

@@ -107,4 +107,26 @@ public class ConsultAgent implements Agent {
         return response;
     }
 
+    @Override
+    public String processImageQuery(String query, String imageUrl, Long userId) {
+        String imageText = aiService.getTextFromImageUrl(imageUrl);
+        query = query +  ". Also analyze the image text provided and incorporate any relevant information from it"
+            + " into your consultation. The image contains the following text: " + imageText;
+
+        Map<String, Object> chainVariables = Map.of(
+            "visit_summary", userKGService.getVisitSummaryLastThree(userId),
+            "doctor_advice", userKGService.getDoctorAdvice(userId),
+            "patient_summary", userKGService.getPatientSummary(userId),
+            "history_summary", userKGService.getHistorySummary(userId),
+            "query", query  
+
+        );
+
+        Prompt prompt = CONSULT_PROMPT.apply(chainVariables);
+        String response = aiService.generateContent(prompt.text());
+
+        System.out.println("ConsultAgent response: " + response);
+        return response;
+    }
+    
 }

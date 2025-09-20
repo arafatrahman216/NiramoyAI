@@ -56,4 +56,11 @@ public class QnAAgent implements Agent {
         return response;
     }
 
+    @Override
+    public String processImageQuery(String query, String imageUrl, Long userId) {
+        String imageText = aiService.getTextFromImageUrl(imageUrl);
+        String combinedQuery = query + "\n\nExtracted Text from Image: " + imageText;
+        return processQuery(combinedQuery, userId);
+    }
+
 }

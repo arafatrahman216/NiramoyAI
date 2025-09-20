@@ -56,4 +56,26 @@ public class ExplainAgent implements Agent {
         return response;
     }
 
+
+    @Override
+    public String processImageQuery(String query, String imageUrl, Long userId) {
+
+        String imageText = aiService.getTextFromImageUrl(imageUrl);
+        query = query +  ". Also analyze the image text provided and incorporate any relevant information from it"
+            + " into your explanation. The image contains the following text: " + imageText;
+
+        Map<String, Object> chainVariables = Map.of(
+            "visit_summary", userKGService.getVisitSummaryLastThree(userId),
+            "doctor_advice", userKGService.getDoctorAdvice(userId),
+            "patient_summary", userKGService.getPatientSummary(userId),
+            "history_summary", userKGService.getHistorySummary(userId),
+            "query", query  
+
+        );
+
+        Prompt prompt = EXPLANATION_PROMPT.apply(chainVariables);
+        String response = aiService.generateContent(prompt.text());
+
+        return response;
+    }
 }

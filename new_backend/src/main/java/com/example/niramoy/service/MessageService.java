@@ -154,4 +154,73 @@ public class MessageService {
         }
 
     }
-}
+
+
+    public Messages sendMessageAndGetReplyWithAttachment(Long chatId, String message, MultipartFile file, String mode, Long userId) {
+        try {
+            // 1. Save user message to database
+            String imageUrl = null;
+            if (file != null && !file.isEmpty()) {
+                imageUrl = imageService.uploadImage(file);
+            }
+
+
+            ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
+            Messages userMessage = Messages.builder()
+                    .content(message)
+                    .isAgent(false)
+                    .isPlan(false)
+                    .chatSession(chatSession)
+                    .build();
+            messageRepository.save(userMessage);
+
+            // 2. Process message and generate AI reply
+            String aiReply;
+            Agent agentWithMode = agentSelector.selectAgent(mode);
+            log.info("Message : " + message);
+
+            try {
+                if (file != null && !file.isEmpty()) {
+                    // Handle image file
+                    log.info("Uploaded image URL: " + imageUrl);
+                    aiReply = agentWithMode.processImageQuery(message, imageUrl, userId);
+                } else {
+                    aiReply = agentWithMode.processQuery(message, userId);
+                }
+            } catch (Exception e) {
+                throw new AgentProcessingException("AI Service is currently unavailable. Please try again later.", e);
+            }
+
+            JSONObject parsedAiReplyJson = JsonParser.parseResponseJson(aiReply, mode);
+            System.out.println("Parsed AI Reply JSON: " + parsedAiReplyJson.toString());
+
+            Messages aiMessage;
+            // Check if this is planner mode AND LLM explicitly set is_plan to true
+            Boolean isPlanMessage = "plan".equals(mode) &&
+                    parsedAiReplyJson.has("is_plan") &&
+                    parsedAiReplyJson.getBoolean("is_plan");
+
+            String parsedAiReply;
+            if (isPlanMessage) {
+                // For plan messages, store the entire JSON so frontend can parse it
+                // log.info("Plan Message detected");
+                parsedAiReply = parsedAiReplyJson.toString();
+            } else {
+                // For non-plan messages, extract just the explanation
+                parsedAiReply = parsedAiReplyJson.optString("Explanation", "No explanation available.");
+            }
+
+            aiMessage = Messages.builder()
+                    .content(parsedAiReply)
+                    .isAgent(true)
+                    .isPlan(isPlanMessage)
+                    .chatSession(chatSession)
+                    .build();
+            messageRepository.save(aiMessage);
+            return aiMessage;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to process message: " + e.getMessage());
+        }
+    }
+
+    }

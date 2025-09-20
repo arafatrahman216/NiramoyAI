@@ -262,4 +262,13 @@ public class PlannerAgent implements Agent {
         return response;
     }
 
+
+    @Override
+    public String processImageQuery(String query, String imageUrl, Long userId) {
+        String imageText = aiService.getTextFromImageUrl(imageUrl);
+        query = query + ". Also analyze the image text provided and incorporate any relevant information from"
+                + " into your plan. The image contains the following text: " + imageText;
+
+        return processQuery(query, userId);
+    }
 }
