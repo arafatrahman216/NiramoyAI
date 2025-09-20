@@ -217,7 +217,7 @@ export const userInfoAPI = {
 // Text-to-Speech API
 export const ttsAPI = {
   generateSpeech: (text) => {
-    text = text.replace(/'/g, '\\\'').replace(/"/g, '\\"');
+    console.log(text.length);
     return api.post('/user/tts', text, {
       responseType: 'blob', // Important: tells axios to expect binary data
       headers: {

@@ -29,6 +29,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null);
   const [speakingMessageId, setSpeakingMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   // Scroll to bottom when messages update
   const scrollToBottom = () => {
@@ -66,6 +68,23 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
 
     window.addEventListener('chatRefresh', handleChatRefresh);
     return () => window.removeEventListener('chatRefresh', handleChatRefresh);
+  }, []);
+
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('Component unmounting - cleaning up audio');
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.remove();
+        currentAudioRef.current = null;
+      }
+      
+      if (currentAudioUrlRef.current) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+        currentAudioUrlRef.current = null;
+      }
+    };
   }, []);
 
   // Fetch messages function
@@ -177,24 +196,39 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
     }
   };
 
+  // Function to stop any currently playing audio
+  const stopCurrentAudio = () => {
+    if (currentAudioRef.current) {
+      console.log('Stopping current audio playback');
+      currentAudioRef.current.pause();
+      currentAudioRef.current.remove();
+      currentAudioRef.current = null;
+    }
+    
+    if (currentAudioUrlRef.current) {
+      console.log('Cleaning up audio URL');
+      URL.revokeObjectURL(currentAudioUrlRef.current);
+      currentAudioUrlRef.current = null;
+    }
+    
+    setSpeakingMessageId(null);
+  };
+
   // Handle text-to-speech functionality using backend API
   const handleReadAloud = async (messageId: number, content: string) => {
     console.log('Read aloud clicked for message:', messageId);
     
-    // Stop any currently playing audio
-    if (speakingMessageId) {
-      const currentAudio = document.getElementById(`audio-${speakingMessageId}`) as HTMLAudioElement;
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.remove();
-      }
-      setSpeakingMessageId(null);
-      
-      // If clicking on the same message, just stop
-      if (speakingMessageId === messageId) {
-        console.log('Same message clicked, stopping');
-        return;
-      }
+    // If clicking on the same message that's currently playing, just stop
+    if (speakingMessageId === messageId) {
+      console.log('Same message clicked, stopping audio');
+      stopCurrentAudio();
+      return;
+    }
+    
+    // Stop any currently playing audio before starting new one
+    if (speakingMessageId || currentAudioRef.current) {
+      console.log('Stopping previous audio before starting new one');
+      stopCurrentAudio();
     }
 
     try {
@@ -209,9 +243,15 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
       const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
       
+      // Store the URL for cleanup
+      currentAudioUrlRef.current = audioUrl;
+      
       // Create and configure audio element
       const audio = new Audio(audioUrl);
       audio.id = `audio-${messageId}`;
+      
+      // Store the audio reference
+      currentAudioRef.current = audio;
       
       // Handle audio events
       audio.onloadstart = () => {
@@ -228,14 +268,12 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
       
       audio.onended = () => {
         console.log('Audio playback ended');
-        setSpeakingMessageId(null);
-        URL.revokeObjectURL(audioUrl); // Clean up blob URL
+        stopCurrentAudio();
       };
       
       audio.onerror = (error) => {
         console.error('Audio playback error:', error);
-        setSpeakingMessageId(null);
-        URL.revokeObjectURL(audioUrl); // Clean up blob URL
+        stopCurrentAudio();
         alert('Error playing audio. Please try again.');
       };
       
@@ -244,7 +282,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, emb
       
     } catch (error: any) {
       console.error('TTS error:', error);
-      setSpeakingMessageId(null);
+      stopCurrentAudio();
       
       if (error.response) {
         console.error('TTS API error response:', error.response.data);
