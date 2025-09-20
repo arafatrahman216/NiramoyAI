@@ -25,7 +25,7 @@ public class QnAAgent implements Agent {
         "4. Provide relevant medical facts when appropriate, but avoid giving direct medical advice.\n" +
         "5. Keep the answer concise, fluent and easy to understand, avoid medical jargon.\n" +
         "6. IMPORTANT: Keep your response under 1500 characters. Be concise but helpful.\n" +
-        "MUST return JSON like this: {\"Answer\": \"...\"}.\n\n" +
+        "MUST strictly return JSON like this: {\"Answer\": \"...\"}.\n\n" +
         "Visit Summary: {{visit_summary}}\n" +
         "Doctor's Advice: {{doctor_advice}}\n" +
         "Patient Summary: {{patient_summary}}\n" +
@@ -34,7 +34,7 @@ public class QnAAgent implements Agent {
         "If intent is somewhat relevent answer the question with basic knowledge" +
         "If the question type doesnot match QNA mode, refer to use other Modes like QnA,Consult, Next Move Planner" +
         "Must Answer with only \"Explanation\" key" +
-        "ALWAYS return JSON like this {\"Explanation\": \"...\"}.\n\n" +
+        "ALWAYS strictly return JSON like this {\"Explanation\": \"...\"}.\n\n" +
         "user_query: {{query}}"
     );
 

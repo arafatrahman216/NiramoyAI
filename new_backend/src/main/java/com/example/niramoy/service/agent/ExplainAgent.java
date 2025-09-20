@@ -26,7 +26,7 @@ public class ExplainAgent implements Agent {
         "5. Keep the conclusion in a new para, concise, very fluent and friendly.\n" +
         "6. Make points or segments as needed, but when explaining keep it fluent and easy, dont use jargon.\n" +
         "7. IMPORTANT: Keep your response under 1500 characters. Be concise but helpful.\n" +
-        "MUST return JSON like this: {\"Explanation\": \"...\"}.\n\n" +
+        "MUST strictly return JSON like this: {\"Explanation\": \"...\"}.\n\n" +
         "Visit Summary: {{visit_summary}}\n" +
         "Doctor's Advice: {{doctor_advice}}\n" +
         "Patient Summary: {{patient_summary}}\n" +
@@ -34,7 +34,7 @@ public class ExplainAgent implements Agent {
         "Also track user intent. If intent is not relevant at all, politely refuse to answer and suggest consulting a healthcare professional." +
         "If intent is somewhat relevent answer the question with basic knowledge" +
         "If the question type doesnot match EXPLANATION mode, refer to use other Modes like QnA,Consult, Next Move Planner" +
-        "ALWAYS return JSON like this {\"Explanation\": \"...\"}.\n\n" +
+        "ALWAYS strictly return JSON like this {\"Explanation\": \"...\"}.\n\n" +
         "user_query: {{query}}"
     );
 
