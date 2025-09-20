@@ -383,7 +383,7 @@ const DiagnosisInterface = () => {
   // CHATS SIDEBAR STATE
   const [isChatsSidebarOpen, setIsChatsSidebarOpen] = useState(false);
   
-  // CHAT ID STATE - tracks selected chat
+  // CHAT ID STATE - tracks
   const [selectedChatId, setSelectedChatId] = useState(null);
   
   // SELECTED CHAT DATA - tracks full chat data with messages
