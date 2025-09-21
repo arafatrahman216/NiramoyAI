@@ -1,4 +1,3 @@
-// src/components/User/Dashboard.js
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -6,10 +5,11 @@ import { MiniSpeedometer} from "./MiniSpeedoMeter"
 import MedicationTimeline from "./MedicationTimeline";
 import Chart from "./Chart";
 import RecentVisits from "../RecentVisits";
-import { Home, User, Activity, LogOut } from "lucide-react";
+import QRModal from "./QRModal";
+import { Home, User, Activity, LogOut, QrCode, Share2 } from "lucide-react";
 
 import axios from "axios";
-import { API_BASE_URL , patientAPI, userInfoAPI} from "../../services/api";
+import { API_BASE_URL , patientAPI, userInfoAPI, sharedProfileAPI} from "../../services/api";
 import { 
   fallbackDashboardUser,
   fallbackDashboardVitals,
@@ -25,6 +25,9 @@ const Dashboard = () => {
   const [recentVisits, setRecentVisits] = useState(fallbackDashboardVisits);
   const [healthProfile, setHealthProfile] = useState(fallbackDashboardProfile);
   const [medications, setMedications] = useState([]);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrData, setQrData] = useState(null);
+  const [loadingQR, setLoadingQR] = useState(false);
 
   const profile = user || fallbackDashboardUser;
 
@@ -127,6 +130,28 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  // Generate QR Code and Shareable Link
+  const generateQRCode = async () => {
+    setLoadingQR(true);
+    
+    try {
+      // For now, using dummy data - replace with actual API call
+      const response = await sharedProfileAPI.getShareableLink();
+      console.log("Shareable link response:", response.data);
+
+
+      // QR data for demonstration
+      const QRData = response.data;
+      setQrData(QRData);
+      setIsQRModalOpen(true);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      // You can add a toast notification here for error handling
+    } finally {
+      setLoadingQR(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       {/* Navbar */}
@@ -142,7 +167,7 @@ const Dashboard = () => {
             {/* Navigation Links */}
             <div className="flex items-center space-x-6">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/')}
                 className="flex items-center px-3 py-2 text-emerald-400 hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <Home className="w-4 h-4 mr-2" />
@@ -171,12 +196,26 @@ const Dashboard = () => {
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
-        <button
-          onClick={() => navigate("/healthlog")}
-          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
-        >
-          + Add Health Log
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={generateQRCode}
+            disabled={loadingQR}
+            className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
+          >
+            {loadingQR ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <QrCode className="w-4 h-4" />
+            )}
+            <span>{loadingQR ? 'Generating...' : 'Get Shareable Link & QR'}</span>
+          </button>
+          <button
+            onClick={() => navigate("/healthlog")}
+            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
+          >
+            + Add Health Log
+          </button>
+        </div>
       </header>
 
       <div className="space-y-6">
@@ -381,6 +420,15 @@ const Dashboard = () => {
         />
       </div>
       </div>
+
+      {/* QR Modal */}
+      {qrData && (
+        <QRModal
+          isOpen={isQRModalOpen}
+          onClose={() => setIsQRModalOpen(false)}
+          qrData={qrData}
+        />
+      )}
     </div>
   );
 };

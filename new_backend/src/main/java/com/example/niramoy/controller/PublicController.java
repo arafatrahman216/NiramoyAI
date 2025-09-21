@@ -1,10 +1,14 @@
 package com.example.niramoy.controller;
 
 
+import com.example.niramoy.dto.UserDTO;
 import com.example.niramoy.entity.DoctorProfile;
+import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.service.DoctorProfileService;
+import com.example.niramoy.service.QRService;
 import com.example.niramoy.service.SearchService;
+import com.example.niramoy.service.UserService;
 import com.example.niramoy.utils.DoctorScrapper;
 import com.example.niramoy.utils.IdMapper;
 import com.example.niramoy.utils.JsonParser;
@@ -29,6 +33,9 @@ public class PublicController {
     private  final SearchService searchService;
     private final AIService aiService;
     private final DoctorScrapper doctorScrapper;
+    private final QRService qrService;
+    private final UserService userService;
+    private final UserRepository userRepository;
 
 
     @GetMapping("/doctors/search")
@@ -104,5 +111,44 @@ public class PublicController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/shared")
+    public ResponseEntity<Map<String, Object>> getSharedProfile(@RequestBody Map<String,String> request){
+        String encryptedId = request.get("encryptedId");
+        String username = "";
+        Map<String, Object> response = new HashMap<>();
+        long expiryTime = 0;
+        response.put("success", false);
+        try {
+            String decryptedData = qrService.decrypt(encryptedId);
+            String[] parts = decryptedData.split("###");
+            username = parts[0];
+            expiryTime = Long.parseLong(parts[1]);
+            long currentTime = System.currentTimeMillis();
+            if (currentTime > expiryTime) {
+                response.put("message", "Link has expired.");
+                response.put("error", "Link expired");
+                return ResponseEntity.status(400).body(response);
+            }
 
+        } catch (Exception e) {
+            response.put("message", "Failed to retrieve shared profile.");
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+
+        // If everything is fine, return the user profile
+        UserDTO userProfile = userService.findByUsername(username);
+        if (userProfile == null) {
+            response.put("message", "User not found.");
+            response.put("error", "User not found");
+            return ResponseEntity.status(404).body(response);
+        }
+        response = userService.createUserDashboardMap(userRepository.findByUsername(username));
+        response.put("success", true);
+        response.put("message", "Shared profile retrieved successfully.");
+        response.put("user", userProfile);
+        response.put("expire", expiryTime);
+        
+        return ResponseEntity.ok(response);
+    }
 }

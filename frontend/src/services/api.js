@@ -244,4 +244,17 @@ export const ttsAPI = {
   }
 };
 
+
+
+export const sharedProfileAPI = {
+  getSharedProfile: (encryptedId) => 
+    api.post('/public/shared', { encryptedId: encryptedId }),
+
+  getShareableLink: () =>
+    api.get('/user/profile/share')
+
+};
+
+
+
 export default api;

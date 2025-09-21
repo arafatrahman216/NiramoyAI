@@ -15,20 +15,6 @@ const HealthLogs = ({ patientId ,healthLog}) => {
     console.log("Fallback Logs:", fallbackHealthLogs);
   }, [patientId]);
 
-  useEffect(() => {
-    let filtered = healthLogs;
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(log => 
-        log.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.symptoms.some(symptom => symptom.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        log.healthLogId.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredLogs(filtered);
-  }, [searchTerm, healthLogs]);
 
   const getStressLevelColor = (level) => {
     if (level <= 3) return 'text-green-400';
@@ -45,20 +31,6 @@ const HealthLogs = ({ patientId ,healthLog}) => {
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-semibold text-white">Health Logs</h3>
         <Clipboard className="w-6 h-6 text-emerald-400" />
-      </div>
-
-      {/* Search Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search logs by ID, symptoms or notes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
       </div>
 
       {/* Health Logs List */}

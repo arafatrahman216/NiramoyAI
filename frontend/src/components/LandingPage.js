@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { doctorAPI, testCenterAPI, symptomsAPI } from '../services/api';
-import AIChatbot, { ChatbotButton } from './AIChatbot';
 
 // Scroll to top component
 function ScrollTop() {
@@ -49,8 +48,37 @@ const LandingPage = () => {
   const [filteredResults, setFilteredResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [chatbotOpen, setChatbotOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Check if user is logged in
+  useEffect(() => {
+    const user = localStorage.getItem('user') || localStorage.getItem('token') || localStorage.getItem('authToken');
+    setIsLoggedIn(!!user);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownOpen && !event.target.closest('.profile-dropdown')) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [profileDropdownOpen]);
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
+    setIsLoggedIn(false);
+    setProfileDropdownOpen(false);
+    navigate('/');
+  };
 
   // Load data from API
   useEffect(() => {
@@ -162,43 +190,113 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-zinc-950 text-white">
       {/* Navigation */}
-      <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40 backdrop-blur-lg bg-opacity-95">
+      <nav className="bg-zinc-900/95 border-b border-zinc-800 sticky top-0 z-40 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-2xl font-bold text-blue-400"
+              className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent"
             >
               NiramoyAI
             </motion.div>
-            <div className="flex space-x-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
-                onClick={() => navigate('/login')}
-              >
-                Login
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                onClick={() => navigate('/signup')}
-              >
-                Sign Up
-              </motion.button>
+            
+            <div className="flex items-center space-x-6">
+              {isLoggedIn && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2 text-zinc-300 hover:text-emerald-400 transition-colors font-medium"
+                  onClick={() => navigate('/diagnosis')}
+                >
+                  🩺 Diagnosis
+                </motion.button>
+              )}
+
+              {isLoggedIn ? (
+                <div className="relative profile-dropdown">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors"
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  >
+                    <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                    </div>
+                    <span>Profile</span>
+                    <svg className={`w-4 h-4 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </motion.button>
+
+                  {profileDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl py-2 z-50"
+                    >
+                      <button
+                        className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          navigate('/dashboard');
+                        }}
+                      >
+                        📊 Dashboard
+                      </button>
+                      <button
+                        className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          navigate('/profile');
+                        }}
+                      >
+                        👤 Profile
+                      </button>
+                      <hr className="border-zinc-700 my-2" />
+                      <button
+                        className="w-full text-left px-4 py-2 text-red-400 hover:bg-zinc-700 hover:text-red-300 transition-colors"
+                        onClick={handleLogout}
+                      >
+                        🚪 Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex space-x-4">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 text-zinc-300 hover:text-white transition-colors"
+                    onClick={() => navigate('/login')}
+                  >
+                    Login
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-medium"
+                    onClick={() => navigate('/signup')}
+                  >
+                    Sign Up
+                  </motion.button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-black to-gray-900 py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
+      <section className="relative bg-gradient-to-br from-zinc-900 via-zinc-950 to-black py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/5 to-blue-600/5"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -206,44 +304,30 @@ const LandingPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="text-5xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Find Healthcare
+              <h1 className="text-5xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                AI-Powered
                 <br />
-                Near You
+                Healthcare
               </h1>
-              <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-                Search for qualified doctors by symptoms, browse test centers, and get AI-powered health assistance.
+              <p className="text-xl text-zinc-300 mb-8 leading-relaxed">
+                Advanced medical diagnosis, doctor recommendations, and comprehensive health insights powered by artificial intelligence.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
-                  onClick={() => navigate('/signup')}
-                >
-                  Get Started
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 border border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white rounded-lg font-semibold transition-colors"
-                  onClick={() => setChatbotOpen(true)}
-                >
-                  🤖 Ask AI Assistant
-                </motion.button>
-              </div>
             </motion.div>
+            
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative"
+              className="flex justify-center lg:justify-end"
             >
-              <div className="w-full h-80 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-gray-700">
-                <svg className="w-32 h-32 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
-                </svg>
-              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors shadow-lg"
+                onClick={() => navigate(isLoggedIn ? '/diagnosis' : '/signup')}
+              >
+                {isLoggedIn ? ' Start Diagnosis' : 'Get Started'}
+              </motion.button>
             </motion.div>
           </div>
         </div>
@@ -256,7 +340,7 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="bg-gray-900 border border-gray-700 rounded-2xl p-8 backdrop-blur-lg bg-opacity-95 shadow-2xl"
+            className="bg-zinc-900/95 border border-zinc-700/50 rounded-2xl p-8 backdrop-blur-lg shadow-2xl"
           >
             <h2 className="text-2xl font-bold text-center mb-6 text-white">
               Search Healthcare Providers
@@ -269,8 +353,8 @@ const LandingPage = () => {
                 whileTap={{ scale: 0.95 }}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                   searchType === 'symptoms'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    ? 'bg-emerald-600 text-white shadow-lg'
+                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                 }`}
                 onClick={() => handleSearchTypeChange('symptoms')}
               >
@@ -281,8 +365,8 @@ const LandingPage = () => {
                 whileTap={{ scale: 0.95 }}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                   searchType === 'doctors'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                 }`}
                 onClick={() => handleSearchTypeChange('doctors')}
               >
@@ -293,8 +377,8 @@ const LandingPage = () => {
                 whileTap={{ scale: 0.95 }}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                   searchType === 'testCenters'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    ? 'bg-purple-600 text-white shadow-lg'
+                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                 }`}
                 onClick={() => handleSearchTypeChange('testCenters')}
               >
@@ -307,7 +391,7 @@ const LandingPage = () => {
               <div className="space-y-4">
                 <div className="relative">
                   <textarea
-                    className="w-full p-4 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:outline-none resize-none"
+                    className="w-full p-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"
                     rows="4"
                     placeholder="Describe your symptoms... (e.g., headache, fever, chest pain)"
                     value={symptomsQuery}
@@ -323,7 +407,7 @@ const LandingPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleSymptomsSearch}
                   
                   disabled={loading || !symptomsQuery.trim()}
@@ -347,7 +431,7 @@ const LandingPage = () => {
                 </div>
                 <input
                   type="text"
-                  className="w-full pl-10 pr-4 py-4 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full pl-10 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder={`Search ${searchType === 'doctors' ? 'doctors by name, specialty, or location' : 'test centers by name, services, or location'}`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -393,11 +477,11 @@ const LandingPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   whileHover={{ y: -8 }}
-                  className="bg-gray-900 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all"
+                  className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-zinc-600 transition-all hover:shadow-lg"
                 >
                   {/* Doctor/Test Center Card Content */}
                   <div className="flex items-center mb-4">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mr-4 overflow-hidden flex-shrink-0">
+                    <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mr-4 overflow-hidden flex-shrink-0">
                       {searchType === 'doctors' || searchType === 'symptoms' ? (
                         item.image ? (
                           <>
@@ -456,7 +540,7 @@ const LandingPage = () => {
                   {/* Specialty/Services */}
                   {(item.specialty || item?.doctor?.specialization) && (
                     <div className="mb-3">
-                      <span className="inline-block bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-sm">
+                      <span className="inline-block bg-emerald-600/20 text-emerald-400 px-3 py-1 rounded-full text-sm">
                         {item.specialty || item?.doctor?.specialization}
                       </span>
                     </div>
@@ -503,8 +587,8 @@ const LandingPage = () => {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
-                      onClick={() => navigate('/dashboard')}
+                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors"
+                      onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')}
                     >
                       Contact
                     </motion.button>
@@ -512,7 +596,7 @@ const LandingPage = () => {
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="px-4 py-2 border border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white rounded-lg text-sm transition-colors"
+                        className="px-4 py-2 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg text-sm transition-colors"
                         onClick={() => window.open(item.profileLink, '_blank')}
                       >
                         Profile
@@ -531,84 +615,162 @@ const LandingPage = () => {
               className="text-center py-16"
             >
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">
+              <h3 className="text-xl font-semibold text-zinc-300 mb-2">
                 No {searchType === 'symptoms' ? 'doctors' : searchType} found
               </h3>
-              <p className="text-gray-500">
+              <p className="text-zinc-500">
                 Try adjusting your search terms or browse all available options.
               </p>
             </motion.div>
           )}
         </div>
       </section>
-
       {/* Features Section */}
-      <section className="bg-gray-950 py-16">
+      <section className="bg-zinc-950 py-24 border-t border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.h2
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl font-bold text-center mb-12 text-white"
+            className="text-center mb-16"
           >
-            Why Choose NiramoyAI?
-          </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Complete Healthcare Ecosystem
+            </h2>
+            <p className="text-xl text-zinc-400 max-w-3xl mx-auto">
+              Advanced AI-powered platform bridging the gap between patients and healthcare providers
+            </p>
+          </motion.div>
+
+          {/* Main Features Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
             {[
               {
-                icon: "🩺",
-                title: "Verified Doctors",
-                description: "All doctors are verified and licensed professionals with proven track records."
+                icon: "🔍",
+                title: "Symptom-Based Search",
+                description: "Enter your symptoms and get matched with the right specialists, nearby doctors, and test centers using AI-powered recommendations.",
+                gradient: "from-blue-500 to-cyan-500"
               },
               {
-                icon: "🧪",
-                title: "Accredited Centers", 
-                description: "Partner with only accredited test centers for accurate and reliable results."
+                icon: "🧠",
+                title: "AI Diagnosis Review",
+                description: "Upload prescriptions and health documents. Our AI explains diagnoses in simple terms and suggests next steps for better care.",
+                gradient: "from-emerald-500 to-teal-500"
               },
               {
-                icon: "⭐",
-                title: "Quality Care",
-                description: "Access to high-quality healthcare services with patient satisfaction guarantee."
+                icon: "📊",
+                title: "Health Knowledge Graph",
+                description: "Automated creation of your personal health timeline and knowledge graph from uploaded documents and medical history.",
+                gradient: "from-purple-500 to-indigo-500"
               }
             ].map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="text-center"
+                className="relative group"
               >
-                <div className="text-6xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold text-white mb-4">{feature.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-8 h-full hover:border-zinc-700 transition-all duration-300 group-hover:shadow-2xl">
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-4">{feature.title}</h3>
+                  <p className="text-zinc-400 leading-relaxed">{feature.description}</p>
+                </div>
               </motion.div>
             ))}
           </div>
+
+          {/* Advanced Features */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-zinc-900/80 to-zinc-800/80 border border-zinc-700/50 rounded-3xl p-8 mb-16"
+          >
+            <h3 className="text-2xl font-bold text-white text-center mb-8">Advanced Healthcare Features</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                {
+                  icon: "💬",
+                  title: "Context-Aware Chatbot",
+                  description: "AI-powered assistant using your health data"
+                },
+                {
+                  icon: "📱",
+                  title: "Personal Dashboard",
+                  description: "Visualize health trends and diagnosis timeline"
+                },
+                {
+                  icon: "👩‍⚕️",
+                  title: "Doctor Access Portal",
+                  description: "Professionals can access structured patient data"
+                },
+                {
+                  icon: "💰",
+                  title: "Cost Estimation",
+                  description: "Estimate treatment costs and required tests"
+                }
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="text-center group"
+                >
+                  <div className="text-4xl mb-3 group-hover:scale-125 transition-transform duration-300">{feature.icon}</div>
+                  <h4 className="text-white font-semibold mb-2">{feature.title}</h4>
+                  <p className="text-zinc-400 text-sm">{feature.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Technology Stack */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <h3 className="text-2xl font-bold text-white mb-8">Powered by Modern Technology</h3>
+            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+              {[
+                { name: "React.js", icon: "⚛️" },
+                { name: "Spring Boot", icon: "🍃" },
+                { name: "AI/LLM", icon: "🤖" },
+                { name: "Knowledge Graph", icon: "🕸️" },
+              ].map((tech, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.1, opacity: 1 }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-zinc-800/50 rounded-lg border border-zinc-700/50 hover:border-emerald-500/50 transition-all"
+                >
+                  <span className="text-xl">{tech.icon}</span>
+                  <span className="text-zinc-300 font-medium">{tech.name}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-black border-t border-gray-800 py-8">
+      <footer className="bg-black border-t border-zinc-800 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-2xl font-bold text-blue-400 mb-2">NiramoyAI</h3>
-          <p className="text-gray-400">
-            Your trusted healthcare companion. Find the best doctors and test centers near you.
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent mb-2">NiramoyAI</h3>
+          <p className="text-zinc-400">
+            Your trusted AI-powered healthcare companion. Advanced medical insights at your fingertips.
           </p>
         </div>
       </footer>
 
       {/* Scroll to top */}
       <ScrollTop />
-
-      {/* Floating AI Chatbot Button */}
-      <ChatbotButton onClick={() => setChatbotOpen(true)} />
-
-      {/* AI Chatbot Dialog */}
-      <AIChatbot
-        open={chatbotOpen}
-        onClose={() => setChatbotOpen(false)}
-      />
     </div>
   );
 };

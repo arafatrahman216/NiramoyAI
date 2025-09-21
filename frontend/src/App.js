@@ -33,6 +33,7 @@ import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
 import Timeline from './components/Timeline/Timeline';
 import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
 import PatientProfile from './components/PatientProfile/PatientProfile';
+import SharedProfile from './components/SharedProfile';
 
 
 const theme = createTheme({
@@ -275,6 +276,7 @@ function App() {
           <div className="App">
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/shared/profile/:encryptedId" element={<SharedProfile />} />
               <Route
                 path="/login"
                 element={

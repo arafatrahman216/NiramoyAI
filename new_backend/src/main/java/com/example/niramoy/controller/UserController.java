@@ -45,6 +45,7 @@ public class UserController {
     private final MessageService messageService;
     private final HealthService healthService;
     private final ElevenLabService elevenLabService;
+    private final QRService qrService;
 
 
 
@@ -603,5 +604,28 @@ public class UserController {
         ));
         return ResponseEntity.ok(response);
 
+    }
+
+
+    @GetMapping("/profile/share")
+    public ResponseEntity<Map<String, Object>> getShareableLink(){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        UserDTO profile = userService.convertToUserDTO(user);
+        response.put("success", true);
+        response.put("message", "Shareable link generated successfully" );
+        String data = profile.getUsername() + "###" + (System.currentTimeMillis() + 24*60*60*1000); // 1 day expiry
+        String profileLink = "http://localhost:3000/shared/profile/" + (profile.getUsername() != null ? qrService.encrypt(data): "user123");
+        response.put("link", profileLink);
+        response.put("user", qrService.decrypt(qrService.encrypt(data)));
+        response.put("expire", qrService.decrypt(qrService.encrypt(data)).split("###")[1]);
+        response.put("qrImage",  qrService.generateQrCode(profileLink));
+        return ResponseEntity.ok(response);
     }
 }

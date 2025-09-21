@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // ==============================================
 // SIDEBAR COMPONENT
@@ -7,9 +8,13 @@ import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
 // Contains: Logo, New Chat, Navigation, Sign In
 // Edit handleNavigation() to add routing/page changes
 const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSidebarOpen, onNewChat }) => {
+  const navigate = useNavigate();
   // TODO: Add navigation logic here
   const handleNavigation = (section) => {
     console.log(`Navigate to: ${section}`);
+    navigate(`/${section}`);
+
+
     // Add your routing logic here (React Router, Next.js router, etc.)
   };
 
@@ -69,7 +74,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
         {/* Home Section */}
         <div className="flex flex-col items-center space-y-2">
           <button 
-            onClick={() => handleNavigation('home')}
+            onClick={() => handleNavigation('')}
             className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
             title="Home"
           >
