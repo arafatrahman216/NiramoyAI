@@ -83,18 +83,22 @@ public class PublicController {
     public ResponseEntity<Map<String, Object>> executeQuery(@RequestBody Map<String,String> query){
         String aiResponse = aiService.generateContent(
                 "You are a Medical Search Assistant. " +
-                        "You help users find doctors based on their symptoms, location, and specialty title(Orthopedist not Orthopedics). " +
+                        "You help users find doctors based on their symptoms, location, and specialty title(Orthopedist, not Orthopedics). " +
                         "You will give output in strictly JSON format with keys: " +
-                        "{ \n \"specialty\": \"...\",\n \"cityName\": \"...\" }" +
+                        "{ \"specialty\": \"...\",\n \"cityName\": \"...\" }" +
                         "If the user provides symptoms, infer the specialty from them. " +
                         "If the user provides a location, extract the city name of Bangladesh " +
                         "If the user does not provide location or symptoms, default to Dhaka, General Physician. " +
                         "Give me only the raw JSON object, no code block, no language tag, no explanation."+
-                        "Do not include any explanations or additional text or delimeter(json or ```) outside the JSON brackets ."
+                        "Do not(strictly) include any explanations or additional text or delimeter(json or ```) outside the JSON brackets ."
 //                       + "suggest from these categories : "+ IdMapper.getAllSpecialities()
                 , query.get("query"));
         Map<String, Object> response = new HashMap<>();
         Map<String,Object> citySpecialty = JsonParser.parseCityAndSpecialty(aiResponse);
+        if (citySpecialty.size()==0){
+            citySpecialty.put("cityName","Dhaka");
+            citySpecialty.put("specialty","General Physician");
+        }
         String doctorSuggestion = null ;
         try {
             doctorSuggestion=doctorScrapper.scrapeDoctors(citySpecialty.get("cityName").toString(),citySpecialty.get("specialty").toString());

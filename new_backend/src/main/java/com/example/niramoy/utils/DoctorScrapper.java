@@ -3,13 +3,19 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.example.niramoy.service.ImageService;
+import dev.langchain4j.data.image.Image;
 import java.util.*;
 
 @Service
 public class DoctorScrapper {
+    @Autowired
+    public ImageService imageService;
 
     @Cacheable(value = "scrappedDoctors", key = "{#cityName, #specialty}")
     public String scrapeDoctors(String cityName, String specialty) throws Exception {
@@ -39,12 +45,12 @@ public class DoctorScrapper {
         // Select each doctor card
         Elements doctorCards = doc.select("div[itemscope][itemtype='https://schema.org/Physician']");
 
-        List<Map<String, String>> doctors = new ArrayList<>();
+        List<Map<String, Object>> doctors = new ArrayList<>();
 
         for (Element card : doctorCards) {
             if (doctors.size() >= 10) break; // Only first 10
 
-            Map<String, String> doctor = new LinkedHashMap<>();
+            Map<String, Object> doctor = new LinkedHashMap<>();
 
             // ✅ Doctor name: specifically q:key="Zw_0"
             Element nameEl = card.selectFirst("h6[itemprop=name][q:key=Zw_0]");
@@ -61,6 +67,16 @@ public class DoctorScrapper {
             Element degreeEl = card.selectFirst(".small-body-searchable");
             if (degreeEl != null) {
                 doctor.put("degree", degreeEl.text().trim());
+            }
+
+            Image imageFile = null;
+            try {
+
+                imageFile = imageService.buildImageFromUrl((String) doctor.get("image") );
+                doctor.put("imageFile", imageFile.base64Data());
+                doctor.put("mimeType", imageFile.mimeType());   
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
             Element specialtyEl = card.selectFirst("[itemprop=medicalSpecialty]");

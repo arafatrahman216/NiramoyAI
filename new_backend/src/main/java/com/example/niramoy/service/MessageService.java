@@ -23,7 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.json.JSONObject;
 
@@ -38,7 +40,7 @@ public class MessageService {
     private final ImageService imageService;
 
 
-    //    @Cacheable(value = "messages", key = "#chatId")
+       @Cacheable(value = "messages", key = "#chatId")
     public List<Messages> getMessagesByChatId(Long chatId) {
         ChatSessions chatSessions = chatSessionRepository.findChatSessionsByChatId(chatId);
         return chatSessions.getMessages().stream().sorted(Comparator.comparing(Messages::getMessageId)).toList();
@@ -95,6 +97,8 @@ public class MessageService {
         }
     }
 
+
+    @CachePut(value = "messages", key = "#chatId")
     public Messages sendMessageAndGetReply(Long chatId, String message, String mode, Long userId) {
         try {
             // 1. Save user message to database
@@ -156,6 +160,7 @@ public class MessageService {
     }
 
 
+    @CachePut(value = "messages", key = "#chatId")
     public Messages sendMessageAndGetReplyWithAttachment(Long chatId, String message, MultipartFile file, String mode, Long userId) {
         try {
             // 1. Save user message to database
@@ -223,4 +228,19 @@ public class MessageService {
         }
     }
 
+
+    public List<Map<String,Object>> convertToMessageMap(List<Messages> messages) {
+        List<Map<String,Object>> messageMaps = new ArrayList<>();
+        for (Messages msg : messages) {
+            Map<String,Object> map = new HashMap<>();
+            map.put("messageId", msg.getMessageId());
+            map.put("content", msg.getContent());
+            map.put("isAgent", msg.isAgent());
+            map.put("isPlan", msg.getIsPlan());
+            map.put("attachmentLink", msg.getAttachmentLink());
+            messageMaps.add(map);
+        }
+        return messageMaps;
     }
+
+}

@@ -37,8 +37,14 @@ public class JsonParser {
         if (jsonResponse.startsWith("```json")) {
             jsonResponse = jsonResponse.substring(7).trim();
         }
+        else if (jsonResponse.startsWith("```json\n")) {
+            jsonResponse = jsonResponse.substring(8).trim();
+        }
         if (jsonResponse.endsWith("```")) {
             jsonResponse = jsonResponse.substring(0, jsonResponse.length() - 3).trim();
+        }
+        else if (jsonResponse.endsWith("```\n")) {
+            jsonResponse = jsonResponse.substring(0, jsonResponse.length() - 4).trim();
         }
         
         return jsonResponse;

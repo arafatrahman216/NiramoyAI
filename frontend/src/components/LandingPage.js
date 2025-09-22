@@ -483,19 +483,19 @@ const LandingPage = () => {
                   <div className="flex items-center mb-4">
                     <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mr-4 overflow-hidden flex-shrink-0">
                       {searchType === 'doctors' || searchType === 'symptoms' ? (
-                        item.image ? (
+                        item.imageFile ? (
                           <>
                             <img 
-                              src={item.image}
+                              src={`data:${item.mimeType};base64,${item.imageFile}`}
                               alt={item.name || 'Doctor'}
                               className="w-full h-full object-cover rounded-full"
                               onError={(e) => {
-                                console.log('Image failed to load:', item.image);
+                                console.log('Image failed to load:', item.imageFile);
                                 e.target.style.display = 'none';
                                 e.target.parentNode.querySelector('.fallback-icon').style.display = 'block';
                               }}
                               onLoad={() => {
-                                console.log('Image loaded successfully:', item.image);
+                                console.log('Image loaded successfully:');
                               }}
                             />
                             <svg className="w-8 h-8 text-white fallback-icon" style={{display: 'none'}} fill="currentColor" viewBox="0 0 24 24">

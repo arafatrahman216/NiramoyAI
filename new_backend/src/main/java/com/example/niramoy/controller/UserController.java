@@ -266,7 +266,8 @@ public class UserController {
         response.put("success", true );
         System.out.println(chatId);
         List<Messages> messages = messageService.getMessagesByChatId(chatId); // get the single chat session by chatId
-        response.put("data", messages); // messages of the distinct chat session(this is what is required)
+        List<Map<String,Object>> messageMaps = messageService.convertToMessageMap(messages);
+        response.put("data", messageMaps); // messages of the distinct chat session(this is what is required)
 //        List<ChatSessions> chatSessionsList = new ArrayList<>();
 //        for (ChatSessions cs: chatSession.getUser().getChatSession()){ // all chat sessions of the user(no use for now)
 //            if (cs.getMessages().size() >0){
@@ -628,4 +629,7 @@ public class UserController {
         response.put("qrImage",  qrService.generateQrCode(profileLink));
         return ResponseEntity.ok(response);
     }
+
+
+    // @GetMapping("/visit-context")
 }
