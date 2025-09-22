@@ -121,7 +121,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         messageId: msg.messageId,
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp,
+        timestamp: msg.timestamp ? msg.timestamp : undefined,
         isPlan: msg.isPlan === true,
         attachmentLink: msg.attachmentLink || msg.attachment_link || null
       }));

@@ -74,7 +74,7 @@ public class DoctorScrapper {
 
                 imageFile = imageService.buildImageFromUrl((String) doctor.get("image") );
                 doctor.put("imageFile", imageFile.base64Data());
-                doctor.put("mimeType", imageFile.mimeType());   
+                doctor.put("mimeType", imageFile.mimeType());
             } catch (Exception e) {
                 e.printStackTrace();
             }

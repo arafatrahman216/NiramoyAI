@@ -252,7 +252,7 @@ public class UserController {
     }
 
     @PostMapping("/message")
-    public  ResponseEntity<HashMap<String,Object>> getAgentMessage(@RequestBody Map<String,String> query){
+    public  ResponseEntity<HashMap<String,Object>> getMessages(@RequestBody Map<String,String> query){
 
         HashMap<String,Object> response = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -267,7 +267,8 @@ public class UserController {
         System.out.println(chatId);
         List<Messages> messages = messageService.getMessagesByChatId(chatId); // get the single chat session by chatId
         List<Map<String,Object>> messageMaps = messageService.convertToMessageMap(messages);
-        response.put("data", messageMaps); // messages of the distinct chat session(this is what is required)
+        System.out.println(messageMaps);
+        response.put("data", messages); // messages of the distinct chat session(this is what is required)
 //        List<ChatSessions> chatSessionsList = new ArrayList<>();
 //        for (ChatSessions cs: chatSession.getUser().getChatSession()){ // all chat sessions of the user(no use for now)
 //            if (cs.getMessages().size() >0){

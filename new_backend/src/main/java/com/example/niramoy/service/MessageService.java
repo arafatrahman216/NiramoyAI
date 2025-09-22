@@ -40,7 +40,6 @@ public class MessageService {
     private final ImageService imageService;
 
 
-       @Cacheable(value = "messages", key = "#chatId")
     public List<Messages> getMessagesByChatId(Long chatId) {
         ChatSessions chatSessions = chatSessionRepository.findChatSessionsByChatId(chatId);
         return chatSessions.getMessages().stream().sorted(Comparator.comparing(Messages::getMessageId)).toList();
@@ -83,11 +82,16 @@ public class MessageService {
 
     @CacheEvict(value = "chatSessions", key = "#user.id")
     public ChatSessionDTO createNewChatSession(User user) {
+
+        ChatSessions emptyChatSession = chatSessionRepository.findChatSessionsByUserAndMessages_Empty(user);
+        if (emptyChatSession != null) {
+            return new ChatSessionDTO(emptyChatSession);
+        }
         try {
             ChatSessions newChatSession = ChatSessions.builder()
                     .user(user)
                     .createdAt(java.time.LocalDateTime.now())
-                    .title("New Chat")
+                    .title("New Chat").messages(new ArrayList<>())
                     .build();
             
             ChatSessions savedSession = chatSessionRepository.save(newChatSession);
@@ -98,7 +102,6 @@ public class MessageService {
     }
 
 
-    @CachePut(value = "messages", key = "#chatId")
     public Messages sendMessageAndGetReply(Long chatId, String message, String mode, Long userId) {
         try {
             // 1. Save user message to database
@@ -160,7 +163,6 @@ public class MessageService {
     }
 
 
-    @CachePut(value = "messages", key = "#chatId")
     public Messages sendMessageAndGetReplyWithAttachment(Long chatId, String message, MultipartFile file, String mode, Long userId) {
         try {
             // 1. Save user message to database

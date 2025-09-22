@@ -6,7 +6,8 @@ import MedicationTimeline from "./MedicationTimeline";
 import Chart from "./Chart";
 import RecentVisits from "../RecentVisits";
 import QRModal from "./QRModal";
-import { Home, User, Activity, LogOut, QrCode, Share2 } from "lucide-react";
+import { Home, User, Activity, LogOut, QrCode, Share2, PlusIcon } from "lucide-react";
+import { HealthAndSafetyRounded} from "@mui/icons-material"
 
 import axios from "axios";
 import { API_BASE_URL , patientAPI, userInfoAPI, sharedProfileAPI} from "../../services/api";
@@ -173,6 +174,16 @@ const Dashboard = () => {
                 <Home className="w-4 h-4 mr-2" />
                 Home
               </button>
+
+
+              <button
+                onClick={() => navigate('/diagnosis')}
+                className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                < HealthAndSafetyRounded className="w-4 h-4 mr-2" />
+                Diagnosis
+              </button>
+
               <button
                 onClick={() => navigate('/profile')}
                 className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
