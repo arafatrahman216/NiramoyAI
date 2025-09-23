@@ -1,6 +1,8 @@
 package com.example.niramoy.service;
 
 import com.example.niramoy.entity.HealthProfile;
+import com.example.niramoy.entity.Medicine;
+import com.example.niramoy.repository.MedicineRepository;
 import com.example.niramoy.repository.graphDB.GraphDB;
 import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.utils.JsonParser;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +29,8 @@ import com.example.niramoy.entity.Visits;
 public class UserKGService {
     private final GraphDB graphDB;
     private final AIService AiService;
-    
+    private final MedicineRepository medicineRepository;
+
     public boolean isConnected() {
         return graphDB.isConnected();
     }
@@ -64,7 +68,7 @@ public class UserKGService {
         List<String> extractedTestReportTexts = visit.getTestReportUrls().stream()
                                     .map(url -> AiService.getTextFromImageUrl(url))
                                     .toList();
-                 
+
         StringBuilder testReportsCombined = new StringBuilder();
         for (int i = 0; i < extractedTestReportTexts.size(); i++) {
             testReportsCombined.append("Test Report ").append(i + 1).append(" : ")
@@ -267,7 +271,8 @@ public class UserKGService {
         final PromptTemplate RELATIONSHIP_EXTRACTION_PROMPT = PromptTemplate.from(
             """
             You are a Medical Knowledge Expert. Analyze the medical data to identify relationships between different medical entities. Think critically about how symptoms, tests, diagnoses, and medicines relate to each other.
-            
+            Extract Medications is for different purpose, it is not related to the relationship extraction(frequency in 24 hr format(like "8:00", "22:00"),)
+            (default duration= 7 days, dosage means how many you have to take in per take(default 1), type is in Tab,Injection, Syrup, Capsule, Drop etc(default Tab))
             Based on the following medical data, extract relationships between entities:
             Symptoms: {{symptoms}}
             Test Results: {{tests}}
@@ -291,7 +296,9 @@ public class UserKGService {
               ],
               "DrugInteractions": [
                 {"medicine1": "...", "relationship": "INTERACTS_WITH", "medicine2": "..."}
-              ]
+              ],
+              "Medications" : [
+                {"medicine_name": "...", "dosage" : "...", "frequency": ["...", "..."], "duration": "...", "instructions": "...", "type": "..."} ]
             }
             """
         );
@@ -308,7 +315,8 @@ public class UserKGService {
                     "tests", extractedVisitJson.optJSONArray("GivenTests") != null ? extractedVisitJson.optJSONArray("GivenTests").toString() : "[]",
                     "diagnoses", extractedVisitJson.optJSONArray("Diagnosis") != null ? extractedVisitJson.optJSONArray("Diagnosis").toString() : "[]",
                     "medicines", extractedVisitJson.optJSONArray("PrescribedMedicines") != null ? extractedVisitJson.optJSONArray("PrescribedMedicines").toString() : "[]",
-                    "patient_data", String.format("{\"allergies\": \"%s\", \"patientID\": \"%s\"}", patientAllergies, patientID)
+                    "patient_data", String.format("{\"allergies\": \"%s\", \"patientID\": \"%s\"}", patientAllergies, patientID),
+                    "medications", extractedVisitJson.optJSONArray("Medications") != null ? extractedVisitJson.optJSONArray("Medications").toString() : "[]"
                 )
             ).text();
 
@@ -478,6 +486,28 @@ public class UserKGService {
                 log.error("Error inserting drug interaction relationships: {}", e.getMessage());
             }
 
+            // 6. Medications Nodes
+            try {
+                if (!relationships.has("Medications")) {
+                    log.debug("No Medications found");
+                } else {
+                    JSONArray medications = relationships.getJSONArray("Medications");
+                    for (int i = 0; i < medications.length(); i++) {
+                        JSONObject med = medications.getJSONObject(i);
+                        Medicine medicine = Medicine.builder().medicineName(med.optString("medicine_name"))
+                            .doses( med.optString("dosage","1")).duration( med.optString("duration","7 days"))
+                            .frequency( JsonParser.jsonArrayToList((JSONArray) med.get("frequency"))).instructions(med.optString("instructions"))
+                            .type(med.optString("type", "Tablet")).visit(visit).build();
+                        log.info("Inserting medication json: {}", med.toString());
+                        medicineRepository.save(medicine);
+                        log.info("Inserting medicine in db: {}", medicine);
+                    }
+                    log.info("Medications nodes inserted.");
+
+                }
+            } catch (Exception e) {
+                log.error("Error inserting medications: {}", e.getMessage());
+            }
             log.info("✅ All relationships successfully processed!");
 
         } catch (Exception e) {
