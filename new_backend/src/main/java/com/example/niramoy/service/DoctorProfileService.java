@@ -193,6 +193,7 @@ public class DoctorProfileService {
         response.put("healthLogs", healthLog);
         response.put("charts",healthService.transformToVitals(healthLog));
         response.put("visits", visits);
+//        System.out.println("Visit :"+ visits);
 
 
 

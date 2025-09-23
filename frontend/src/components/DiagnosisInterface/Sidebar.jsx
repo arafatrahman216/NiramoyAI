@@ -45,6 +45,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
   // TODO: Add sign in functionality
   const handleSignIn = () => {
     console.log('Sign in clicked');
+    navigate('/dashboard');
     // Add authentication logic here
   };
 

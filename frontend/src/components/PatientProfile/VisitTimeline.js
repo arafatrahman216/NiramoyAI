@@ -291,7 +291,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                                         <span className="text-gray-400">Dose:</span> {medicine.doses}
                                       </p>
                                       <p className="text-gray-300">
-                                        <span className="text-gray-400">Frequency:</span> {medicine.frequency}
+                                        <span className="text-gray-400">Frequency:</span> {medicine.frequency.length } times/day
                                       </p>
                                       <p className="text-gray-300">
                                         <span className="text-gray-400">Duration:</span> {medicine.duration}
