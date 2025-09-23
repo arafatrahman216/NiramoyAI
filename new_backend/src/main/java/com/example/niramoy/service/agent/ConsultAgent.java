@@ -58,7 +58,7 @@ public class ConsultAgent implements Agent {
             5.Response Constraints
 
             Length: Maximum 1500 characters
-            Format: JSON only: {\"Consultation\": \"your response here\"}
+            Format: JSON only: {\"Explanation\": \"your response here\"}
             Tone: Professional yet warm and accessible
 
             Example Response Structure
@@ -83,8 +83,8 @@ public class ConsultAgent implements Agent {
             If the question type doesnot match CONSULT mode, refer to use other Modes
             like QnA,Consult, Next Move Planner
                 
-            Must Answer with only \"Explanation\" key
-            ALWAYS return JSON like this {\"Explanation\": \"...\"}.\n\n
+            Must Answer with only \"Explanation\" key. donot use delimeters like json``` and ```. Must Answer only the raw JSON 
+            ALWAYS return RAW JSON like this {\"Explanation\": \"...\"}.\n\n
             user_query: {{query}}
         """
     );
@@ -126,6 +126,10 @@ public class ConsultAgent implements Agent {
         String response = aiService.generateContent(prompt.text());
 
         System.out.println("ConsultAgent response: " + response);
+        if (response != null){
+            if (response.startsWith("```json")) response = response.replace("```json", "");
+            if (response.endsWith("```")) response = response.substring(0, response.length()-3);
+        }
         return response;
     }
     

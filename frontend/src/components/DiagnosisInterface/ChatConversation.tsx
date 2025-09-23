@@ -62,6 +62,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         messageId: newMessage.messageId,
         content: newMessage.content,
         agent: newMessage.isAgent,
+        isPlan : newMessage.isPlan, 
         timestamp: newMessage.timestamp
       }]);
     };
@@ -171,7 +172,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
       const aiResponseData = botResponse.aiResponse || botResponse;
       
       // Check if there's an image link in the AI response
-      const imageLink = aiResponseData.imageLink || aiResponseData.image_link || aiResponseData.imageUrl || null;
+      const imageLink = aiResponseData.attachmentLink || aiResponseData.image_link || aiResponseData.imageUrl || null;
       
       const botMessage: Message = {
         messageId: aiResponseData.messageId || Date.now() + 1,

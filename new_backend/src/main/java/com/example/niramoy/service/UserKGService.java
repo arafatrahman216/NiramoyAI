@@ -31,6 +31,7 @@ public class UserKGService {
     private final AIService AiService;
     private final MedicineRepository medicineRepository;
 
+
     public boolean isConnected() {
         return graphDB.isConnected();
     }

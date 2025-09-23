@@ -119,14 +119,26 @@ public class VisitService {
     public List<VisitDTO> getRecentVisits(User user, int i) {
 
         List<Visits> visits = visitsRepository.findByUserOrderByAppointmentDateDesc(user);
+
         return visits.stream().limit(i).map(v -> {
+            Long doctorId =  -1L;
+            String doctorName = "";
+            if (v.getDoctor() != null) {
+                doctorId = v.getDoctor().getDoctorId();
+                doctorName = v.getDoctor().getName();
+            }
+            else {
+                doctorName = v.getDoctorName();
+            }
+
             VisitDTO dto = new VisitDTO();
             dto.setVisitId(v.getVisitId());
             dto.setAppointmentDate(v.getAppointmentDate().toString());
-            dto.setDoctorName(v.getDoctorName());
+            dto.setDoctorName(doctorName);
             dto.setPatientName(user.getName());
             dto.setUserId(user.getId());
-            dto.setDoctorId(v.getDoctor().getDoctorId());
+            dto.setDoctorId(doctorId);
+
             dto.setSymptoms(v.getSymptoms());
             dto.setPrescription(v.getPrescription());
             dto.setPrescriptionFileUrl(v.getPrescriptionFileUrl());

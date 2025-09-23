@@ -12,6 +12,10 @@ const VisitGraph = ({ visits = [] }) => {
   "#F472B6", // pink
   "#F87171", // red
   "#FBBF24", // orange
+  "#C084FC", // purple
+  "#34D399", // teal
+  "#F9A8D4"  // light pink
+
 ];
   // ------------------------------
   // Process visits to assign tracks, colors, and branch connections
@@ -28,8 +32,8 @@ const VisitGraph = ({ visits = [] }) => {
 
     visits.forEach((visit, index) => {
       // Handle both old format (doctor_id) and new format (doctorId)
-      const doctorId = visit.doctorId || visit.doctor_id;
-      if (!doctorTracks.has(doctorId)) {
+      const doctorName = visit.doctorName;
+      if (!doctorTracks.has(doctorName)) {
         // New doctor → assign a track
         if (trackCounter > 0) {
           // Connect previous track to this new track
@@ -43,22 +47,22 @@ const VisitGraph = ({ visits = [] }) => {
           });
         }
 
-        doctorTracks.set(doctorId, {
+        doctorTracks.set(doctorName, {
           trackIndex: trackCounter++,
           color: colors[(trackCounter - 1) % colors.length],
           lastVisitIndex: index
         });
       } else {
         // Existing doctor → update last visit index
-        doctorTracks.get(doctorId).lastVisitIndex = index;
+        doctorTracks.get(doctorName).lastVisitIndex = index;
       }
 
       // Add track info to the visit
       processedVisits.push({
         ...visit,
-        trackIndex: doctorTracks.get(doctorId).trackIndex,
-        color: doctorTracks.get(doctorId).color,
-        doctorId, // Normalize the doctor ID field
+        trackIndex: doctorTracks.get(doctorName).trackIndex,
+        color: doctorTracks.get(doctorName).color,
+        doctorName: doctorName, // Normalize the doctor ID field
         visitId: visit.visitId || visit.visit_id, // Normalize the visit ID field
         index
       });
@@ -156,7 +160,7 @@ const VisitGraph = ({ visits = [] }) => {
               OFFSET applied: startY and endY are raised by START_OFFSET
           ------------------------------ */}
           {graphData.processedVisits.map((visit, index) => {
-            const nextVisit = graphData.processedVisits.slice(index + 1).find(v => v.doctorId === visit.doctorId);
+            const nextVisit = graphData.processedVisits.slice(index + 1).find(v => v.doctorName === visit.doctorName);
             if (nextVisit) {
               const startX = GRAPH_PADDING + visit.trackIndex * TRACK_WIDTH + TRACK_WIDTH/2;
               const startY = GRAPH_PADDING + index * ROW_HEIGHT - START_OFFSET;
@@ -168,7 +172,7 @@ const VisitGraph = ({ visits = [] }) => {
 
               return (
                 <path
-                  key={`connection-${visit.visitId}-${nextVisit.visitId}`}
+                  key={`connection-${visit.doctorName}-${index}-${nextVisit.index}`}
                   d={`M ${startX} ${startY} Q ${controlX} ${controlY}, ${endX} ${endY}`}
                   stroke={visit.color}
                   strokeWidth="2"
@@ -224,8 +228,8 @@ const VisitGraph = ({ visits = [] }) => {
         <div className="mt-3 bg-zinc-900 rounded-lg p-2 border border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-200 mb-2">Doctors</h3>
           <div className="flex flex-wrap gap-2">
-            {[...new Map(visits.map(v => [v.doctorId || v.doctor_id, v.doctorName])).entries()].map(([doctorId, doctorName], index) => (
-              <div key={doctorId} className="flex items-center gap-1">
+            {[...new Map(visits.map(v => [v.doctorName])).entries()].map(([ doctorName], index) => (
+              <div key={doctorName} className="flex items-center gap-1">
                 <div 
                   className="w-3 h-3 rounded-full border border-zinc-700"
                   style={{ backgroundColor: colors[index % colors.length] }}
