@@ -226,7 +226,11 @@ export const userInfoAPI = {
 
   getHealthLog : ()=> api.get('/user/health-log'),
 
-  getRecentVisits : () => api.get('/user/recent-visits')
+  getRecentVisits : () => api.get('/user/recent-visits'),
+
+  getMedicines : () => api.get('/user/medicines'),
+
+  deleteMedicine : (id) => api.delete(`/user/medicines/${id}`)
 
 };
 

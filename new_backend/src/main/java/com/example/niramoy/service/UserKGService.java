@@ -272,7 +272,7 @@ public class UserKGService {
         final PromptTemplate RELATIONSHIP_EXTRACTION_PROMPT = PromptTemplate.from(
             """
             You are a Medical Knowledge Expert. Analyze the medical data to identify relationships between different medical entities. Think critically about how symptoms, tests, diagnoses, and medicines relate to each other.
-            Extract Medications is for different purpose, it is not related to the relationship extraction(frequency in 24 hr format(like "8:00", "22:00"),)
+            Extract Medications is for different purpose, it is not related to the relationship extraction(frequency in 24 hr format(like "8:00", "22:00")-> must me hr:min format).)
             (default duration= 7 days, dosage means how many you have to take in per take(default 1), type is in Tab,Injection, Syrup, Capsule, Drop etc(default Tab))
             Based on the following medical data, extract relationships between entities:
             Symptoms: {{symptoms}}

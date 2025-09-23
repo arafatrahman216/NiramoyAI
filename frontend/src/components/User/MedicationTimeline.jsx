@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Pill, Clock, Calendar, ChevronDown, ChevronUp, Bell,SyringeIcon,
-  Droplet
+import { Pill, Clock, Calendar, ChevronDown, ChevronUp, Bell, SyringeIcon,
+  Droplet, Trash2
 } from 'lucide-react';
+import { userInfoAPI } from '../../services/api';
 
 const dummyMedications = [
   {
@@ -31,12 +32,76 @@ const MedicationTimeline = ({fetchedMedications}) => {
   
   const [expandedId, setExpandedId] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch medications from API
+  const fetchMedications = async () => {
+    setIsLoading(true);
+    try {
+      const response = await userInfoAPI.getMedicines();
+      
+      if (response.data.success) {
+        const data = response.data.medicines;
+        console.log(data);
+        
+        setMedications(data);
+      } else {
+        console.error('Failed to fetch medications');
+        // Fallback to dummy data on error
+        setMedications(dummyMedications);
+      }
+    } catch (error) {
+      console.error('Error fetching medications:', error);
+      // Fallback to dummy data on error
+      setMedications(dummyMedications);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete medication function
+  const deleteMedication = async (medicineId) => {
+    try {
+      setIsLoading(true);
+      
+      const response = await userInfoAPI.deleteMedicine(medicineId);
+      if (!response.data.success) {
+        console.error('Failed to delete medication');
+        return;
+      }
+      
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Remove medication from local state for immediate UI update
+      setMedications(prev => prev.filter(med => med.medicineId !== medicineId));
+      
+      // Refresh data from server after deletion
+      await fetchMedications();
+      
+      // Close expanded view if it was the deleted item
+      if (expandedId && expandedId.includes(medicineId.toString())) {
+        setExpandedId(null);
+      }
+      
+    } catch (error) {
+      console.error('Error deleting medication:', error);
+      // You might want to show an error notification here
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Update current time every minute
   React.useEffect(() => {
     if (fetchedMedications && Array.isArray(fetchedMedications)) {
-    setMedications(fetchedMedications);
-  }
+      setMedications(fetchedMedications);
+    } else {
+      // Fetch medications on component mount
+      fetchMedications();
+    }
+    
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
@@ -130,8 +195,18 @@ const MedicationTimeline = ({fetchedMedications}) => {
     <div className="bg-gray-800 rounded-2xl p-4 shadow-lg h-[500px] flex flex-col">
       {/* Header - Compact */}
       <div className="mb-4">
-        <h2 className="text-xl font-semibold text-white mb-1">Medication Timeline</h2>
-        <p className="text-sm text-gray-400">Today's schedule</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-white mb-1">Medication Timeline</h2>
+            <p className="text-sm text-gray-400">Today's schedule</p>
+          </div>
+          {isLoading && (
+            <div className="flex items-center text-sm text-blue-400">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400 mr-2"></div>
+              Updating...
+            </div>
+          )}
+        </div>
         <div className="mt-2 inline-flex items-center bg-gray-700/50 px-3 py-1 rounded-lg">
           <Clock className="w-4 h-4 mr-2 text-amber-400" />
           <span className="text-sm font-medium">
@@ -167,9 +242,9 @@ const MedicationTimeline = ({fetchedMedications}) => {
                   {/* Medications at this time */}
                   <div className="ml-8 space-y-2">
                     {medsAtTime.map((med) => (
-                      <div key={med.id} className={`rounded-lg p-3 transition-all duration-300 ${expandedId === med.id ? 'bg-gray-700' : 'bg-gray-700/50 hover:bg-gray-700'} border border-gray-600`}>
+                      <div key={med.id} className={`rounded-lg p-3 transition-all duration-300 ${expandedId === med.id ? 'bg-gray-700' : 'bg-gray-700/50 hover:bg-gray-700'} border border-gray-600 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center">
+                          <div className="flex items-center flex-1">
                             {getPillIcon(med.type)}
                             <div className="ml-2">
                               <h4 className="text-sm font-medium text-white">
@@ -179,16 +254,26 @@ const MedicationTimeline = ({fetchedMedications}) => {
                               <p className="text-xs text-gray-400 mt-1">{med.instructions}</p>
                             </div>
                           </div>
-                          <button 
-                            onClick={() => toggleExpand(med.id)}
-                            className="p-1 rounded hover:bg-gray-600/50 transition-colors"
-                          >
-                            {expandedId === med.id ? (
-                              <ChevronUp className="w-4 h-4 text-gray-400" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4 text-gray-400" />
-                            )}
-                          </button>
+                          <div className="flex items-center space-x-1">
+                            <button 
+                              onClick={() => deleteMedication(med.medicineId)}
+                              disabled={isLoading}
+                              className="p-1 rounded hover:bg-red-600/20 transition-colors group"
+                              title="Delete medication"
+                            >
+                              <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-400" />
+                            </button>
+                            <button 
+                              onClick={() => toggleExpand(med.id)}
+                              className="p-1 rounded hover:bg-gray-600/50 transition-colors"
+                            >
+                              {expandedId === med.id ? (
+                                <ChevronUp className="w-4 h-4 text-gray-400" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
                         </div>
                         
                         {expandedId === med.id && (

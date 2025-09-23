@@ -3,11 +3,7 @@ package com.example.niramoy.controller;
 import com.example.niramoy.customExceptions.AgentProcessingException;
 import com.example.niramoy.dto.*;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
-import com.example.niramoy.entity.ChatSessions;
-import com.example.niramoy.entity.HealthLog;
-import com.example.niramoy.entity.HealthProfile;
-import com.example.niramoy.entity.User;
-import com.example.niramoy.entity.Messages;
+import com.example.niramoy.entity.*;
 import com.example.niramoy.service.*;
 import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.service.AIServices.AIService;
@@ -628,6 +624,45 @@ public class UserController {
         response.put("user", qrService.decrypt(qrService.encrypt(data)));
         response.put("expire", qrService.decrypt(qrService.encrypt(data)).split("###")[1]);
         response.put("qrImage",  qrService.generateQrCode(profileLink));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/medicines")
+    public ResponseEntity<Map<String,Object>> getMedicines (){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        response.put("success", true);
+        List<Medicine> medicines = userService.getMedicinesByUserId(user.getId());
+        response.put("medicines",medicines);
+        return ResponseEntity.ok(response);
+    }
+
+
+    @DeleteMapping("/medicines/{id}")
+    public ResponseEntity<Map<String,Object>> deleteMedicine (@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        boolean deleted = userService.deleteMedicineByIdAndUserId(id, user.getId());
+        if (deleted){
+            response.put("success", true);
+            response.put("message", "Medicine deleted successfully");
+        }
+        else {
+            response.put("success", false);
+            response.put("message", "Failed to delete medicine. Medicine not found or does not belong to user");
+        }
         return ResponseEntity.ok(response);
     }
 

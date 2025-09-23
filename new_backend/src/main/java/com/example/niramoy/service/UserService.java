@@ -248,4 +248,17 @@ public class UserService implements UserDetailsService {
         healthDashboard.put("medications", medications);
         return healthDashboard;
     }
+
+    public List<Medicine> getMedicinesByUserId(Long userId){
+        return medicineRepository.findMedicineByVisit_User(userRepository.findById(userId).orElseThrow());
+    }
+
+    public boolean deleteMedicineByIdAndUserId(Long medicineId, Long userId) {
+        Medicine medicine = medicineRepository.findById(medicineId).orElseThrow(() -> new RuntimeException("Medicine not found with id: " + medicineId));
+        if (medicine.getVisit().getUser().getId().equals(userId)) {
+            medicineRepository.deleteById(medicineId);
+            return true;
+        }
+        return false;
+    }
 }
