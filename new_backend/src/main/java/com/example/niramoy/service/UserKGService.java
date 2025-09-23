@@ -8,11 +8,13 @@ import com.example.niramoy.utils.JsonParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -455,9 +457,9 @@ public class UserKGService {
                 if (!relationships.has("DrugInteractions")) {
                     log.debug("No DrugInteractions found");
                 } else {
-                    org.json.JSONArray drugRels = relationships.getJSONArray("DrugInteractions");
+                    JSONArray drugRels = relationships.getJSONArray("DrugInteractions");
                     for (int i = 0; i < drugRels.length(); i++) {
-                        org.json.JSONObject rel = drugRels.getJSONObject(i);
+                        JSONObject rel = drugRels.getJSONObject(i);
                         
                         String interactionQuery = """
                             MATCH (m1:Medicine {medicine_name: $medicine1})
@@ -620,5 +622,169 @@ public class UserKGService {
 
     public String getHistorySummary(Long patientID) {
         return "";
+    }
+
+
+    public boolean createNewPatient(Long patientID, String name, String gender, Integer age, 
+                                  Double weight, Double height, String bloodType, 
+                                  String allergies, String chronicDiseases, String lifestyle, 
+                                  String majorEvents) {
+        log.info("Creating new patient in Knowledge Graph with ID: {}", patientID);
+        
+        try {
+            // First check if patient already exists
+            String checkQuery = "MATCH (p:Patient {patientID: $patientID}) RETURN p";
+            List<Map<String, Object>> existingPatient = graphDB.executeQuery(checkQuery, Map.of("patientID", patientID));
+            
+            if (!existingPatient.isEmpty()) {
+                log.warn("Patient with ID {} already exists in Knowledge Graph", patientID);
+                return false;
+            }
+            
+            // Generate patient summary using AI
+            final PromptTemplate PATIENT_SUMMARY_PROMPT = PromptTemplate.from(
+                """
+                Create a comprehensive medical summary for the following patient data:
+                Name: {name}
+                Age: {age}
+                Gender: {gender}
+                Weight: {weight} kg
+                Height: {height} cm
+                Blood Type: {bloodType}
+                Allergies: {allergies}
+                Chronic Diseases: {chronicDiseases}
+                Lifestyle: {lifestyle}
+                Major Events: {majorEvents}
+                
+                Provide a concise medical summary (max 200 words) that would be useful for healthcare professionals.
+                Return JSON ONLY like this: {"patient_summary": "..."}
+                """
+            );
+            
+            Map<String, Object> summaryVariables = new java.util.HashMap<>();
+            summaryVariables.put("name", name != null ? name : "");
+            summaryVariables.put("age", age != null ? age.toString() : "Unknown");
+            summaryVariables.put("gender", gender != null ? gender : "");
+            summaryVariables.put("weight", weight != null ? weight.toString() : "Unknown");
+            summaryVariables.put("height", height != null ? height.toString() : "Unknown");
+            summaryVariables.put("bloodType", bloodType != null ? bloodType : "");
+            summaryVariables.put("allergies", allergies != null ? allergies : "");
+            summaryVariables.put("chronicDiseases", chronicDiseases != null ? chronicDiseases : "");
+            summaryVariables.put("lifestyle", lifestyle != null ? lifestyle : "");
+            summaryVariables.put("majorEvents", majorEvents != null ? majorEvents : "");
+            
+            Prompt summaryPrompt = PATIENT_SUMMARY_PROMPT.apply(summaryVariables);
+            String summaryResponse = AiService.generateContent(summaryPrompt.text());
+            String patientSummary = JsonParser.parseJsonField(summaryResponse, "patient_summary");
+            
+            // Create patient node in Neo4j
+            String createPatientQuery = """
+                CREATE (p:Patient {
+                    patientID: $patientID,
+                    name: $name,
+                    gender: $gender,
+                    age: $age,
+                    weight: $weight,
+                    height: $height,
+                    bloodType: $bloodType,
+                    allergies: $allergies,
+                    chronic_diseases: $chronicDiseases,
+                    lifestyle: $lifestyle,
+                    major_events: $majorEvents,
+                    patient_summary: $patientSummary,
+                    created_date: $createdDate
+                })
+                RETURN p
+            """;
+            
+            Map<String, Object> patientData = new HashMap<>();
+            patientData.put("patientID", patientID);
+            patientData.put("name", name != null ? name : "");
+            patientData.put("gender", gender != null ? gender : "");
+            patientData.put("age", age != null ? age : 0);
+            patientData.put("weight", weight != null ? weight : 0.0);
+            patientData.put("height", height != null ? height : 0.0);
+            patientData.put("bloodType", bloodType != null ? bloodType : "");
+            patientData.put("allergies", allergies != null ? allergies : "");
+            patientData.put("chronicDiseases", chronicDiseases != null ? chronicDiseases : "");
+            patientData.put("lifestyle", lifestyle != null ? lifestyle : "");
+            patientData.put("majorEvents", majorEvents != null ? majorEvents : "");
+            patientData.put("patientSummary", patientSummary != null ? patientSummary : "");
+            patientData.put("createdDate", java.time.LocalDateTime.now().toString());
+            
+            List<Map<String, Object>> result = graphDB.executeQuery(createPatientQuery, patientData);
+            
+            if (!result.isEmpty()) {
+                log.info("Successfully created patient with ID: {} in Knowledge Graph", patientID);
+                
+                // Create chronic disease nodes and relationships if chronic diseases exist
+                if (chronicDiseases != null && !chronicDiseases.trim().isEmpty()) {
+                    String[] diseases = chronicDiseases.split(",");
+                    for (String disease : diseases) {
+                        String trimmedDisease = disease.trim();
+                        if (!trimmedDisease.isEmpty()) {
+                            String diseaseQuery = """
+                                MATCH (p:Patient {patientID: $patientID})
+                                MERGE (cd:ChronicDisease {name: $diseaseName})
+                                MERGE (p)-[:HAS_CHRONIC_DISEASE]->(cd)
+                            """;
+                            graphDB.executeQuery(diseaseQuery, Map.of(
+                                "patientID", patientID,
+                                "diseaseName", trimmedDisease
+                            ));
+                        }
+                    }
+                    log.info("Created chronic disease relationships for patient: {}", patientID);
+                }
+                
+                // Create allergy nodes and relationships if allergies exist
+                if (allergies != null && !allergies.trim().isEmpty()) {
+                    String[] allergyList = allergies.split(",");
+                    for (String allergy : allergyList) {
+                        String trimmedAllergy = allergy.trim();
+                        if (!trimmedAllergy.isEmpty()) {
+                            String allergyQuery = """
+                                MATCH (p:Patient {patientID: $patientID})
+                                MERGE (a:Allergy {name: $allergyName})
+                                MERGE (p)-[:HAS_ALLERGY]->(a)
+                            """;
+                            graphDB.executeQuery(allergyQuery, Map.of(
+                                "patientID", patientID,
+                                "allergyName", trimmedAllergy
+                            ));
+                        }
+                    }
+                    log.info("Created allergy relationships for patient: {}", patientID);
+                }
+                
+                return true;
+            } else {
+                log.error("Failed to create patient with ID: {} in Knowledge Graph", patientID);
+                return false;
+            }
+            
+        } catch (Exception e) {
+            log.error("Error creating patient with ID {}: {}", patientID, e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    
+    public boolean createDemoPatient() {
+        log.info("Creating demo patient in Knowledge Graph");
+        
+        return createNewPatient(
+            2L,
+            "Afham Adian",
+            "male",
+            12,
+            45.0,
+            123.0,
+            "B+",
+            "dust,pollen",
+            "hypertension,diabetes",
+            "exercise__regular_,Light Exercise",
+            ""
+        );
     }
 }

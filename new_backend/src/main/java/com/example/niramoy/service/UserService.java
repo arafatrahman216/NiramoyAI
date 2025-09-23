@@ -199,6 +199,14 @@ public class UserService implements UserDetailsService {
         healthProfile.setAllergies(dto.getAllergies() != null ? String.join(",", dto.getAllergies()) : null);
         healthProfile.setMajorEvents(dto.getMajorEvents() != null ? String.join(",", dto.getMajorEvents()) : null);
         healthProfile.setChronicDiseases(dto.getChronicDiseases() != null ? String.join(",", dto.getChronicDiseases()) : null);
+
+        boolean success = userKGService.createNewPatient( healthProfile.getUserId(), healthProfile.getUser().getName(), healthProfile.getGender(), 21, healthProfile.getWeight(),
+                healthProfile.getHeight(), healthProfile.getBloodType(), healthProfile.getAllergies(), healthProfile.getChronicDiseases(), healthProfile.getLifestyle(), healthProfile.getMajorEvents());
+        if (!success) {
+            throw new RuntimeException("Failed to create patient in knowledge graph");
+        }
+        System.out.println("Health profile updated successfully: " + healthProfile);
+
     }
 
     private HealthProfileDTO convertToHealthProfileDTO(HealthProfile healthProfile) {
