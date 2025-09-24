@@ -123,7 +123,7 @@ export const printHealthProfile = (profile, healthLogs = []) => {
             ${validHealthLogs.slice(0, 5).map(log => `
               <div class="print-item" style="margin-bottom: 10px;">
                 <div class="print-label">Date: ${new Date(log?.logDatetime).toDateString() || 'N/A'}</div>
-                <div class="print-value"><strong>Symptoms:</strong> ${(log?.symptoms && Array.isArray(log.symptoms)) ? log.symptoms.join(', ') : 'None reported'}</div>
+                <div class="print-value"><strong>Symptoms:</strong> ${(log?.otherSymptoms && Array.isArray(log.otherSymptoms)) ? log.otherSymptoms.join(', ') : 'None reported'}</div>
                 <div class="print-value"><strong>Notes:</strong> ${log?.notes || 'No notes'}</div>
                 <div class="print-value"><strong>Stress Level:</strong> ${log?.stressLevel || 'N/A'}/10</div>
                 <div class="print-value"><strong>BP :</strong> ${log?.stressbloodPressure || 'N/A'}</div>

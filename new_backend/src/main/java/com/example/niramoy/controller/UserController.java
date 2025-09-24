@@ -598,7 +598,8 @@ public class UserController {
             "content", aiReply.getContent(),
             "isAgent", aiReply.isAgent(),
             "chatId", chatIdLong,
-            "isPlan", aiReply.getIsPlan()
+            "isPlan", aiReply.getIsPlan(),
+                "attachmentLink", aiReply.getAttachmentLink()
         ));
         return ResponseEntity.ok(response);
 

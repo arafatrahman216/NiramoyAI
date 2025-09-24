@@ -72,7 +72,7 @@ public class MessageService {
 
     @Cacheable(value = "chatSessions", key = "#user.id")
     public List<ChatSessionDTO> getChatSessionDtoByUser(User user)     {
-        List<ChatSessions> chatSessionsList = user.getChatSession();
+        List<ChatSessions> chatSessionsList = chatSessionRepository.findChatSessionsByUserOrderByChatIdDesc(user);
         List<ChatSessionDTO> chatSessionDTOs =new ArrayList<>();
         for (ChatSessions cs: chatSessionsList){
             chatSessionDTOs.add(new ChatSessionDTO(cs));
