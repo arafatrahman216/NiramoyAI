@@ -34,4 +34,6 @@ public class Medicine {
     private String duration;
     private String instructions;
     private String type ; // tablet, capsule, injection, syrup
+    @Column(name = "taking",nullable = true)
+    private boolean taking = true ;
 }

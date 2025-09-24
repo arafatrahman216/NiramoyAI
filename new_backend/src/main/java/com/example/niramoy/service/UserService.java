@@ -16,6 +16,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -253,10 +254,14 @@ public class UserService implements UserDetailsService {
         return medicineRepository.findMedicineByVisit_User(userRepository.findById(userId).orElseThrow());
     }
 
+    @Transactional
+    @Modifying
     public boolean deleteMedicineByIdAndUserId(Long medicineId, Long userId) {
         Medicine medicine = medicineRepository.findById(medicineId).orElseThrow(() -> new RuntimeException("Medicine not found with id: " + medicineId));
         if (medicine.getVisit().getUser().getId().equals(userId)) {
-            medicineRepository.deleteById(medicineId);
+            medicine.setTaking(false);
+            medicineRepository.save(medicine);
+            System.out.println("Medicine deleted"+" "+medicine.isTaking());
             return true;
         }
         return false;
