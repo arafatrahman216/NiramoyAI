@@ -132,11 +132,6 @@ export const printHealthProfile = (profile, healthLogs = []) => {
                 <div class="print-value"><strong> Weight:</strong> ${log?.weight || 'N/A'} kg</div>
                 <div class="print-value"><strong> Blood Sugar:</strong> ${log?.bloodSugar || 'N/A'} mg/dL</div>
                 <div class="print-value"><strong> Oxygen Saturation:</strong> ${log?.oxygenSaturation || 'N/A'} %</div>
-
-
-
-
-                
               </div>
             `).join('')}
           </div>
