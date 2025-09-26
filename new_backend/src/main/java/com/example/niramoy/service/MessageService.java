@@ -70,7 +70,7 @@ public class MessageService {
         }
     }
 
-    @Cacheable(value = "chatSessions", key = "#user.id")
+    // @Cacheable(value = "chatSessions", key = "#user.id")
     public List<ChatSessionDTO> getChatSessionDtoByUser(User user)     {
         List<ChatSessions> chatSessionsList = chatSessionRepository.findChatSessionsByUserOrderByChatIdDesc(user);
         List<ChatSessionDTO> chatSessionDTOs =new ArrayList<>();
@@ -80,7 +80,7 @@ public class MessageService {
         return chatSessionDTOs;
     }
 
-    @CacheEvict(value = "chatSessions", key = "#user.id")
+    // @CacheEvict(value = "chatSessions", key = "#user.id")
     public ChatSessionDTO createNewChatSession(User user) {
 
         ChatSessions emptyChatSession = chatSessionRepository.findChatSessionsByUserAndMessages_Empty(user);

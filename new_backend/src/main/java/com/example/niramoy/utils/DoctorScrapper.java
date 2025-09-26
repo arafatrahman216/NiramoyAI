@@ -17,7 +17,7 @@ public class DoctorScrapper {
     @Autowired
     public ImageService imageService;
 
-    @Cacheable(value = "scrappedDoctors", key = "{#cityName, #specialty}")
+    // @Cacheable(value = "scrappedDoctors", key = "{#cityName, #specialty}")
     public String scrapeDoctors(String cityName, String specialty) throws Exception {
         System.out.println("inside scrapeDoctors");
         String cityId = "1";

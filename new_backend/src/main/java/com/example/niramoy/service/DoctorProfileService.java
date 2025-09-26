@@ -35,13 +35,13 @@ public class DoctorProfileService {
     private final VisitsRepository visitsRepository;
     private final HealthService healthService;
 
-    @Cacheable(value = "doctorProfiles")
+    // @Cacheable(value = "doctorProfiles")
     public List<DoctorProfile> findAllDoctor(){
         return doctorProfileRepository.findAll();
     }
 
     @Transactional
-    @CacheEvict(value = "doctorProfiles", allEntries = true)
+    // @CacheEvict(value = "doctorProfiles", allEntries = true)
     public DoctorProfile createDoctorProfile(Map<String, String> newDoctor, Doctor doctor, User user) {
         try{
             newDoctor = makeDoctorProfileNotNull(newDoctor);
@@ -64,7 +64,7 @@ public class DoctorProfileService {
 
 
     @Transactional
-    @CacheEvict(value = "doctorProfiles", allEntries = true)
+    // @CacheEvict(value = "doctorProfiles", allEntries = true)
     public Doctor createDoctor(Map<String, String> doctorMap){
         String name = (String) doctorMap.get("name");
         DoctorSource dc = DoctorSource.REGISTERED;
@@ -203,7 +203,7 @@ public class DoctorProfileService {
 
     }
 
-    @Cacheable(value = "doctorProfile", key = "#query")
+    // @Cacheable(value = "doctorProfile", key = "#query")
     public List<DoctorProfile> findDoctorBy(String query){
         return doctorProfileRepository.findByDoctor_NameContainingIgnoreCaseOrDoctor_SpecializationContainingIgnoreCase(query, query);
     }
