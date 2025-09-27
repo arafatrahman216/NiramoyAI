@@ -147,6 +147,9 @@ const HealthLogForm = ({ isModal = false, onClose = null }) => {
     // TODO: Replace with actual API call
     try {
       // Simulate API call
+      // const response = api.post('/user/vitals', logData);
+      // console.log('API response:', response);
+      // if (response && response.status === 200) 
       alert('Health log submitted successfully!');
       resetForm();
     } catch (error) {

@@ -66,7 +66,7 @@ public class HealthService {
             Double temperature = safeGetDouble(formData, "temperature", 98.6);
             System.out.println(temperature);
 
-            List<String> otherSymptoms = (List<String>) formData.get("symptoms");
+            List<String> otherSymptoms = extractStringList(formData, "symptoms");
             if (otherSymptoms == null) otherSymptoms = List.of();
 
             System.out.println("hi2");
@@ -116,6 +116,15 @@ public class HealthService {
         } catch (NumberFormatException e) {
             return defaultValue;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> extractStringList(Map<String, Object> formData, String key) {
+        Object value = formData.get(key);
+        if (value instanceof List<?>) {
+            return (List<String>) value;
+        }
+        return null;
     }
 
 
