@@ -365,6 +365,7 @@ import VisitsSidebar from './VisitsSidebar';
 import ChatsSidebar from './ChatsSidebar';
 import UploadVisitModal from './UploadVisitModal';
 import ChatConversation from './ChatConversation';
+import VisitContext from './VisitContext';
 
 import { chatbotAPI, doctorAPI, userInfoAPI } from '../../services/api'
 
@@ -397,6 +398,19 @@ const DiagnosisInterface = () => {
   
   // PROCESSING STATE - tracks when AI is generating response
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // VISIT CONTEXT STATE - stores visit information for chatbot context
+  const [visitContext, setVisitContext] = useState(null);
+
+  // Handle visit context from timeline clicks
+  const handleVisitContextSet = (context) => {
+    setVisitContext(context);
+  };
+
+  // Clear visit context
+  const clearVisitContext = () => {
+    setVisitContext(null);
+  };
   
   // RECENT VISITS STATE - for Timeline component
   const [recentVisits, setRecentVisits] = useState([]);
@@ -472,19 +486,28 @@ const DiagnosisInterface = () => {
     if (selectedChatId) {
       console.log('Sending message to current chat:', selectedChatId);
       console.log('Message content:', query);
+      console.log('Visit context:', visitContext);
       console.log('Attachment:', attachment?.name);
       console.log('Auth token exists:', !!localStorage.getItem('token'));
       
-      const messageToSend = query.trim();
+      // Prepare message content with visit context if available
+      const originalQuery = query.trim();
+      let messageToSend = originalQuery;
+      if (visitContext) {
+        const contextString = `[Visit Context: Visit #${visitContext.visitId} with Dr. ${visitContext.doctorName} on ${visitContext.appointmentDate}. Symptoms: ${Array.isArray(visitContext.symptoms) ? visitContext.symptoms.join(', ') : visitContext.symptoms}${visitContext.prescription ? '. Prescription: ' + (Array.isArray(visitContext.prescription) ? visitContext.prescription.join(', ') : visitContext.prescription) : ''}] ${originalQuery}`;
+        messageToSend = contextString;
+      }
+      
       setQuery(''); // Clear input immediately
+      clearVisitContext(); // Clear visit context after sending
 
       // Set processing state to show loading indicator
       setIsProcessing(true);
       
-      // Add user message immediately to local state
+      // Add user message immediately to local state (show original query, not context)
       const userMessage = {
         messageId: Date.now(),
-        content: messageToSend,
+        content: originalQuery, // Show original user query
         isAgent: false,
         timestamp: new Date().toISOString(),
         isPlan: false
@@ -560,7 +583,7 @@ const DiagnosisInterface = () => {
         console.error('Error data:', error.response?.data);
         
 
-          setQuery(messageToSend);
+          setQuery(originalQuery); // Restore original query, not the context-enhanced version
           if (error.response?.status === 401) {
             alert('Authentication failed. Please log in again.');
           } else if (error.response?.status === 403) {
@@ -631,6 +654,7 @@ const DiagnosisInterface = () => {
   const handleBackToSearch = () => {
     setSelectedChatId(null);
     setSelectedChatData({ messages: [] });
+    clearVisitContext(); // Clear visit context when returning to search
     console.log('Returning to search interface');
   };
 
@@ -685,6 +709,7 @@ const DiagnosisInterface = () => {
       <VisitsSidebar 
         isOpen={isVisitsSidebarOpen}
         onClose={() => setIsVisitsSidebarOpen(false)}
+        onVisitContextSet={handleVisitContextSet}
         visits={recentVisits}
         isLoading={visitsLoading}
       />
@@ -744,6 +769,8 @@ const DiagnosisInterface = () => {
                   onBack={handleBackToSearch}
                   chatData={selectedChatData}
                   isProcessing={isProcessing}
+                  visitContext={visitContext}
+                  onClearVisitContext={clearVisitContext}
                   embedded={true}
                 />
               </div>
@@ -751,6 +778,13 @@ const DiagnosisInterface = () => {
               {/* FIXED SEARCH INPUT AT BOTTOM */}
               <div className={`fixed bottom-0 ${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'left-96' : 'left-16'} right-0 py-4 bg-gradient-to-t from-zinc-950 via-zinc-950 to-zinc-950/80 backdrop-blur-sm z-40 transition-all duration-300`}>
                 <div className="max-w-4xl mx-auto px-6">
+                  {/* VISIT CONTEXT DISPLAY */}
+                  <VisitContext 
+                    visitContext={visitContext} 
+                    onClearVisitContext={clearVisitContext}
+                    isInChatMode={!!selectedChatId}
+                  />
+
                   <SearchInput 
                     ref={searchInputRef}
                     query={query} 

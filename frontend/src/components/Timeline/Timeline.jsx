@@ -1,6 +1,29 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
-const VisitGraph = ({ visits = [] }) => {
+const VisitGraph = ({ visits = [], onVisitContextSet }) => {
+  const [hoveredVisit, setHoveredVisit] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Handle visit click to set context
+    const handleVisitClick = (visit, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    if (onVisitContextSet) {
+      // Extract visit context information
+      const visitContext = {
+        visitId: visit.id,
+        doctorName: visit.doctorName,
+        appointmentDate: visit.appointmentDate,
+        symptoms: visit.symptoms || [],
+        prescription: visit.prescription || [],
+        otherInfo: visit.otherInfo || {}
+      };
+      
+      onVisitContextSet(visitContext);
+    }
+  };
   // ------------------------------
   // Colors for each doctor/track
   // ------------------------------
@@ -193,7 +216,17 @@ const VisitGraph = ({ visits = [] }) => {
             const y = GRAPH_PADDING + index * ROW_HEIGHT;
 
             return (
-              <g key={visit.visitId}>
+              <g 
+                key={visit.visitId} 
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={(e) => {
+                  setHoveredVisit(visit);
+                  setMousePosition({ x: e.clientX, y: e.clientY });
+                }}
+                onMouseLeave={() => setHoveredVisit(null)}
+                onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                onClick={(e) => handleVisitClick(visit, e)}
+              >
                 <circle
                   cx={x}
                   cy={y}
@@ -240,6 +273,26 @@ const VisitGraph = ({ visits = [] }) => {
           </div>
         </div>
       </div>
+
+      {/* Hover Tooltip */}
+      {hoveredVisit && (
+        <div 
+          className="fixed bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg p-3 pointer-events-none z-50 text-sm"
+          style={{
+            left: mousePosition.x + 10,
+            top: mousePosition.y - 10,
+            transform: 'translateY(-100%)'
+          }}
+        >
+          <div className="space-y-1">
+            <div className="font-semibold text-zinc-200">Visit #{hoveredVisit.visitId}</div>
+            <div className="text-zinc-300">Dr. {hoveredVisit.doctorName}</div>
+            {hoveredVisit.appointmentDate && (
+              <div className="text-zinc-400">{hoveredVisit.appointmentDate}</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

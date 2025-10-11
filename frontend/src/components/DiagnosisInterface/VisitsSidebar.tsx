@@ -10,6 +10,7 @@ import Timeline from '../Timeline/Timeline';
 interface VisitsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onVisitContextSet?: (context: any) => void;
   visits?: Array<{
     visitId: number;
     appointmentDate: string;
@@ -23,7 +24,7 @@ interface VisitsSidebarProps {
   isLoading?: boolean; // Loading state from parent
 }
 
-const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, visits = [], isLoading = false }) => {
+const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, onVisitContextSet, visits = [], isLoading = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -52,7 +53,7 @@ const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, visits =
               <p className="text-sm">Loading visits timeline...</p>
             </div>
           ) : (
-            <Timeline visits={visits as any} />
+            <Timeline visits={visits as any} onVisitContextSet={onVisitContextSet} />
           )}
         </div>
       </div>

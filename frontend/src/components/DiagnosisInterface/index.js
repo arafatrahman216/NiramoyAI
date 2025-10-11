@@ -10,6 +10,7 @@ export { default as MainLogo } from './MainLogo';
 export { default as VisitsSidebar } from './VisitsSidebar';
 export { default as ChatsSidebar } from './ChatsSidebar';
 export { default as UploadVisitModal } from './UploadVisitModal';
+export { default as VisitContext } from './VisitContext';
 
 // If you add more components to this directory, export them here following the same pattern:
 // export { default as NewComponent } from './NewComponent';

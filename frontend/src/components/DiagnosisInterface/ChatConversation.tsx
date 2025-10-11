@@ -29,10 +29,12 @@ interface ChatConversationProps {
   chatData?: any;
   embedded?: boolean;
   isProcessing?: boolean;
+  visitContext?: any;
+  onClearVisitContext?: () => void;
 }
 
 
-const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false, isProcessing = false }) => {
+const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false, isProcessing = false, visitContext, onClearVisitContext }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
