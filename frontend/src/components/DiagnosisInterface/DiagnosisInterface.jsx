@@ -494,7 +494,7 @@ const DiagnosisInterface = () => {
       const originalQuery = query.trim();
       let messageToSend = originalQuery;
       if (visitContext) {
-        const contextString = `[Visit Context: Visit #${visitContext.visitId} with Dr. ${visitContext.doctorName} on ${visitContext.appointmentDate}. Symptoms: ${Array.isArray(visitContext.symptoms) ? visitContext.symptoms.join(', ') : visitContext.symptoms}${visitContext.prescription ? '. Prescription: ' + (Array.isArray(visitContext.prescription) ? visitContext.prescription.join(', ') : visitContext.prescription) : ''}] ${originalQuery}`;
+        const contextString = `${visitContext.summary} ${originalQuery}`;
         messageToSend = contextString;
       }
       

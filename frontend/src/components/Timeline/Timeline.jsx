@@ -13,12 +13,16 @@ const VisitGraph = ({ visits = [], onVisitContextSet }) => {
     if (onVisitContextSet) {
       // Extract visit context information
       const visitContext = {
-        visitId: visit.id,
+        visitId: visit.visitId,
         doctorName: visit.doctorName,
         appointmentDate: visit.appointmentDate,
         symptoms: visit.symptoms || [],
         prescription: visit.prescription || [],
-        otherInfo: visit.otherInfo || {}
+        otherInfo: visit.otherInfo || {},
+        summary : "You visited Dr. " + visit.doctorName + " on " + visit.appointmentDate + ". Main symptoms were: " + (Array.isArray(visit.symptoms) ? visit.symptoms.join(', ') : visit.symptoms) + ". Prescribed: " + (Array.isArray(visit.prescription) ? visit.prescription.join(', ') : visit.prescription) + "."+
+        " Please note that this is a summary and may not include all relevant information."+
+                " As a reminder, please follow the prescribed treatment and consult your doctor if symptoms persist or worsen."+
+                " For more details, refer to your full medical history in the app."
       };
       
       onVisitContextSet(visitContext);
