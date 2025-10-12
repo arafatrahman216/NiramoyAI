@@ -11,6 +11,8 @@ import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.MedicineRepository;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.HealthProfileRepository;
+
+import org.hibernate.engine.jdbc.env.internal.LobCreationLogging_.logger;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -64,15 +66,16 @@ public class UserService implements UserDetailsService {
         String gender = newUser.get("gender");
         String foundRole = newUser.get("role");
         Role role = Role.valueOf(foundRole.toUpperCase());
-
+        
         String profilePictureUrl = newUser.get("profilePictureUrl");
         String status = "ACTIVE";
         LocalDate dateOfBirth = LocalDate.parse(newUser.get("dateOfBirth"));
         User user = userRepository.findUserByUsernameOrEmail(username,email);
         if (user != null) {
             throw new DuplicateUserException("User already exists with username or email: " + username + " or " + email);
-        }
+            }
 
+        System.out.println("Creating user: " + username + ", email: " + email + ", role: " + role);
         User newUser1 = User.builder().username(username).name(name).email(email).password(password)
                 .phoneNumber(phoneNumber).gender(gender).createdAt(LocalDateTime.now())
                 .profilePictureUrl(profilePictureUrl)
