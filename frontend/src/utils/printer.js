@@ -607,6 +607,9 @@ export const printMedicalSummary = (printData) => {
     `;
   }
 
+
+  // summary in natural language ()
+
   // Visit Summaries Section (Full Width)
   if (visitSummaries && Array.isArray(visitSummaries) && visitSummaries.length > 0) {
     const summaries = generateVisitSummaries(visitSummaries.slice(0, 5)); // Limit to 5 recent visits
