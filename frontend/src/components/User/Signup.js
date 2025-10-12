@@ -99,8 +99,8 @@ const Signup = () => {
           alert('Admin accounts must be created through the Admin Portal.');
           return;
         }
-        alert('Account created successfully! Please log in.');
-        navigate('/login');
+        // alert('Account created successfully! Please ');
+        navigate('/healthdataform', { replace: true });
         
         // redirectBasedOnRole(userData, navigate);
       }
