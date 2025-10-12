@@ -461,10 +461,47 @@ export const printMedicalSummary = (printData) => {
           line-height: 1.3;
           margin: 4px 0;
         }
+        .medical-history-section {
+          background: #FEFEFE;
+          border: 1px solid #E5E7EB;
+          border-radius: 8px;
+          padding: 15px;
+          margin-top: 0px;
+          margin-bottom: 15px;
+          break-inside: auto;
+        }
+        .history-subsection {
+          margin-bottom: 15px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #F3F4F6;
+        }
+        .history-subsection:last-child {
+          border-bottom: none;
+          margin-bottom: 0;
+        }
+        .subsection-title {
+          font-size: 13px;
+          font-weight: 600;
+          color: #1F2937;
+          margin-bottom: 8px;
+          padding-bottom: 4px;
+          border-bottom: 2px solid #4F46E5;
+          display: inline-block;
+        }
+        .history-text {
+          font-size: 12px;
+          line-height: 1.5;
+          color: #374151;
+          margin: 0;
+          text-align: justify;
+        }
         @media print {
-          .section { break-inside: avoid; }
           .vital-card { break-inside: avoid; }
           .visit-item { break-inside: avoid; }
+          .history-subsection { break-inside: avoid; }
+          .medical-history-section { break-inside: auto; }
+          body { margin: 0; padding: 15px; }
+          .section { margin-bottom: 10px; }
         }
       }
     </style>`;
@@ -505,7 +542,7 @@ export const printMedicalSummary = (printData) => {
             </div>
             <div class="info-item">
               <div class="info-label">Date of Birth</div>
-              <div class="info-value">${'healthProfile?.dateOfBirth' || 'N/A'}</div>
+              <div class="info-value">${healthProfile?.dateOfBirth || 'N/A'}</div>
             </div>
           </div>
           ${userProfile.emergencyContact ? `
@@ -608,7 +645,70 @@ export const printMedicalSummary = (printData) => {
   }
 
 
-  // summary in natural language ()
+  // Medical History Section (Full Width) - Added before visit summaries
+  contentSections += `
+    <div class="section full-width medical-history-section">
+      <div class="section-header">
+        <h3 class="section-title">Medical History</h3>
+      </div>
+      <div class="section-content">
+        <div class="history-subsection">
+          <h4 class="subsection-title">History of Present Illness</h4>
+          <p class="history-text">
+            Afham experienced high-grade fever with accompanying rash, body weakness, and joint pain in September 2025. He was subsequently diagnosed with Dengue fever, which was managed symptomatically. Treatment included antipyretics (Napa) and topical ointments for rash relief under the supervision of Dr. Shafin and Dr. Dip.
+            No complications or adverse drug reactions were reported. The illness has since resolved, and the patient's current health status is stable with vital signs (blood pressure and heart rate) within the normal range for his age.
+          </p>
+        </div>
+        
+        <div class="history-subsection">
+          <h4 class="subsection-title">Past Medical History</h4>
+          <p class="history-text">
+            Hypertension – ongoing management.<br>
+            Diabetes Mellitus – ongoing management.<br>
+            No history of tuberculosis, asthma, stroke, or cardiac disease.<br>
+            No prior major surgeries, hospitalizations, or blood transfusions.<br>
+            Previous illnesses were mild and self-limiting.
+          </p>
+        </div>
+        
+        <div class="history-subsection">
+          <h4 class="subsection-title">Drug and Treatment History</h4>
+          <p class="history-text">
+            Regular medication for hypertension and diabetes.<br>
+            Antipyretics (Napa) during dengue episode.<br>
+            No history of prolonged steroid use.<br>
+            No adverse drug reactions reported.
+          </p>
+        </div>
+        
+        <div class="history-subsection">
+          <h4 class="subsection-title">Allergic History</h4>
+          <p class="history-text">
+            Allergic to dust and pollen.
+          </p>
+        </div>
+        
+        <div class="history-subsection">
+          <h4 class="subsection-title">Family History</h4>
+          <p class="history-text">
+            Positive family history of hypertension and diabetes on both maternal and paternal sides, indicating a hereditary predisposition.
+            No history of congenital or genetic disorders reported.
+          </p>
+        </div>
+        
+        <div class="history-subsection">
+          <h4 class="subsection-title">Personal History</h4>
+          <p class="history-text">
+            Maintains good personal hygiene and balanced diet with adequate hydration.<br>
+            Engages in moderate physical activity suitable for his age.<br>
+            Denies tobacco, alcohol, or substance use.<br>
+            Immunizations are up to date.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+  
 
   // Visit Summaries Section (Full Width)
   if (visitSummaries && Array.isArray(visitSummaries) && visitSummaries.length > 0) {
@@ -631,6 +731,9 @@ export const printMedicalSummary = (printData) => {
         </div>
       </div>
     `;
+
+
+
   }
 
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -663,10 +766,7 @@ export const printMedicalSummary = (printData) => {
           ${contentSections}
         </div>
 
-        <div class="footer">
-          <p><strong>DISCLAIMER:</strong> This report is for informational purposes only and should not replace professional medical advice.</p>
-          <p>Generated by NiramoyAI Health Management System | Report Date: ${currentDate}</p>
-        </div>
+       
       </div>
     </body>
     </html>
