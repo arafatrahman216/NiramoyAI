@@ -179,12 +179,11 @@ const Dashboard = () => {
                 Home
               </button>
 
-
               <button
                 onClick={() => navigate('/diagnosis')}
                 className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
               >
-                < HealthAndSafetyRounded className="w-4 h-4 mr-2" />
+                <HealthAndSafetyRounded className="w-4 h-4 mr-2" />
                 Diagnosis
               </button>
 
@@ -218,6 +217,13 @@ const Dashboard = () => {
           >
             <Printer className="w-4 h-4" />
             <span>Print Summary</span>
+          </button>
+          <button
+            onClick={() => navigate("/healthdataform")}
+            className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
+          >
+            <User className="w-4 h-4" />
+            <span>Health Data Form</span>
           </button>
           <button
             onClick={generateQRCode}
