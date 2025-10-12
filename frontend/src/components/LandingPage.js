@@ -28,7 +28,7 @@ function ScrollTop() {
     <motion.button
       initial={{ opacity: 0 }}
       animate={{ opacity: showScroll ? 1 : 0 }}
-      className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50"
+      className="fixed bottom-6 right-6 bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg shadow-xl z-50 transition-all duration-200"
       onClick={scrollTop}
     >
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,6 +39,28 @@ function ScrollTop() {
 }
 
 const LandingPage = () => {
+  // Add CSS keyframes for gradient animation
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+      
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [symptomsQuery, setSymptomsQuery] = useState('');
   const [searchType, setSearchType] = useState('doctors'); // 'doctors', 'testCenters', 'symptoms'
@@ -424,7 +446,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen text-white" style={{backgroundColor: '#0B0B0C', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
       {/* Navigation */}
       <nav className="bg-zinc-900/95 border-b border-zinc-800 sticky top-0 z-40 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -432,7 +454,12 @@ const LandingPage = () => {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent"
+              className="text-2xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent animate-gradient bg-300% hover:bg-200%"
+              style={{
+                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                backgroundSize: '300% 300%',
+                animation: 'gradient 6s ease infinite'
+              }}
             >
               NiramoyAI
             </motion.div>
@@ -440,21 +467,21 @@ const LandingPage = () => {
             <div className="flex items-center space-x-6">
               {isLoggedIn && (
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 text-zinc-300 hover:text-emerald-400 transition-colors font-medium"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-6 py-3 text-zinc-300 hover:text-white transition-all duration-200 font-medium rounded-lg border border-transparent hover:border-zinc-700 bg-transparent hover:bg-zinc-800/50"
                   onClick={() => navigate('/diagnosis')}
                 >
-                  🩺 Diagnosis
+                  Diagnosis
                 </motion.button>
               )}
 
               {isLoggedIn ? (
                 <div className="relative profile-dropdown">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center space-x-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-all duration-200"
                     onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   >
                     <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
@@ -476,29 +503,29 @@ const LandingPage = () => {
                       className="absolute right-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl py-2 z-50"
                     >
                       <button
-                        className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                        className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all duration-200 rounded-lg font-medium"
                         onClick={() => {
                           setProfileDropdownOpen(false);
                           navigate('/dashboard');
                         }}
                       >
-                        📊 Dashboard
+                        Dashboard
                       </button>
                       <button
-                        className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                        className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all duration-200 rounded-lg font-medium"
                         onClick={() => {
                           setProfileDropdownOpen(false);
                           navigate('/profile');
                         }}
                       >
-                        👤 Profile
+                        Profile
                       </button>
                       <hr className="border-zinc-700 my-2" />
                       <button
-                        className="w-full text-left px-4 py-2 text-red-400 hover:bg-zinc-700 hover:text-red-300 transition-colors"
+                        className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-600 hover:text-white transition-all duration-200 rounded-lg font-medium"
                         onClick={handleLogout}
                       >
-                        🚪 Logout
+                        Logout
                       </button>
                     </motion.div>
                   )}
@@ -506,17 +533,17 @@ const LandingPage = () => {
               ) : (
                 <div className="flex space-x-4">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 text-zinc-300 hover:text-white transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-3 text-zinc-300 hover:text-white transition-all duration-200 font-medium rounded-lg border border-transparent hover:border-zinc-700 bg-transparent hover:bg-zinc-800/50"
                     onClick={() => navigate('/login')}
                   >
                     Login
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-medium"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-all duration-200"
                     onClick={() => navigate('/signup')}
                   >
                     Sign Up
@@ -531,6 +558,10 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-zinc-900 via-zinc-950 to-black py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/5 to-blue-600/5"></div>
+        {/* Animated gradient orbs */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-emerald-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/15 to-purple-400/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-purple-400/10 to-emerald-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -538,12 +569,17 @@ const LandingPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="text-5xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-5xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight" 
+                  style={{
+                    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    backgroundSize: '200% 200%',
+                    animation: 'gradient 8s ease infinite'
+                  }}>
                 AI-Powered
                 <br />
                 Healthcare
               </h1>
-              <p className="text-xl text-zinc-300 mb-8 leading-relaxed">
+              <p className="text-xl text-zinc-400 mb-8 leading-relaxed font-medium" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', lineHeight: '1.5'}}>
                 Advanced medical diagnosis, doctor recommendations, and comprehensive health insights powered by artificial intelligence.
               </p>
             </motion.div>
@@ -554,13 +590,13 @@ const LandingPage = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex justify-center lg:justify-end"
             >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors shadow-lg"
+                            <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-lg font-semibold transition-all duration-200 text-lg shadow-xl hover:shadow-2xl animate-float"
                 onClick={() => navigate(isLoggedIn ? '/diagnosis' : '/signup')}
               >
-                {isLoggedIn ? ' Start Diagnosis' : 'Get Started'}
+                {isLoggedIn ? 'Start Diagnosis' : 'Get Started'}
               </motion.button>
             </motion.div>
           </div>
@@ -574,49 +610,54 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="bg-zinc-900/95 border border-zinc-700/50 rounded-2xl p-8 backdrop-blur-lg shadow-2xl"
+            className="bg-zinc-900/95 border border-zinc-700/50 rounded-2xl p-8 backdrop-blur-lg shadow-2xl relative overflow-hidden"
           >
-            <h2 className="text-2xl font-bold text-center mb-6 text-white">
+            {/* Animated border gradient */}
+            <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 animate-pulse">
+              <div className="h-full w-full rounded-2xl bg-zinc-900/95"></div>
+            </div>
+            <div className="relative z-10">
+            <h2 className="text-2xl font-bold text-center mb-6 text-white" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
               Search Healthcare Providers
             </h2>
             
             {/* Search Type Tabs */}
             <div className="flex flex-wrap justify-center gap-3 mb-6">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
                   searchType === 'symptoms'
                     ? 'bg-emerald-600 text-white shadow-lg'
-                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
                 }`}
                 onClick={() => handleSearchTypeChange('symptoms')}
               >
-                🩺 Symptoms Search
+                Symptoms Search
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
                   searchType === 'doctors'
                     ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
                 }`}
                 onClick={() => handleSearchTypeChange('doctors')}
               >
-                👨‍⚕️ Doctors
+                Doctors
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
                   searchType === 'testCenters'
                     ? 'bg-purple-600 text-white shadow-lg'
-                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
                 }`}
                 onClick={() => handleSearchTypeChange('testCenters')}
               >
-                🧪 Test Centers
+                Test Centers
               </motion.button>
             </div>
 
@@ -625,7 +666,7 @@ const LandingPage = () => {
               <div className="space-y-4">
                 <div className="relative">
                   <textarea
-                    className="w-full p-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"
+                    className="w-full p-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-white focus:ring-2 focus:ring-white/20 focus:outline-none resize-none transition-all duration-200"
                     rows="4"
                     placeholder="Describe your symptoms... (e.g., headache, fever, chest pain)"
                     value={symptomsQuery}
@@ -641,7 +682,7 @@ const LandingPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                   onClick={handleSymptomsSearch}
                   
                   disabled={loading || !symptomsQuery.trim()}
@@ -665,13 +706,14 @@ const LandingPage = () => {
                 </div>
                 <input
                   type="text"
-                  className="w-full pl-10 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full pl-10 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-white focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-200"
                   placeholder={`Search ${searchType === 'doctors' ? 'doctors by name, specialty, or location' : 'test centers by name, services, or location'}`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             )}
+            </div>
           </motion.div>
         </div>
       </section>
@@ -683,6 +725,7 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl font-bold text-center mb-12 text-white"
+            style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}
           >
             {searchType === 'symptoms' ? 'Recommended Doctors' : 
              searchType === 'doctors' ? 'Available Doctors' : 'Test Centers'}
@@ -866,7 +909,7 @@ const LandingPage = () => {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors"
+                      className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-md"
                       onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')}
                     >
                       Contact
@@ -875,7 +918,7 @@ const LandingPage = () => {
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="px-4 py-2 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg text-sm transition-colors"
+                        className="px-4 py-3 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg text-sm transition-all duration-200 bg-transparent hover:bg-zinc-800/50"
                         onClick={() => window.open(item.profileLink, '_blank')}
                       >
                         Profile
@@ -925,19 +968,16 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
             {[
               {
-                icon: "🔍",
                 title: "Symptom-Based Search",
                 description: "Enter your symptoms and get matched with the right specialists, nearby doctors, and test centers using AI-powered recommendations.",
                 gradient: "from-blue-500 to-cyan-500"
               },
               {
-                icon: "🧠",
                 title: "AI Diagnosis Review",
                 description: "Upload prescriptions and health documents. Our AI explains diagnoses in simple terms and suggests next steps for better care.",
                 gradient: "from-emerald-500 to-teal-500"
               },
               {
-                icon: "📊",
                 title: "Health Knowledge Graph",
                 description: "Automated creation of your personal health timeline and knowledge graph from uploaded documents and medical history.",
                 gradient: "from-purple-500 to-indigo-500"
@@ -951,12 +991,13 @@ const LandingPage = () => {
                 viewport={{ once: true }}
                 className="relative group"
               >
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-8 h-full hover:border-zinc-700 transition-all duration-300 group-hover:shadow-2xl">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    {feature.icon}
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-8 h-full hover:border-zinc-700 transition-all duration-300 group-hover:shadow-2xl relative overflow-hidden">
+                  {/* Subtle gradient overlay */}
+                  <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${feature.gradient} opacity-10 rounded-full blur-2xl group-hover:opacity-20 transition-opacity duration-500`}></div>
+                  <div className="relative z-10">
+                    <h3 className="text-xl font-semibold text-white mb-4">{feature.title}</h3>
+                    <p className="text-zinc-400 leading-relaxed">{feature.description}</p>
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-4">{feature.title}</h3>
-                  <p className="text-zinc-400 leading-relaxed">{feature.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -973,24 +1014,40 @@ const LandingPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
-                  icon: "💬",
                   title: "Context-Aware Chatbot",
-                  description: "AI-powered assistant using your health data"
+                  description: "AI-powered assistant using your health data",
+                  icon: (
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  )
                 },
                 {
-                  icon: "📱",
                   title: "Personal Dashboard",
-                  description: "Visualize health trends and diagnosis timeline"
+                  description: "Visualize health trends and diagnosis timeline",
+                  icon: (
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  )
                 },
                 {
-                  icon: "👩‍⚕️",
                   title: "Doctor Access Portal",
-                  description: "Professionals can access structured patient data"
+                  description: "Professionals can access structured patient data",
+                  icon: (
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  )
                 },
                 {
-                  icon: "💰",
                   title: "Cost Estimation",
-                  description: "Estimate treatment costs and required tests"
+                  description: "Estimate treatment costs and required tests",
+                  icon: (
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  )
                 }
               ].map((feature, index) => (
                 <motion.div
@@ -1001,7 +1058,11 @@ const LandingPage = () => {
                   viewport={{ once: true }}
                   className="text-center group"
                 >
-                  <div className="text-4xl mb-3 group-hover:scale-125 transition-transform duration-300">{feature.icon}</div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg mx-auto mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 flex items-center justify-center shadow-lg group-hover:shadow-emerald-500/25">
+                    <div className="group-hover:scale-110 transition-transform duration-300">
+                      {feature.icon}
+                    </div>
+                  </div>
                   <h4 className="text-white font-semibold mb-2">{feature.title}</h4>
                   <p className="text-zinc-400 text-sm">{feature.description}</p>
                 </motion.div>
@@ -1019,18 +1080,23 @@ const LandingPage = () => {
             <h3 className="text-2xl font-bold text-white mb-8">Powered by Modern Technology</h3>
             <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
               {[
-                { name: "React.js", icon: "⚛️" },
-                { name: "Spring Boot", icon: "🍃" },
-                { name: "AI/LLM", icon: "🤖" },
-                { name: "Knowledge Graph", icon: "🕸️" },
+                { name: "React.js" },
+                { name: "Spring Boot" },
+                { name: "AI/LLM" },
+                { name: "Knowledge Graph" },
               ].map((tech, index) => (
                 <motion.div
                   key={index}
-                  whileHover={{ scale: 1.1, opacity: 1 }}
-                  className="flex items-center space-x-2 px-4 py-2 bg-zinc-800/50 rounded-lg border border-zinc-700/50 hover:border-emerald-500/50 transition-all"
+                  whileHover={{ 
+                    scale: 1.1, 
+                    opacity: 1,
+                    boxShadow: '0 0 25px rgba(16, 185, 129, 0.3)'
+                  }}
+                  className="px-6 py-3 bg-zinc-800/50 rounded-lg border border-zinc-700/50 hover:border-emerald-500/50 transition-all duration-300 relative overflow-hidden"
                 >
-                  <span className="text-xl">{tech.icon}</span>
-                  <span className="text-zinc-300 font-medium">{tech.name}</span>
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000"></div>
+                  <span className="text-zinc-300 font-medium relative z-10">{tech.name}</span>
                 </motion.div>
               ))}
             </div>
@@ -1039,12 +1105,78 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black border-t border-zinc-800 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent mb-2">NiramoyAI</h3>
-          <p className="text-zinc-400">
-            Your trusted AI-powered healthcare companion. Advanced medical insights at your fingertips.
-          </p>
+      <footer className="bg-black border-t border-zinc-800 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            {/* Brand */}
+            <div className="col-span-1 md:col-span-2">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent mb-4" 
+                  style={{
+                    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    backgroundSize: '200% 200%',
+                    animation: 'gradient 4s ease infinite'
+                  }}>
+                NiramoyAI
+              </h3>
+              <p className="text-zinc-400 mb-6 max-w-md" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
+                Your trusted AI-powered healthcare companion. Advanced medical insights, doctor recommendations, and comprehensive health management at your fingertips.
+              </p>
+              <div className="flex space-x-4">
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  className="w-10 h-10 bg-zinc-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <span className="text-white text-sm font-bold">f</span>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  className="w-10 h-10 bg-zinc-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <span className="text-white text-sm font-bold">t</span>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  className="w-10 h-10 bg-zinc-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <span className="text-white text-sm font-bold">in</span>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Services */}
+            <div>
+              <h4 className="text-white font-semibold mb-4" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>Services</h4>
+              <ul className="space-y-2 text-zinc-400">
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">AI Diagnosis</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">Doctor Search</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">Test Centers</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">Health Analytics</a></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h4 className="text-white font-semibold mb-4" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>Company</h4>
+              <ul className="space-y-2 text-zinc-400">
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">Contact</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-zinc-500 text-sm" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
+              © 2025 NiramoyAI. All rights reserved.
+            </p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">Privacy</a>
+              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">Terms</a>
+              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">Security</a>
+            </div>
+          </div>
         </div>
       </footer>
 

@@ -695,4 +695,5 @@ export const printMedicalSummary = (printData) => {
   }
 };
 
-export default { printHealthProfile, printBasicProfile, printMedicalSummary };
+const printerUtils = { printHealthProfile, printBasicProfile, printMedicalSummary };
+export default printerUtils;
