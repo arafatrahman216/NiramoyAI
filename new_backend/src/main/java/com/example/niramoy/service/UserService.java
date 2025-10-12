@@ -75,6 +75,7 @@ public class UserService implements UserDetailsService {
             throw new DuplicateUserException("User already exists with username or email: " + username + " or " + email);
             }
 
+        System.out.println("Creating user: " + username + ", email: " + email + ", role: " + role);
         User newUser1 = User.builder().username(username).name(name).email(email).password(password)
                 .phoneNumber(phoneNumber).gender(gender).createdAt(LocalDateTime.now())
                 .profilePictureUrl(profilePictureUrl)
