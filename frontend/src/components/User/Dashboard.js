@@ -6,7 +6,8 @@ import MedicationTimeline from "./MedicationTimeline";
 import Chart from "./Chart";
 import RecentVisits from "../RecentVisits";
 import QRModal from "./QRModal";
-import { Home, User, Activity, LogOut, QrCode, Share2, PlusIcon } from "lucide-react";
+import PrintSummaryModal from "./PrintSummaryModal";
+import { Home, User, Activity, LogOut, QrCode, Share2, PlusIcon, Printer } from "lucide-react";
 import { HealthAndSafetyRounded} from "@mui/icons-material"
 
 import axios from "axios";
@@ -29,6 +30,7 @@ const Dashboard = () => {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [qrData, setQrData] = useState(null);
   const [loadingQR, setLoadingQR] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   const profile = user || fallbackDashboardUser;
 
@@ -63,6 +65,8 @@ const Dashboard = () => {
         majorEvents : fetchedProfile.majorEvents,
         majorHealthEvents: fetchedProfile.majorHealthEvents,
         lifestyle: fetchedProfile.lifestyle,
+        bloodPressure: fetchedProfile.bloodPressure,
+        dateOfBirth: fetchedProfile.dateOfBirth
       }
       setHealthProfile(profile);
       setHealthVitals(response.data.vitals);
@@ -208,6 +212,13 @@ const Dashboard = () => {
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
         <div className="flex space-x-3">
+          <button
+            onClick={() => setIsPrintModalOpen(true)}
+            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Print Summary</span>
+          </button>
           <button
             onClick={generateQRCode}
             disabled={loadingQR}
@@ -440,6 +451,15 @@ const Dashboard = () => {
           qrData={qrData}
         />
       )}
+
+      {/* Print Summary Modal */}
+      <PrintSummaryModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        userProfile={profile}
+        healthProfile={healthProfile}
+        recentVisits={recentVisits}
+      />
     </div>
   );
 };

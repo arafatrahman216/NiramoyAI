@@ -217,4 +217,479 @@ export const printBasicProfile = (profile) => {
   }
 };
 
-export default { printHealthProfile, printBasicProfile };
+/**
+ * Converts visit data into natural language summaries
+ * @param {Array} visits - Array of visit data
+ * @returns {Array} Array of formatted visit summaries
+ */
+const generateVisitSummaries = (visits = []) => {
+  if (!Array.isArray(visits) || visits.length === 0) {
+    return ['No recent visits recorded.'];
+  }
+
+  return visits.map((visit, index) => {
+    const visitDate = visit.appointmentDate || visit.visitDate || 'Unknown date';
+    const doctor = visit.doctor || visit.doctorName || 'Unknown doctor';
+    const symptoms = Array.isArray(visit.symptoms) ? visit.symptoms : (visit.symptoms ? [visit.symptoms] : []);
+    const diagnosis = visit.prescription || visit.condition || 'Not specified';
+
+    let summary = `Visit ${index + 1}: On ${visitDate}, the patient consulted with ${doctor} `;
+    
+    if (symptoms.length > 0) {
+      summary += `The patient presented with symptoms including ${symptoms.join(', ')}. `;
+    }
+    
+    if (diagnosis && diagnosis !== 'Not specified') {
+      summary += `The diagnosis was ${diagnosis}. `;
+    }
+
+    return summary;
+  });
+};
+
+/**
+ * Prints a comprehensive medical summary with selected sections
+ * @param {Object} printData - Object containing selected data sections
+ */
+export const printMedicalSummary = (printData) => {
+  const { userProfile, healthProfile, visitSummaries } = printData;
+
+  if (!userProfile && !healthProfile && !visitSummaries) {
+    console.error('No data selected for printing');
+    return;
+  }
+
+  // Calculate age from date of birth
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return 'N/A';
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+
+  // Compact, elegant medical report styles - 1-2 page design
+  const printStyles = `
+    <style>
+      @media print {
+        * { box-sizing: border-box; }
+        body { 
+          margin: 0; 
+          padding: 15px; 
+          font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
+          font-size: 12px;
+          line-height: 1.4;
+          color: #333;
+          background: #fff;
+        }
+        .report-container {
+          max-width: 100%;
+          margin: 0 auto;
+          background: white;
+        }
+        .header { 
+          background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%);
+          color: white;
+          padding: 20px;
+          margin-bottom: 20px;
+          border-radius: 8px;
+          text-align: center;
+          position: relative;
+          overflow: hidden;
+        }
+        .header::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 100px;
+          height: 100px;
+          background: rgba(255,255,255,0.1);
+          border-radius: 50%;
+          transform: translate(30px, -30px);
+        }
+        .header h1 { 
+          margin: 0 0 5px 0; 
+          font-size: 24px; 
+          font-weight: 700;
+          position: relative;
+          z-index: 1;
+        }
+        .header p { 
+          margin: 0; 
+          opacity: 0.9; 
+          font-size: 14px;
+          position: relative;
+          z-index: 1;
+        }
+        .two-column {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-bottom: 20px;
+        }
+        .section {
+          border: 1px solid #E5E7EB;
+          border-radius: 8px;
+          overflow: hidden;
+          page-break-inside: avoid;
+        }
+        .section-header {
+          background: linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 100%);
+          padding: 12px 16px;
+          border-bottom: 2px solid #4F46E5;
+          margin: 0;
+        }
+        .section-title {
+          color: #4F46E5;
+          font-size: 14px;
+          font-weight: 600;
+          margin: 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .section-content {
+          padding: 16px;
+        }
+        .info-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+        .info-item {
+          display: flex;
+          flex-direction: column;
+        }
+        .info-label {
+          font-size: 10px;
+          color: #6B7280;
+          text-transform: uppercase;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          margin-bottom: 2px;
+        }
+        .info-value {
+          font-size: 13px;
+          color: #111827;
+          font-weight: 500;
+        }
+        .vitals-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+          margin-bottom: 15px;
+        }
+        .vital-card {
+          background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+          color: white;
+          padding: 12px;
+          border-radius: 6px;
+          text-align: center;
+          position: relative;
+        }
+        .vital-label {
+          font-size: 9px;
+          opacity: 0.9;
+          text-transform: uppercase;
+          font-weight: 600;
+          margin-bottom: 2px;
+        }
+        .vital-value {
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 2px;
+        }
+        .vital-unit {
+          font-size: 9px;
+          opacity: 0.8;
+        }
+        .full-width {
+          grid-column: 1 / -1;
+        }
+        .visits-section {
+          margin-top: 20px;
+        }
+        .visit-item {
+          background: #F8FAFC;
+          border-left: 4px solid #4F46E5;
+          padding: 12px;
+          margin-bottom: 8px;
+          border-radius: 0 4px 4px 0;
+        }
+        .visit-date {
+          font-size: 11px;
+          color: #4F46E5;
+          font-weight: 600;
+          margin-bottom: 4px;
+        }
+        .visit-summary {
+          font-size: 12px;
+          line-height: 1.4;
+          color: #374151;
+        }
+        .emergency-contact {
+          background: linear-gradient(90deg, #FEF2F2 0%, #FEE2E2 100%);
+          border: 1px solid #FECACA;
+          border-radius: 6px;
+          padding: 10px;
+          margin-top: 10px;
+        }
+        .footer {
+          margin-top: 20px;
+          padding: 15px;
+          background: #F9FAFB;
+          border-radius: 6px;
+          text-align: center;
+          font-size: 10px;
+          color: #6B7280;
+          border-top: 2px solid #4F46E5;
+        }
+        .medical-list {
+          font-size: 11px;
+          line-height: 1.4;
+          color: #374151;
+        }
+        .compact-text {
+          font-size: 11px;
+          line-height: 1.3;
+          margin: 4px 0;
+        }
+        @media print {
+          .section { break-inside: avoid; }
+          .vital-card { break-inside: avoid; }
+          .visit-item { break-inside: avoid; }
+        }
+      }
+    </style>`;
+
+  // Build compact content sections
+  let contentSections = '';
+  console.log(healthProfile);
+
+  // Patient Information Section (Left Column)
+  if (userProfile) {
+    const age = calculateAge(healthProfile?.dateOfBirth);
+    contentSections += `
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Patient Information</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Full Name</div>
+              <div class="info-value">${userProfile.name || userProfile.fullName || 'N/A'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Age</div>
+              <div class="info-value">${age} years</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Gender</div>
+              <div class="info-value">${userProfile.gender || 'N/A'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Blood Type</div>
+              <div class="info-value">${healthProfile?.bloodType || healthProfile.bloodGroup || 'N/A'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Phone</div>
+              <div class="info-value">${userProfile.phone || userProfile.phoneNumber || 'N/A'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Date of Birth</div>
+              <div class="info-value">${'healthProfile?.dateOfBirth' || 'N/A'}</div>
+            </div>
+          </div>
+          ${userProfile.emergencyContact ? `
+            <div class="emergency-contact">
+              <div class="info-label">Emergency Contact</div>
+              <div class="info-value compact-text">${userProfile.emergencyContact}</div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // Health Profile & Vitals Section (Right Column)
+  if (healthProfile) {
+    contentSections += `
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Current Health Status</h3>
+        </div>
+        <div class="section-content">
+          <div class="vitals-row">
+            ${healthProfile.height ? `
+              <div class="vital-card">
+                <div class="vital-label">Height</div>
+                <div class="vital-value">${healthProfile.height}</div>
+                <div class="vital-unit">cm</div>
+              </div>
+            ` : ''}
+            ${healthProfile.weight ? `
+              <div class="vital-card">
+                <div class="vital-label">Weight</div>
+                <div class="vital-value">${healthProfile.weight}</div>
+                <div class="vital-unit">kg</div>
+              </div>
+            ` : ''}
+            ${healthProfile.bmi ? `
+              <div class="vital-card">
+                <div class="vital-label">BMI</div>
+                <div class="vital-value">${healthProfile.bmi}</div>
+                <div class="vital-unit">kg/m²</div>
+              </div>
+            ` : ''}
+          </div>
+          <div class="vitals-row">
+            ${healthProfile.bloodPressure ? `
+              <div class="vital-card">
+                <div class="vital-label">Blood Pressure</div>
+                <div class="vital-value">${healthProfile.bloodPressure}</div>
+                <div class="vital-unit">mmHg</div>
+              </div>
+            ` : ''}
+            ${healthProfile.heartRate ? `
+              <div class="vital-card">
+                <div class="vital-label">Heart Rate</div>
+                <div class="vital-value">${healthProfile.heartRate}</div>
+                <div class="vital-unit">bpm</div>
+              </div>
+            ` : ''}
+            ${healthProfile.temperature ? `
+              <div class="vital-card">
+                <div class="vital-label">Temperature</div>
+                <div class="vital-value">${healthProfile.temperature}</div>
+                <div class="vital-unit">°C</div>
+              </div>
+            ` : ''}
+          </div>
+          
+          ${healthProfile.allergies || healthProfile.medications || healthProfile.chronicDiseases ? `
+            <div class="info-grid">
+              ${healthProfile.allergies ? `
+                <div class="info-item">
+                  <div class="info-label">Allergies</div>
+                  <div class="info-value medical-list">${Array.isArray(healthProfile.allergies) ? healthProfile.allergies.join(', ') : healthProfile.allergies}</div>
+                </div>
+              ` : ''}
+              ${healthProfile.medications ? `
+                <div class="info-item">
+                  <div class="info-label">Medications</div>
+                  <div class="info-value medical-list">${Array.isArray(healthProfile.medications) ? healthProfile.medications.join(', ') : healthProfile.medications}</div>
+                </div>
+              ` : ''}
+              ${healthProfile.chronicDiseases ? `
+                <div class="info-item">
+                  <div class="info-label">Chronic Diseases</div>
+                  <div class="info-value medical-list">${Array.isArray(healthProfile.chronicDiseases) ? healthProfile.chronicDiseases.join(', ') : healthProfile.chronicDiseases}</div>
+                </div>
+              ` : ''}
+              ${healthProfile.majorHealthEvents ? `
+                <div class="info-item">
+                  <div class="info-label">Medical History</div>
+                  <div class="info-value medical-list">${healthProfile.majorHealthEvents}</div>
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // Visit Summaries Section (Full Width)
+  if (visitSummaries && Array.isArray(visitSummaries) && visitSummaries.length > 0) {
+    const summaries = generateVisitSummaries(visitSummaries.slice(0, 5)); // Limit to 5 recent visits
+    contentSections += `
+      <div class="section full-width visits-section">
+        <div class="section-header">
+          <h3 class="section-title">Recent Medical Visits (Last 5)</h3>
+        </div>
+        <div class="section-content">
+          ${summaries.map((summary, index) => {
+            const visit = visitSummaries[index];
+            return `
+              <div class="visit-item">
+                <div class="visit-date">${visit?.appointmentDate || visit?.visitDate || `Visit ${index + 1}`}</div>
+                <div class="visit-summary">${summary}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const patientName = userProfile?.name || userProfile?.fullName || 'Patient';
+
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Medical Report - ${patientName}</title>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      ${printStyles}
+    </head>
+    <body>
+      <div class="report-container">
+        <div class="header">
+          <h1>🏥 NiramoyAI Medical Report</h1>
+          <p><strong>${patientName}</strong> | Generated: ${currentDate}</p>
+        </div>
+
+        <div class="two-column">
+          ${contentSections}
+        </div>
+
+        <div class="footer">
+          <p><strong>DISCLAIMER:</strong> This report is for informational purposes only and should not replace professional medical advice.</p>
+          <p>Generated by NiramoyAI Health Management System | Report Date: ${currentDate}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      console.error('Unable to open print window. Pop-up blocked?');
+      alert('Please allow pop-ups to print the medical summary.');
+      return;
+    }
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Wait for content to load before printing
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  } catch (error) {
+    console.error('Error during printing:', error);
+    alert('Error generating print summary. Please try again.');
+  }
+};
+
+export default { printHealthProfile, printBasicProfile, printMedicalSummary };

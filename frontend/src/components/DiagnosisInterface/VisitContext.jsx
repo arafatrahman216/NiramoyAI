@@ -7,7 +7,7 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
   if (showInChatOnly && !isInChatMode) return null;
 
   return (
-    <div className="mb-4">
+    <div className="w-full max-w-3xl">
       <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 transition-all hover:border-zinc-600">
         <div className="flex items-start justify-between">
           <div className="flex-1">

@@ -95,14 +95,81 @@ const LandingPage = () => {
           setDoctors(doctorsData);
           setFilteredResults(doctorsData);
         } else {
-          const response = await testCenterAPI.getAllTestCenters();
-          const testCentersData = response.data?.data || response.data || [];
-          setTestCenters(testCentersData);
-          setFilteredResults(testCentersData);
+          // Use demo data for test centers instead of API
+          const demoTestCenters = [
+            {
+              id: 1,
+              name: 'Square Hospitals Ltd.',
+              location: 'Panthapath, Dhaka',
+              phone: '+88-02-8159457',
+              services: ['Blood Tests', 'Pathology', 'Radiology', 'Cardiology'],
+              rating: 4.8
+            },
+            {
+              id: 2,
+              name: 'United Hospital Limited',
+              location: 'Gulshan, Dhaka',
+              phone: '+88-02-9883311',
+              services: ['Hematology', 'Lab Services', 'Imaging', 'Emergency'],
+              rating: 4.9
+            },
+            {
+              id: 3,
+              name: 'Apollo Hospitals Dhaka',
+              location: 'Bashundhara, Dhaka',
+              phone: '+88-10678',
+              services: ['Blood Analysis', 'Diagnostic Services', 'CT Scan', 'MRI'],
+              rating: 4.7
+            },
+            {
+              id: 4,
+              name: 'Labaid Specialized Hospital',
+              location: 'Dhanmondi, Dhaka',
+              phone: '+88-02-9611233',
+              services: ['Blood Count', 'Pathology', 'Biochemistry', 'Microbiology'],
+              rating: 4.6
+            },
+            {
+              id: 5,
+              name: 'Ibn Sina Hospital',
+              location: 'Kallyanpur, Dhaka',
+              phone: '+88-02-9002513',
+              services: ['Hematology Tests', 'Lab Tests', 'X-Ray', 'Ultrasound'],
+              rating: 4.5
+            },
+            {
+              id: 6,
+              name: 'Green Life Medical College Hospital',
+              location: 'Panthapath, Dhaka',
+              phone: '+88-02-58151275',
+              services: ['Blood Screening', 'Medical Tests', 'ECG', 'Endoscopy'],
+              rating: 4.4
+            },
+            {
+              id: 7,
+              name: 'Bangladesh Medical College Hospital',
+              location: 'Dhanmondi, Dhaka',
+              phone: '+88-02-9665188',
+              services: ['Clinical Pathology', 'Blood Tests', 'Urine Tests', 'Stool Tests'],
+              rating: 4.3
+            },
+            {
+              id: 8,
+              name: 'Holy Family Red Crescent Medical College Hospital',
+              location: 'Maghbazar, Dhaka',
+              phone: '+88-02-9337513',
+              services: ['Laboratory Medicine', 'Blood Bank', 'Histopathology', 'Cytology'],
+              rating: 4.2
+            }
+          ];
+          setTestCenters(demoTestCenters);
+          setFilteredResults(demoTestCenters);
         }
       } catch (error) {
         console.error('Error loading data:', error);
-        setError(`Failed to load ${searchType}. Please check if the backend server is running.`);
+        if (searchType === 'doctors') {
+          setError(`Failed to load ${searchType}. Please check if the backend server is running.`);
+        }
         setFilteredResults([]);
       } finally {
         setLoading(false);
@@ -136,12 +203,179 @@ const LandingPage = () => {
           if (response.data && response.data) {
             searchResults = response.data || [];
           }
-        } else {
-          const response = await testCenterAPI.searchTestCenters(searchTerm);
-          if (response.data && response.data.success) {
-            searchResults = response.data.data || [];
+          } else {
+            // Use demo data for test centers instead of API calls
+            if (searchTerm.toLowerCase().includes('cbc') || searchTerm.toLowerCase().includes('complete blood count')) {
+              // Show CBC-specific data with pricing
+              searchResults = [
+                {
+                  id: 1,
+                  name: 'Square Hospitals Ltd.',
+                  location: 'Panthapath, Dhaka',
+                  phone: '+88-02-8159457',
+                  services: ['CBC Test', 'Blood Tests', 'Pathology'],
+                  testName: 'Complete Blood Count (CBC)',
+                  cost: '৳650',
+                  duration: '30 minutes',
+                  reportTime: '6-8 hours',
+                  availability: 'Daily 7:00 AM - 11:00 PM',
+                  department: 'Pathology Lab',
+                  fasting: 'Not Required',
+                  rating: 4.8
+                },
+                {
+                  id: 2,
+                  name: 'United Hospital Limited',
+                  location: 'Gulshan, Dhaka',
+                  phone: '+88-02-9883311',
+                  services: ['CBC Test', 'Hematology', 'Lab Services'],
+                  testName: 'Complete Blood Count (CBC)',
+                  cost: '৳700',
+                  duration: '25 minutes',
+                  reportTime: '4-6 hours',
+                  availability: 'Daily 6:00 AM - 12:00 AM',
+                  department: 'Clinical Laboratory',
+                  fasting: 'Not Required',
+                  rating: 4.9
+                },
+                {
+                  id: 3,
+                  name: 'Apollo Hospitals Dhaka',
+                  location: 'Bashundhara, Dhaka',
+                  phone: '+88-10678',
+                  services: ['CBC Test', 'Blood Analysis', 'Diagnostic Services'],
+                  testName: 'Complete Blood Count (CBC)',
+                  cost: '৳720',
+                  duration: '20 minutes',
+                  reportTime: '3-5 hours',
+                  availability: 'Daily 24/7',
+                  department: 'Laboratory Medicine',
+                  fasting: 'Not Required',
+                  rating: 4.7
+                },
+                {
+                  id: 4,
+                  name: 'Labaid Specialized Hospital',
+                  location: 'Dhanmondi, Dhaka',
+                  phone: '+88-02-9611233',
+                  services: ['CBC Test', 'Blood Count', 'Pathology'],
+                  testName: 'Complete Blood Count (CBC)',
+                  cost: '৳580',
+                  duration: '35 minutes',
+                  reportTime: '6-12 hours',
+                  availability: 'Daily 7:00 AM - 10:00 PM',
+                  department: 'Pathology Department',
+                  fasting: 'Not Required',
+                  rating: 4.6
+                },
+                {
+                  id: 5,
+                  name: 'Ibn Sina Hospital',
+                  location: 'Kallyanpur, Dhaka',
+                  phone: '+88-02-9002513',
+                  services: ['CBC Test', 'Hematology Tests', 'Lab Tests'],
+                  testName: 'Complete Blood Count (CBC)',
+                  cost: '৳520',
+                  duration: '40 minutes',
+                  reportTime: '8-12 hours',
+                  availability: 'Daily 6:00 AM - 11:00 PM',
+                  department: 'Laboratory Services',
+                  fasting: 'Not Required',
+                  rating: 4.5
+                },
+                {
+                  id: 6,
+                  name: 'Green Life Medical College Hospital',
+                  location: 'Panthapath, Dhaka',
+                  phone: '+88-02-58151275',
+                  services: ['CBC Test', 'Blood Screening', 'Medical Tests'],
+                  testName: 'Complete Blood Count (CBC)',
+                  cost: '৳600',
+                  duration: '30 minutes',
+                  reportTime: '6-10 hours',
+                  availability: 'Daily 8:00 AM - 10:00 PM',
+                  department: 'Clinical Pathology',
+                  fasting: 'Not Required',
+                  rating: 4.4
+                }
+              ];
+            } else {
+              // Filter from existing demo test centers data
+              const allTestCenters = testCenters.length > 0 ? testCenters : [
+                {
+                  id: 1,
+                  name: 'Square Hospitals Ltd.',
+                  location: 'Panthapath, Dhaka',
+                  phone: '+88-02-8159457',
+                  services: ['Blood Tests', 'Pathology', 'Radiology', 'Cardiology'],
+                  rating: 4.8
+                },
+                {
+                  id: 2,
+                  name: 'United Hospital Limited',
+                  location: 'Gulshan, Dhaka',
+                  phone: '+88-02-9883311',
+                  services: ['Hematology', 'Lab Services', 'Imaging', 'Emergency'],
+                  rating: 4.9
+                },
+                {
+                  id: 3,
+                  name: 'Apollo Hospitals Dhaka',
+                  location: 'Bashundhara, Dhaka',
+                  phone: '+88-10678',
+                  services: ['Blood Analysis', 'Diagnostic Services', 'CT Scan', 'MRI'],
+                  rating: 4.7
+                },
+                {
+                  id: 4,
+                  name: 'Labaid Specialized Hospital',
+                  location: 'Dhanmondi, Dhaka',
+                  phone: '+88-02-9611233',
+                  services: ['Blood Count', 'Pathology', 'Biochemistry', 'Microbiology'],
+                  rating: 4.6
+                },
+                {
+                  id: 5,
+                  name: 'Ibn Sina Hospital',
+                  location: 'Kallyanpur, Dhaka',
+                  phone: '+88-02-9002513',
+                  services: ['Hematology Tests', 'Lab Tests', 'X-Ray', 'Ultrasound'],
+                  rating: 4.5
+                },
+                {
+                  id: 6,
+                  name: 'Green Life Medical College Hospital',
+                  location: 'Panthapath, Dhaka',
+                  phone: '+88-02-58151275',
+                  services: ['Blood Screening', 'Medical Tests', 'ECG', 'Endoscopy'],
+                  rating: 4.4
+                },
+                {
+                  id: 7,
+                  name: 'Bangladesh Medical College Hospital',
+                  location: 'Dhanmondi, Dhaka',
+                  phone: '+88-02-9665188',
+                  services: ['Clinical Pathology', 'Blood Tests', 'Urine Tests', 'Stool Tests'],
+                  rating: 4.3
+                },
+                {
+                  id: 8,
+                  name: 'Holy Family Red Crescent Medical College Hospital',
+                  location: 'Maghbazar, Dhaka',
+                  phone: '+88-02-9337513',
+                  services: ['Laboratory Medicine', 'Blood Bank', 'Histopathology', 'Cytology'],
+                  rating: 4.2
+                }
+              ];
+              
+              // Filter based on search term
+              searchResults = allTestCenters.filter(center => 
+                center.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                center.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                center.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()))
+              );
+            }
           }
-        }
 
         setFilteredResults(searchResults);
       } catch (error) {
@@ -580,6 +814,51 @@ const LandingPage = () => {
                   )}
                   {item.email && (
                     <p className="text-sm text-gray-400 mb-4">✉️ {item.email}</p>
+                  )}
+
+                  {/* Test-Specific Information (for test centers) */}
+                  {searchType === 'testCenters' && item.testName && (
+                    <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mb-4">
+                      <h4 className="text-blue-300 font-semibold mb-2">🧪 {item.testName}</h4>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {item.cost && (
+                          <div className="flex items-center">
+                            <span className="text-gray-400">💰 Cost:</span>
+                            <span className="text-green-400 font-semibold ml-1">{item.cost}</span>
+                          </div>
+                        )}
+                        {item.duration && (
+                          <div className="flex items-center">
+                            <span className="text-gray-400">⏱️ Duration:</span>
+                            <span className="text-white ml-1">{item.duration}</span>
+                          </div>
+                        )}
+                        {item.reportTime && (
+                          <div className="flex items-center">
+                            <span className="text-gray-400">📋 Report:</span>
+                            <span className="text-white ml-1">{item.reportTime}</span>
+                          </div>
+                        )}
+                        {item.fasting && (
+                          <div className="flex items-center">
+                            <span className="text-gray-400">🍽️ Fasting:</span>
+                            <span className="text-white ml-1">{item.fasting}</span>
+                          </div>
+                        )}
+                      </div>
+                      {item.availability && (
+                        <div className="mt-2 pt-2 border-t border-blue-700/30">
+                          <span className="text-gray-400 text-xs">🕒 Available: </span>
+                          <span className="text-white text-xs">{item.availability}</span>
+                        </div>
+                      )}
+                      {item.department && (
+                        <div className="mt-1">
+                          <span className="text-gray-400 text-xs">🏥 Department: </span>
+                          <span className="text-blue-300 text-xs">{item.department}</span>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Action Buttons */}
