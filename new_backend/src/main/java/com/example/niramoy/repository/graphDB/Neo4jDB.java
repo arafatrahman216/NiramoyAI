@@ -30,6 +30,8 @@ public class Neo4jDB implements GraphDB {
         }
     }
 
+    
+
     /**
      * Execute a Cypher query with parameters
      */

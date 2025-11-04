@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.example.niramoy.dto.VisitContextDTO;
 import com.example.niramoy.entity.Visits;
 
 @Slf4j
@@ -90,6 +92,8 @@ public class UserKGService {
             Return JSON ONLY like this: {\"Symptoms\": \"...\"}\n
             """
         );
+
+        //FIX: DOCTOR SPECIALIZATION NOT CORRECT
         String promptText = SYMPTOMS_AND_SPECIALIZATION_EXTRACTION_PROMPT.apply(
             Map.of("symptoms", "Patient complains of persistent cough, shortness of breath, and occasional chest pain.")
         ).text();
@@ -647,7 +651,7 @@ public class UserKGService {
         } catch (Exception e) {
             log.error("Error fetching patient summary: {}", e.getMessage(), e);
             return "Error fetching patient summary.";
-        }  
+        } 
     }
 
 
@@ -799,23 +803,107 @@ public class UserKGService {
             return false;
         }
     }
+
+
+    public VisitContextDTO getVisitContextByID(Long visitID) {
+        log.info("Fetching visit context from Knowledge Graph for visit ID: {}", visitID);
+
+        visitID = Long.valueOf(5);
+        String cypherQuery = """
+            MATCH (v:Visit {visitID: "5"})
+            OPTIONAL MATCH (v)-[:HAS_SYMPTOM]->(symptom)
+            OPTIONAL MATCH (v)-[:HAS_DIAGNOSIS]->(diagnosis)
+            OPTIONAL MATCH (v)-[:HAS_MEDICINE]->(medicine)
+            RETURN v, 
+                   collect(DISTINCT symptom) AS Symptoms, 
+                   collect(DISTINCT diagnosis) AS Diagnoses,
+                   collect(DISTINCT medicine) AS Medicines;
+        """;
+
+        try {
+            List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, Map.of("visitID", visitID));
+            
+            if (results == null || results.isEmpty()) {
+                log.warn("No visit found with ID: {}", visitID);
+                return null;
+            }
+
+            Map<String, Object> result = results.get(0);
+            
+            // Extract visit node properties
+            @SuppressWarnings("unchecked")
+            Map<String, Object> visitNode = (Map<String, Object>) result.get("v");
+            
+            if (visitNode == null) {
+                log.warn("Visit node is null for ID: {}", visitID);
+                return null;
+            }
+            
+            // Extract symptoms list
+            @SuppressWarnings("unchecked")
+            List<String> symptoms = (List<String>) result.getOrDefault("Symptoms", new ArrayList<>());
+            symptoms = symptoms.stream()
+                .filter(s -> s != null && !s.isEmpty())
+                .collect(Collectors.toList());
+            
+            // Extract diagnoses list
+            @SuppressWarnings("unchecked")
+            List<String> diagnoses = (List<String>) result.getOrDefault("Diagnoses", new ArrayList<>());
+            diagnoses = diagnoses.stream()
+                .filter(d -> d != null && !d.isEmpty())
+                .collect(Collectors.toList());
+            
+            // Extract medicines/prescription list
+            @SuppressWarnings("unchecked")
+            List<String> medicines = (List<String>) result.getOrDefault("Medicines", new ArrayList<>());
+            medicines = medicines.stream()
+                .filter(m -> m != null && !m.isEmpty())
+                .collect(Collectors.toList());
+            
+            // Build VisitContextDTO
+            VisitContextDTO visitContext = VisitContextDTO.builder()
+                .visitId(visitID)
+                .doctorName((String) visitNode.getOrDefault("doctor_name", "Unknown Doctor"))
+                .appointmentDate((String) visitNode.getOrDefault("date", ""))
+                .diagnosis(diagnoses.isEmpty() ? null : String.join(", ", diagnoses))
+                .symptoms(symptoms.isEmpty() ? null : symptoms)
+                .prescription(medicines.isEmpty() ? null : medicines)
+                .summary((String) visitNode.getOrDefault("visit_summary", ""))
+                .otherInfo(buildOtherInfo(visitNode))
+                .build();
+            
+            log.info("Successfully fetched visit context for visit ID: {}", visitID);
+            return visitContext;
+            
+        } catch (Exception e) {
+            log.error("Error fetching visit context for visit ID {}: {}", visitID, e.getMessage(), e);
+            return null;
+        }
+    }
     
+
     
-    public boolean createDemoPatient() {
-        log.info("Creating demo patient in Knowledge Graph");
+
+    /**
+     * Helper method to build otherInfo map from visit node properties
+     */
+    private Map<String, Object> buildOtherInfo(Map<String, Object> visitNode) {
+        Map<String, Object> otherInfo = new HashMap<>();
         
-        return createNewPatient(
-            2L,
-            "Afham Adian",
-            "male",
-            12,
-            45.0,
-            123.0,
-            "B+",
-            "dust,pollen",
-            "hypertension,diabetes",
-            "exercise__regular_,Light Exercise",
-            ""
-        );
+        // Add additional visit properties to otherInfo
+        if (visitNode.containsKey("visit_type")) {
+            otherInfo.put("visitType", visitNode.get("visit_type"));
+        }
+        if (visitNode.containsKey("doctor_advice")) {
+            otherInfo.put("doctorAdvice", visitNode.get("doctor_advice"));
+        }
+        if (visitNode.containsKey("specialization")) {
+            otherInfo.put("specialization", visitNode.get("specialization"));
+        }
+        if (visitNode.containsKey("doctorID")) {
+            otherInfo.put("doctorID", visitNode.get("doctorID"));
+        }
+        
+        return otherInfo;
     }
 }

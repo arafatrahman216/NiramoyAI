@@ -57,12 +57,12 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
               )}
               
               {/* CONTEXT: Prescription */}
-              {visitContext.prescription && (
+              {/* {visitContext.prescription && (
                 <div className="text-zinc-300">
                   <span className="text-zinc-500 font-medium">Prescription: </span>
                   {Array.isArray(visitContext.prescription) ? visitContext.prescription.join(', ') : visitContext.prescription}
                 </div>
-              )}
+              )} */}
               
               {/* CONTEXT: Summary from backend */}
               {visitContext.summary && (
