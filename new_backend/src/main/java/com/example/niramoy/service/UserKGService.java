@@ -808,20 +808,29 @@ public class UserKGService {
     public VisitContextDTO getVisitContextByID(Long visitID) {
         log.info("Fetching visit context from Knowledge Graph for visit ID: {}", visitID);
 
-        visitID = Long.valueOf(5);
+        // visitID = Long.valueOf(5);
         String cypherQuery = """
-            MATCH (v:Visit {visitID: "5"})
+            MATCH (v:Visit {visitID: $visitID})
             OPTIONAL MATCH (v)-[:HAS_SYMPTOM]->(symptom)
             OPTIONAL MATCH (v)-[:HAS_DIAGNOSIS]->(diagnosis)
             OPTIONAL MATCH (v)-[:HAS_MEDICINE]->(medicine)
-            RETURN v, 
-                   collect(DISTINCT symptom) AS Symptoms, 
-                   collect(DISTINCT diagnosis) AS Diagnoses,
-                   collect(DISTINCT medicine) AS Medicines;
+            RETURN 
+                v.visitID as visitID,
+                v.doctor_name as doctorName,
+                v.date as date,
+                v.visit_summary as visitSummary,
+                v.visit_type as visitType,
+                v.doctor_advice as doctorAdvice,
+                v.specialization as specialization,
+                v.doctorID as doctorID,
+                collect(DISTINCT symptom.name) AS symptoms,
+                collect(DISTINCT diagnosis.name) AS diagnoses,
+                collect(DISTINCT medicine.medicine_name + ' - ' + medicine.dosage_and_duration) AS medicines
         """;
 
         try {
-            List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, Map.of("visitID", visitID));
+            List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, 
+                Map.of("visitID", visitID.toString()));
             
             if (results == null || results.isEmpty()) {
                 log.warn("No visit found with ID: {}", visitID);
@@ -830,46 +839,52 @@ public class UserKGService {
 
             Map<String, Object> result = results.get(0);
             
-            // Extract visit node properties
-            @SuppressWarnings("unchecked")
-            Map<String, Object> visitNode = (Map<String, Object>) result.get("v");
-            
-            if (visitNode == null) {
-                log.warn("Visit node is null for ID: {}", visitID);
-                return null;
-            }
-            
             // Extract symptoms list
             @SuppressWarnings("unchecked")
-            List<String> symptoms = (List<String>) result.getOrDefault("Symptoms", new ArrayList<>());
+            List<String> symptoms = (List<String>) result.getOrDefault("symptoms", new ArrayList<>());
             symptoms = symptoms.stream()
                 .filter(s -> s != null && !s.isEmpty())
                 .collect(Collectors.toList());
             
             // Extract diagnoses list
             @SuppressWarnings("unchecked")
-            List<String> diagnoses = (List<String>) result.getOrDefault("Diagnoses", new ArrayList<>());
+            List<String> diagnoses = (List<String>) result.getOrDefault("diagnoses", new ArrayList<>());
             diagnoses = diagnoses.stream()
                 .filter(d -> d != null && !d.isEmpty())
                 .collect(Collectors.toList());
             
             // Extract medicines/prescription list
             @SuppressWarnings("unchecked")
-            List<String> medicines = (List<String>) result.getOrDefault("Medicines", new ArrayList<>());
+            List<String> medicines = (List<String>) result.getOrDefault("medicines", new ArrayList<>());
             medicines = medicines.stream()
                 .filter(m -> m != null && !m.isEmpty())
                 .collect(Collectors.toList());
             
+            // Build otherInfo map
+            Map<String, Object> otherInfo = new HashMap<>();
+            if (result.containsKey("visitType") && result.get("visitType") != null) {
+                otherInfo.put("visitType", result.get("visitType"));
+            }
+            if (result.containsKey("doctorAdvice") && result.get("doctorAdvice") != null) {
+                otherInfo.put("doctorAdvice", result.get("doctorAdvice"));
+            }
+            if (result.containsKey("specialization") && result.get("specialization") != null) {
+                otherInfo.put("specialization", result.get("specialization"));
+            }
+            if (result.containsKey("doctorID") && result.get("doctorID") != null) {
+                otherInfo.put("doctorID", result.get("doctorID"));
+            }
+            
             // Build VisitContextDTO
             VisitContextDTO visitContext = VisitContextDTO.builder()
                 .visitId(visitID)
-                .doctorName((String) visitNode.getOrDefault("doctor_name", "Unknown Doctor"))
-                .appointmentDate((String) visitNode.getOrDefault("date", ""))
+                .doctorName((String) result.getOrDefault("doctorName", "Unknown Doctor"))
+                .appointmentDate((String) result.getOrDefault("date", ""))
                 .diagnosis(diagnoses.isEmpty() ? null : String.join(", ", diagnoses))
                 .symptoms(symptoms.isEmpty() ? null : symptoms)
                 .prescription(medicines.isEmpty() ? null : medicines)
-                .summary((String) visitNode.getOrDefault("visit_summary", ""))
-                .otherInfo(buildOtherInfo(visitNode))
+                .summary((String) result.getOrDefault("visitSummary", ""))
+                .otherInfo(otherInfo)
                 .build();
             
             log.info("Successfully fetched visit context for visit ID: {}", visitID);
@@ -879,31 +894,5 @@ public class UserKGService {
             log.error("Error fetching visit context for visit ID {}: {}", visitID, e.getMessage(), e);
             return null;
         }
-    }
-    
-
-    
-
-    /**
-     * Helper method to build otherInfo map from visit node properties
-     */
-    private Map<String, Object> buildOtherInfo(Map<String, Object> visitNode) {
-        Map<String, Object> otherInfo = new HashMap<>();
-        
-        // Add additional visit properties to otherInfo
-        if (visitNode.containsKey("visit_type")) {
-            otherInfo.put("visitType", visitNode.get("visit_type"));
-        }
-        if (visitNode.containsKey("doctor_advice")) {
-            otherInfo.put("doctorAdvice", visitNode.get("doctor_advice"));
-        }
-        if (visitNode.containsKey("specialization")) {
-            otherInfo.put("specialization", visitNode.get("specialization"));
-        }
-        if (visitNode.containsKey("doctorID")) {
-            otherInfo.put("doctorID", visitNode.get("doctorID"));
-        }
-        
-        return otherInfo;
     }
 }
