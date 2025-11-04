@@ -236,11 +236,8 @@ export const appointmentAPI = {
 
 // Diagnosis Interface Job
 export const agentAPI = {
-
   searchAPI: (query) => 
     api.post('/agent/search', { query })
-  
-
 };
 
 
@@ -282,7 +279,10 @@ export const userInfoAPI = {
 
   getMedicines : () => api.get('/user/medicines'),
 
-  deleteMedicine : (id) => api.delete(`/user/medicines/${id}`)
+  deleteMedicine : (id) => api.delete(`/user/medicines/${id}`),
+
+  //CONTEXT: Fetch detailed visit information by visit ID
+  getVisitDetails: (visitId) => api.get(`/user/visit/${visitId}`)
 
 };
 

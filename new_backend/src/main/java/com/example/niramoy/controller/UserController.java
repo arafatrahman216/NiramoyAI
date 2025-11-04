@@ -667,6 +667,57 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    //CONTEXT: Dummy endpoint to get visit details by visit ID
+    @GetMapping("/visit/{visitId}")
+    public ResponseEntity<Map<String, Object>> getVisitDetails(@PathVariable Long visitId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            //CONTEXT: Create dummy visit data
+            Map<String, Object> visitData = new HashMap<>();
+            visitData.put("visitId", visitId);
+            visitData.put("doctorName", "Sarah Johnson");
+            visitData.put("appointmentDate", "2024-11-15");
+            visitData.put("diagnosis", "Seasonal Allergic Rhinitis");
+            
+            //CONTEXT: Dummy symptoms array
+            List<String> symptoms = Arrays.asList("Sneezing", "Runny nose", "Itchy eyes", "Nasal congestion");
+            visitData.put("symptoms", symptoms);
+            
+            //CONTEXT: Dummy prescription array
+            List<String> prescription = Arrays.asList(
+                "Cetirizine 10mg - Once daily",
+                "Fluticasone nasal spray - Twice daily",
+                "Avoid allergen exposure"
+            );
+            visitData.put("prescription", prescription);
+            
+            //CONTEXT: Dummy summary
+            String summary = "Patient presented with seasonal allergy symptoms including persistent sneezing, " +
+                           "runny nose, and itchy eyes. Physical examination revealed mild nasal congestion " +
+                           "and slightly red eyes. Diagnosed with Seasonal Allergic Rhinitis. " +
+                           "Prescribed antihistamine and nasal spray for symptom relief. " +
+                           "Advised to avoid known allergens and follow up if symptoms persist beyond 2 weeks.";
+            visitData.put("summary", summary);
+            
+            //CONTEXT: Additional info
+            Map<String, Object> otherInfo = new HashMap<>();
+            otherInfo.put("duration", "30 minutes");
+            otherInfo.put("followUpRequired", true);
+            otherInfo.put("followUpDate", "2024-11-29");
+            visitData.put("otherInfo", otherInfo);
+            
+            response.put("success", true);
+            response.put("data", visitData);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error fetching visit details: {}", e.getMessage());
+            response.put("success", false);
+            response.put("message", "Failed to fetch visit details: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 
     // @GetMapping("/visit-context")
 }
