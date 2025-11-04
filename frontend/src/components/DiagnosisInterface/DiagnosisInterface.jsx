@@ -523,9 +523,8 @@ const DiagnosisInterface = () => {
       try {
         //CONTEXT: Prepare context data to send with the message
         const contextData = {
-          previousMessages: previousMessages
-          
-          // visitContext: visitContext
+          previousMessages: previousMessages,
+          visitContext: visitContext
         };
         
         // Choose API method based on whether we have attachment
@@ -570,7 +569,7 @@ const DiagnosisInterface = () => {
           //CONTEXT: Update previousMessages queue with new user message, keep max 6
           setPreviousMessages(prev => {
             const updated = [...prev, { role: 'user', content: originalQuery }];
-            return updated.slice(-6);
+            return updated.slice(-10);
           });
           
         } else {
@@ -677,7 +676,7 @@ const DiagnosisInterface = () => {
           role: 'user',
           content: msg.content
         }))
-        .slice(-6);
+        .slice(-10);
       
       setPreviousMessages(userMessages);
       console.log('Previous messages loaded as context:', userMessages);

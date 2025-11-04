@@ -97,25 +97,30 @@ export const chatbotAPI = {
     //CONTEXT: Include previous messages and visit context if available
     if (contextData) {
       if (contextData.previousMessages && contextData.previousMessages.length > 0) {
-        const builtHistory = contextData.previousMessages
-          .map((m) => {
-            const role = (m.role || m.sender || m.from || 'user').toString().toUpperCase();
-            const text = (m.text || m.message || m.content || '').toString();
-            return `${role}: ${text}`;
+        const messageHistory = contextData.previousMessages
+          .map((msg) => {
+            //CONTEXT: Safe parsing of message properties
+            const role = (msg.role || 'user').toString().toUpperCase();
+            const content = (msg.content || msg.text || msg.message || '').toString().trim();
+            return content ? `${role}: ${content}` : null;
           })
+          .filter(Boolean) //CONTEXT: Remove empty messages
           .join('\n');
 
-        if (builtHistory) {
-          payload.message = `MESSAGE_HISTORY:\n${builtHistory}\n\nUSER_QUERY: ${payload.message}`;
-          
-          // Also include structured previousMessages in case backend needs it
-          payload.previousMessages = contextData.previousMessages;
+        if (messageHistory) {
+          payload.message = `Previous conversation context:\n${messageHistory}\n\nCurrent query: ${message}`;
         }
       }
 
-      if (contextData.visitContext) {
-        payload.visitContext = contextData.visitContext;
-      }
+      console.log(payload);
+
+      //CONTEXT: Include visit context information
+      // if (contextData.visitContext) {
+      //   const visitInfo = typeof contextData.visitContext === 'string' 
+      //     ? contextData.visitContext 
+      //     : JSON.stringify(contextData.visitContext);
+      //   payload.message = `Visit context: ${visitInfo}\n\n${payload.message}`;
+      // }
     }
     
     return api.post('/user/chat', payload);
