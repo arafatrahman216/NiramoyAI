@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://niramoyai.up.railway.app/api';
+
+//For Deployment
+// const API_BASE_URL = 'https://niramoyai.up.railway.app/api';
+
+// For local development
+const API_BASE_URL = 'http://localhost:8080/api';
 
 
 // Create axios instance with default config
@@ -82,11 +87,42 @@ export const testCenterAPI = {
 // AI Chatbot API endpoints
 export const chatbotAPI = {
   // Send message to AI chatbot
-  sendMessage: (message, chatId, mode = 'explain') => 
-    api.post('/user/chat', { message, chatId: chatId.toString(), mode }),
+  sendMessage: (message, chatId, mode = 'explain', contextData = null) => {
+    const payload = { 
+      message, 
+      chatId: chatId.toString(), 
+      mode 
+    };
+    
+    //CONTEXT: Include previous messages and visit context if available
+    if (contextData) {
+      if (contextData.previousMessages && contextData.previousMessages.length > 0) {
+        const builtHistory = contextData.previousMessages
+          .map((m) => {
+            const role = (m.role || m.sender || m.from || 'user').toString().toUpperCase();
+            const text = (m.text || m.message || m.content || '').toString();
+            return `${role}: ${text}`;
+          })
+          .join('\n');
+
+        if (builtHistory) {
+          payload.message = `MESSAGE_HISTORY:\n${builtHistory}\n\nUSER_QUERY: ${payload.message}`;
+          
+          // Also include structured previousMessages in case backend needs it
+          payload.previousMessages = contextData.previousMessages;
+        }
+      }
+
+      if (contextData.visitContext) {
+        payload.visitContext = contextData.visitContext;
+      }
+    }
+    
+    return api.post('/user/chat', payload);
+  },
   
   // Send message with attachment to AI chatbot
-  sendMessageWithAttachment: (message, chatId, attachment, mode = 'explain') => {
+  sendMessageWithAttachment: (message, chatId, attachment, mode = 'explain', contextData = null) => {
     const formData = new FormData();
     formData.append('message', message || '');
     formData.append('chatId', chatId.toString());
@@ -94,6 +130,17 @@ export const chatbotAPI = {
     if (attachment) {
       formData.append('attachment', attachment);
     }
+    
+    //CONTEXT: Include previous messages and visit context as JSON strings
+    // if (contextData) {
+    //   if (contextData.previousMessages && contextData.previousMessages.length > 0) {
+    //     formData.append('previousMessages', JSON.stringify(contextData.previousMessages));
+    //   }
+    //   if (contextData.visitContext) {
+    //     formData.append('visitContext', JSON.stringify(contextData.visitContext));
+    //   }
+    // }
+    
     return api.post('/user/chat-attachment', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'

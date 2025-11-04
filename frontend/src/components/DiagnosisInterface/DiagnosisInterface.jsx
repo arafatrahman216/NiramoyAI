@@ -393,6 +393,9 @@ const DiagnosisInterface = () => {
   // SELECTED CHAT DATA - tracks full chat data with messages
   const [selectedChatData, setSelectedChatData] = useState({ messages: [] });
   
+  //CONTEXT: Store previous messages to send as context to LLM
+  const [previousMessages, setPreviousMessages] = useState([]);
+  
   // UPLOAD VISIT MODAL STATE
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
@@ -518,10 +521,17 @@ const DiagnosisInterface = () => {
       
       var aiMessage;
       try {
+        //CONTEXT: Prepare context data to send with the message
+        const contextData = {
+          previousMessages: previousMessages
+          
+          // visitContext: visitContext
+        };
+        
         // Choose API method based on whether we have attachment
         const response = attachment 
-          ? await chatbotAPI.sendMessageWithAttachment(messageToSend, selectedChatId, attachment, mode)
-          : await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode);
+          ? await chatbotAPI.sendMessageWithAttachment(messageToSend, selectedChatId, attachment, mode, contextData)
+          : await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode, contextData);
         
         console.log('API Response:', response);
         
@@ -556,6 +566,12 @@ const DiagnosisInterface = () => {
           
           // Send AI message to ChatConversation component
           window.dispatchEvent(new CustomEvent('addMessage', { detail: aiMessage }));
+          
+          //CONTEXT: Update previousMessages queue with new user message, keep max 6
+          setPreviousMessages(prev => {
+            const updated = [...prev, { role: 'user', content: originalQuery }];
+            return updated.slice(-6);
+          });
           
         } else {
           console.error('Failed to send message:');
@@ -645,9 +661,30 @@ const DiagnosisInterface = () => {
   };
 
   // CHAT SELECTION HANDLER
-  const handleChatSelection = (chatId) => {
+  const handleChatSelection = async (chatId) => {
     setSelectedChatId(chatId);
     console.log('Selected chat ID:', chatId);
+    
+    //CONTEXT: Fetch and store previous messages when a chat is selected
+    try {
+      const response = await chatbotAPI.getMessages(chatId);
+      const conversationData = response.data;
+      
+      //CONTEXT: Filter only user messages and keep last 6
+      const userMessages = (conversationData.data || [])
+        .filter((msg) => !msg.isAgent)
+        .map((msg) => ({
+          role: 'user',
+          content: msg.content
+        }))
+        .slice(-6);
+      
+      setPreviousMessages(userMessages);
+      console.log('Previous messages loaded as context:', userMessages);
+    } catch (error) {
+      console.error('Error loading previous messages:', error);
+      setPreviousMessages([]);
+    }
   };
 
   // BACK TO SEARCH HANDLER
@@ -655,6 +692,7 @@ const DiagnosisInterface = () => {
     setSelectedChatId(null);
     setSelectedChatData({ messages: [] });
     clearVisitContext(); // Clear visit context when returning to search
+    setPreviousMessages([]); //CONTEXT: Clear previous messages context
     console.log('Returning to search interface');
   };
 
@@ -674,6 +712,8 @@ const DiagnosisInterface = () => {
         
         // Clear any existing query
         setQuery('');
+        
+        setPreviousMessages([]); //CONTEXT: Clear previous messages for new chat
         
         console.log('New chat created and selected:', newChatId);
       }
