@@ -90,19 +90,9 @@ const Signup = () => {
         formData.password.trim()) {
       const success = await signup(formData);
       if (success) {
-        // Get user data and check if admin
-        const userData = JSON.parse(localStorage.getItem('user'));
-        
-        // Block admin users from normal signup (shouldn't happen but safety check)
-        if (userData.role && userData.role==='ADMIN') {
-          logout();
-          alert('Admin accounts must be created through the Admin Portal.');
-          return;
-        }
-        // alert('Account created successfully! Please ');
-        navigate('/healthdataform', { replace: true });
-        
-        // redirectBasedOnRole(userData, navigate);
+        // Redirect to login page after successful signup
+        alert('Account created successfully! Please login with your credentials.');
+        navigate('/login', { replace: true });
       }
     }
   };
