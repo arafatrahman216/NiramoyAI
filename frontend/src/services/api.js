@@ -94,35 +94,32 @@ export const chatbotAPI = {
       mode 
     };
     
-    //CONTEXT: Include previous messages and visit context if available
+    //CONTEXT: Include previous messages as separate attribute
     if (contextData) {
       if (contextData.previousMessages && contextData.previousMessages.length > 0) {
-        const messageHistory = contextData.previousMessages
-          .map((msg) => {
-            //CONTEXT: Safe parsing of message properties
-            const role = (msg.role || 'user').toString().toUpperCase();
-            const content = (msg.content || msg.text || msg.message || '').toString().trim();
-            return content ? `${role}: ${content}` : null;
-          })
-          .filter(Boolean) //CONTEXT: Remove empty messages
-          .join('\n');
-
-        if (messageHistory) {
-          payload.message = `Previous conversation context:\n${messageHistory}\n\nCurrent query: ${message}`;
-        }
+        // Send previous messages as array of objects
+        payload.previousMessages = contextData.previousMessages.map((msg) => ({
+          role: (msg.role || 'user').toString(),
+          content: (msg.content || msg.text || msg.message || '').toString().trim()
+        })).filter(msg => msg.content); // Remove empty messages
       }
 
-      console.log(payload);
-
-      //CONTEXT: Include visit context information
-      // if (contextData.visitContext) {
-      //   const visitInfo = typeof contextData.visitContext === 'string' 
-      //     ? contextData.visitContext 
-      //     : JSON.stringify(contextData.visitContext);
-      //   payload.message = `Visit context: ${visitInfo}\n\n${payload.message}`;
-      // }
+      //CONTEXT: Include visit context as separate attribute
+      if (contextData.visitContext) {
+        payload.visitContext = {
+          visitId: contextData.visitContext.visitId,
+          doctorName: contextData.visitContext.doctorName,
+          appointmentDate: contextData.visitContext.appointmentDate,
+          diagnosis: contextData.visitContext.diagnosis,
+          symptoms: contextData.visitContext.symptoms,
+          prescription: contextData.visitContext.prescription,
+          summary: contextData.visitContext.summary,
+          otherInfo: contextData.visitContext.otherInfo
+        };
+      }
     }
     
+    console.log('Sending payload to backend:', payload);
     return api.post('/user/chat', payload);
   },
   
@@ -137,15 +134,32 @@ export const chatbotAPI = {
     }
     
     //CONTEXT: Include previous messages and visit context as JSON strings
-    // if (contextData) {
-    //   if (contextData.previousMessages && contextData.previousMessages.length > 0) {
-    //     formData.append('previousMessages', JSON.stringify(contextData.previousMessages));
-    //   }
-    //   if (contextData.visitContext) {
-    //     formData.append('visitContext', JSON.stringify(contextData.visitContext));
-    //   }
-    // }
+    if (contextData) {
+      if (contextData.previousMessages && contextData.previousMessages.length > 0) {
+        const cleanMessages = contextData.previousMessages.map((msg) => ({
+          role: (msg.role || 'user').toString(),
+          content: (msg.content || msg.text || msg.message || '').toString().trim()
+        })).filter(msg => msg.content);
+        
+        formData.append('previousMessages', JSON.stringify(cleanMessages));
+      }
+      
+      if (contextData.visitContext) {
+        const visitData = {
+          visitId: contextData.visitContext.visitId,
+          doctorName: contextData.visitContext.doctorName,
+          appointmentDate: contextData.visitContext.appointmentDate,
+          diagnosis: contextData.visitContext.diagnosis,
+          symptoms: contextData.visitContext.symptoms,
+          prescription: contextData.visitContext.prescription,
+          summary: contextData.visitContext.summary,
+          otherInfo: contextData.visitContext.otherInfo
+        };
+        formData.append('visitContext', JSON.stringify(visitData));
+      }
+    }
     
+    console.log('Sending FormData with context to backend');
     return api.post('/user/chat-attachment', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'

@@ -141,16 +141,12 @@ const DiagnosisInterface = () => {
       console.log('Sending message to current chat:', selectedChatId);
       console.log('Message content:', query);
       console.log('Visit context:', visitContext);
+      console.log('Previous messages:', previousMessages);
       console.log('Attachment:', attachment?.name);
       console.log('Auth token exists:', !!localStorage.getItem('token'));
       
-      // Prepare message content with visit context if available
+      //CONTEXT: No longer embedding context in message - sending as separate attributes
       const originalQuery = query.trim();
-      let messageToSend = originalQuery;
-      if (visitContext) {
-        const contextString = `${visitContext.summary} ${originalQuery}`;
-        messageToSend = contextString;
-      }
       
       setQuery(''); // Clear input immediately
       clearVisitContext(); // Clear visit context after sending
@@ -158,7 +154,7 @@ const DiagnosisInterface = () => {
       // Set processing state to show loading indicator
       setIsProcessing(true);
       
-      // Add user message immediately to local state (show original query, not context)
+      // Add user message immediately to local state (show original query)
       const userMessage = {
         messageId: Date.now(),
         content: originalQuery, // Show original user query
@@ -172,7 +168,7 @@ const DiagnosisInterface = () => {
       
       var aiMessage;
       try {
-        //CONTEXT: Prepare context data to send with the message
+        //CONTEXT: Prepare context data with both previous messages and visit context
         const contextData = {
           previousMessages: previousMessages,
           visitContext: visitContext
@@ -180,8 +176,8 @@ const DiagnosisInterface = () => {
         
         // Choose API method based on whether we have attachment
         const response = attachment 
-          ? await chatbotAPI.sendMessageWithAttachment(messageToSend, selectedChatId, attachment, mode, contextData)
-          : await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode, contextData);
+          ? await chatbotAPI.sendMessageWithAttachment(originalQuery, selectedChatId, attachment, mode, contextData)
+          : await chatbotAPI.sendMessage(originalQuery, selectedChatId, mode, contextData);
         
         console.log('API Response:', response);
         

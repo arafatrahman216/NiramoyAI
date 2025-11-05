@@ -25,8 +25,7 @@ import VitalsChart from './VitalsChart';
 import HealthLogs from './HealthLogs';
 import VisitTimeline from './VisitTimeline';
 import TestReports from './TestReports';
-import axios from 'axios';
-import { API_BASE_URL, doctorAPI } from '../../services/api';
+import { doctorAPI } from '../../services/api';
 import { Height } from '@mui/icons-material';
 
 const PatientProfile = () => {
