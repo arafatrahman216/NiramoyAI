@@ -10,7 +10,11 @@ import com.example.niramoy.enumerate.Role;
 import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.MedicineRepository;
 import com.example.niramoy.repository.UserRepository;
+import com.example.niramoy.service.AIServices.AIService;
+import com.example.niramoy.utils.JsonParser;
 import com.example.niramoy.repository.HealthProfileRepository;
+
+import org.json.JSONObject;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,6 +23,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -33,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
@@ -41,6 +48,7 @@ public class UserService implements UserDetailsService {
     private final HealthService healthService;
     private final MedicineRepository medicineRepository;
     private final UserKGService userKGService;
+    private final AIService aiService;
 
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
     // until then the query result will be stored in persistence context
@@ -266,4 +274,43 @@ public class UserService implements UserDetailsService {
         }
         return false;
     }
+
+    public JSONObject generateMedicalSummary(Long id) {
+        String kgInferedInfo = userKGService.getMedicalSummary(id);
+        String llmGeneratedSummary = aiService.generateContent("""
+                You are a helpful medical assistant. Based on the following patient information extracted from their medical records, generate a concise and comprehensive medical summary suitable for review by healthcare professionals
+                having the following details. Donot write anything extra other than the json format mentioned below. donot add any explanations, delimeters or additional text outside the json brackets. The summary should include the following sections:
+                - History of Present Illness (also analyze the issues for visits)
+                - Past Medical History
+                - Allergies (array , donot write any medicine name here)
+                - Medications (array of medications)
+                - Social History (if there's none simply mention none)
+                - Surgical History (")
+                - Family History (")
+
+                extract the relevant details and format them into a well-structured medical summary in json :
+                {
+                  "history_of_illness": "...",
+                  "past_medical_history": "...",
+                  "allergies": [ "...", "..." ],
+                  "medications": [ "...", "..."],
+                  "social_history": "...",
+                  "surgical_history": "...",
+                  "family_history": "..."
+                }""", """
+                The given patient information : 
+                """+ kgInferedInfo);
+
+        if (llmGeneratedSummary == null || llmGeneratedSummary.isEmpty()) {
+            return null;
+        }
+        // log.info("LLM Generated Medical Summary for user ID {}: \n{}", id, llmGeneratedSummary);
+
+        JSONObject json = JsonParser.parseJsonToObject(llmGeneratedSummary);
+        // System.out.println(json.toString(4));
+        return json;
+
+
+    }
+        
 }

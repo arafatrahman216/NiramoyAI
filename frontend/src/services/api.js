@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://niramoyai.up.railway.app/api';
+// const API_BASE_URL = 'https://niramoyai.up.railway.app/api';
+const API_BASE_URL = 'http://localhost:8080/api';
 
 
 // Create axios instance with default config
@@ -230,7 +231,9 @@ export const userInfoAPI = {
 
   getMedicines : () => api.get('/user/medicines'),
 
-  deleteMedicine : (id) => api.delete(`/user/medicines/${id}`)
+  deleteMedicine : (id) => api.delete(`/user/medicines/${id}`),
+
+  getMedicalSummary: () => api.get(`/user/medical-summary`)
 
 };
 
