@@ -6,6 +6,7 @@ import com.example.niramoy.entity.ChatSessions;
 import com.example.niramoy.entity.HealthLog;
 import com.example.niramoy.entity.HealthProfile;
 import com.example.niramoy.entity.User;
+import com.example.niramoy.entity.Messages;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.dto.HealthProfileDTO;
 import com.example.niramoy.service.HealthService;
@@ -138,6 +139,36 @@ public class UserController {
 
     }
 
+    @PostMapping("/start-conversation")
+    public ResponseEntity<HashMap<String, Object>> startConversation(){
+        HashMap<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to start conversation");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        try {
+            User user = (User) authentication.getPrincipal();
+            ChatSessions newChatSession = messageService.createNewChatSession(user);
+            
+            response.put("success", true);
+            response.put("message", "New chat session created successfully");
+            response.put("conversationId", newChatSession.getChatId());
+            response.put("chatId", newChatSession.getChatId());
+            response.put("createdAt", newChatSession.getCreatedAt());
+            response.put("title", newChatSession.getTitle());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to create new chat session: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 
     @PostMapping("/chat")
     public ResponseEntity<HashMap<String, Object>> sendMessage(@RequestBody Map<String, String> body){
@@ -146,16 +177,60 @@ public class UserController {
         if (authentication == null) {
             response.put("success", false);
             response.put("message", "Authentication token is null. Please login to send message");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-        User user = (User) authentication.getPrincipal();
-        String message = body.get("message");
-        Long chatId = Long.parseLong(body.get("chatId"));
-        boolean success = messageService.addMessageToChat(chatId, message);
+        
+        try {
+            User user = (User) authentication.getPrincipal();
+            String message = body.get("message");
+            String chatIdStr = body.get("chatId");
+            String mode = body.get("mode");
 
-        response.put("success", success);
-        return ResponseEntity.ok(response);
+            log.info("Received message: {}", message);
+            log.info("Received mode: {}", mode);
 
+            if (message == null || message.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Message cannot be empty");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (chatIdStr == null) {
+                response.put("success", false);
+                response.put("message", "Chat ID is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Long chatId = Long.parseLong(chatIdStr);
+            
+            // Process message and get AI reply (synchronous for now, but DB saves are async internally)
+            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message, mode);
+
+            response.put("success", true);
+            response.put("message", "Message sent and processed successfully");
+            response.put("userMessage", Map.of(
+                "content", message,
+                "isAgent", false,
+                "chatId", chatId
+            ));
+            response.put("aiResponse", Map.of(
+                "messageId", aiReply.getMessageId(),
+                "content", aiReply.getContent(),
+                "isAgent", aiReply.isAgent(),
+                "chatId", chatId
+            ));
+            
+            return ResponseEntity.ok(response);
+        } catch (NumberFormatException e) {
+            response.put("success", false);
+            response.put("message", "Invalid chat ID format");
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            log.error("Error processing message: ", e);
+            response.put("success", false);
+            response.put("message", "Failed to process message: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     @PostMapping("/message")
