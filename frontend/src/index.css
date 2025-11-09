@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet Map Styles */
+@import 'leaflet/dist/leaflet.css';
+
 /* Custom scrollbar styles */
 @layer utilities {
   .scrollbar-thin {

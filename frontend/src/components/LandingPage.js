@@ -5,6 +5,7 @@ import { doctorAPI, symptomsAPI } from '../services/api';
 import hospitalsDatasetRaw from '../utils/all_hospitals_incremental_1755095601280.json';
 import testCentersCsv from '../utils/test_centers.csv';
 import { HospitalSearchInput, HospitalSearchResults } from './HospitalSearch';
+import NearbyHospitalsMap from './HospitalMap/NearbyHospitalsMap';
 
 const getHospitalDisplayName = (item) => {
   if (!item) return '';
@@ -770,11 +771,20 @@ const LandingPage = () => {
                 </motion.button>
               </div>
             ) : searchType === 'hospitals' ? (
-              <HospitalSearchInput
-                searchTerm={hospitalSearchTerm}
-                onSearchChange={handleHospitalSearchChange}
-                totalCount={totalHospitals}
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  className="w-full pl-10 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-white focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-200"
+                  placeholder="Search hospitals by name, services, or location"
+                  value={hospitalSearchTerm}
+                  onChange={(e) => handleHospitalSearchChange(e.target.value)}
+                />
+              </div>
             ) : (
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -832,11 +842,14 @@ const LandingPage = () => {
           </motion.h2>
 
           {searchType === 'hospitals' ? (
-            <HospitalSearchResults
-              hospitals={visibleHospitals}
-              hasMore={hasMoreHospitals}
-              onLoadMore={handleLoadMoreHospitals}
-            />
+            <>
+              <HospitalSearchResults
+                hospitals={visibleHospitals}
+                hasMore={hasMoreHospitals}
+                onLoadMore={handleLoadMoreHospitals}
+              />
+              <NearbyHospitalsMap />
+            </>
           ) : (
             <>
               {error && (
