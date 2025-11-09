@@ -120,6 +120,9 @@ public class VisitService {
 
         List<Visits> visits = visitsRepository.findByUserOrderByAppointmentDateDesc(user);
 
+        //FIXME: FIX LIMIT
+        i = Math.max(i, visits.size());
+
         return visits.stream().limit(i).map(v -> {
             Long doctorId =  -1L;
             String doctorName = "";

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

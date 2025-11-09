@@ -185,7 +185,7 @@ public class UserKGService {
                 RETURN v
             """;
             graphDB.executeQuery(visitQuery, updatedVisitData);
-            log.info("Visit node inserted.");
+            log.info("Visit node inserted. VISIT ID {}", updatedVisitData.get("visitID"));
         } catch (Exception e) {
             log.error("Error inserting visit node: {}", e.getMessage());
         }
@@ -327,7 +327,7 @@ public class UserKGService {
 
             String relationshipsResponse = AiService.generateContent(relationshipPromptText);
             JSONObject relationships = JsonParser.parseJsonToObject(relationshipsResponse);
-            log.info("Extracted Relationships: {}", relationships != null ? relationships.toString() : "null");
+            // log.info("Extracted Relationships: {}", relationships != null ? relationships.toString() : "null");
 
             // INSERT RELATIONSHIPS INTO NEO4J
             log.info("=== INSERTING RELATIONSHIPS ===");
@@ -659,13 +659,43 @@ public class UserKGService {
         return "";
     }
 
+    public boolean createPatientDuringSignup(Long patientID, String name) {
+        log.info("Creating patient in Knowledge Graph during signup with ID: {}", patientID);
 
-    public boolean createNewPatient(Long patientID, String name, String gender, Integer age, 
+        try {
+            String createPatientQuery = """
+                MERGE (p:Patient {patientID: $patientID})
+                SET p.name = $name,
+                    p.created_date = $createdDate
+                RETURN p
+            """;
+
+            Map<String, Object> patientData = new HashMap<>();
+            patientData.put("patientID", patientID);
+            patientData.put("name", name != null ? name : "");
+            patientData.put("createdDate", java.time.LocalDateTime.now().toString());
+
+            List<Map<String, Object>> result = graphDB.executeQuery(createPatientQuery, patientData);
+
+            if (!result.isEmpty()) {
+                log.info("Successfully created patient with ID: {} in Knowledge Graph", patientID);
+                return true;
+            } else {
+                log.error("Failed to create patient with ID: {} in Knowledge Graph", patientID);
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("Error creating patient with ID {}: {}", patientID, e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean createOrUpdatePatient(Long patientID, String name, String gender, Integer age, 
                                   Double weight, Double height, String bloodType, 
                                   String allergies, String chronicDiseases, String lifestyle, 
                                   String majorEvents) {
-        log.info("Creating new patient in Knowledge Graph with ID: {}", patientID);
-        
+        log.info("Creating or updating patient in Knowledge Graph with ID: {}", patientID);
+
         try {
             // First check if patient already exists
             String checkQuery = "MATCH (p:Patient {patientID: $patientID}) RETURN p";
@@ -714,21 +744,20 @@ public class UserKGService {
             
             // Create patient node in Neo4j
             String createPatientQuery = """
-                CREATE (p:Patient {
-                    patientID: $patientID,
-                    name: $name,
-                    gender: $gender,
-                    age: $age,
-                    weight: $weight,
-                    height: $height,
-                    bloodType: $bloodType,
-                    allergies: $allergies,
-                    chronic_diseases: $chronicDiseases,
-                    lifestyle: $lifestyle,
-                    major_events: $majorEvents,
-                    patient_summary: $patientSummary,
-                    created_date: $createdDate
-                })
+                MERGE (p:Patient {patientID: $patientID})
+                SET
+                    p.name = $name,
+                    p.gender = $gender,
+                    p.age = $age,
+                    p.weight = $weight,
+                    p.height = $height,
+                    p.bloodType = $bloodType,
+                    p.allergies = $allergies,
+                    p.chronic_diseases = $chronicDiseases,
+                    p.lifestyle = $lifestyle,
+                    p.major_events = $majorEvents,
+                    p.patient_summary = $patientSummary,
+                    p.created_date = $createdDate
                 RETURN p
             """;
             
