@@ -218,7 +218,6 @@ public class JsonParser {
     }
 
     public static JsonNode parseDoctorSuggestions ( String doctorSuggestions){
-        Map<String,Object> returnMap = new HashMap<>();
         try {
             JsonNode root = objectMapper.readTree(doctorSuggestions);
             return root;

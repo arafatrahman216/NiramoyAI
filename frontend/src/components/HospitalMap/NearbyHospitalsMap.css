@@ -1,0 +1,591 @@
+/* Nearby Hospitals Map Component - Mapbox Version */
+.nearby-hospitals-container {
+  margin-top: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.8) 0%, rgba(39, 39, 42, 0.8) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.map-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f4f4f5;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Location Search Box */
+.location-search-box {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.location-search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(39, 39, 42, 0.6);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.location-search-input-wrapper:focus-within {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(39, 39, 42, 0.9);
+}
+
+.search-icon {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.search-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.location-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #f4f4f5;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.location-search-input::placeholder {
+  color: #a1a1a8;
+}
+
+/* Location Refresh Button */
+.location-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.location-refresh-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.location-refresh-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.location-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner-tiny-inline {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Location suggestions dropdown */
+.location-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(15, 15, 18, 0.95);
+  border: 1px solid rgba(63, 63, 70, 0.3);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10;
+  margin-top: -1px;
+  backdrop-filter: blur(10px);
+}
+
+.location-suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(63, 63, 70, 0.2);
+}
+
+.location-suggestion-item:hover {
+  background: rgba(39, 39, 42, 0.5);
+}
+
+.location-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.location-suggestion-item svg {
+  color: #10b981;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.suggestion-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.suggestion-name {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: #f4f4f5;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestion-coords {
+  margin: 0;
+  font-size: 12px;
+  color: #a1a1a8;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.find-hospitals-btn {
+  display: none;
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.spinner-small {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 14px;
+  margin-bottom: 16px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.error-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.map-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  border-top: 1px solid rgba(63, 63, 70, 0.5);
+  padding-top: 16px;
+}
+
+/* Mapbox Container */
+.mapboxgl-canvas {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mapboxgl-popup {
+  max-width: 300px;
+}
+
+.mapboxgl-popup-content {
+  background: #18181b;
+  color: #f4f4f5;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: #18181b;
+}
+
+/* Marker Styles */
+.user-marker,
+.hospital-marker {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: all 0.2s ease;
+}
+
+.user-marker:hover,
+.hospital-marker:hover {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+  transform: scale(1.15);
+}
+
+.user-marker svg,
+.hospital-marker svg {
+  width: 100%;
+  height: 100%;
+}
+
+.popup-content {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.popup-content strong {
+  display: block;
+  color: #10b981;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.hospital-name {
+  color: #10b981 !important;
+}
+
+.hospital-coords {
+  font-size: 12px;
+  color: #a1a1a8;
+  margin: 0 0 12px 0;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* Direction Button */
+.direction-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.direction-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.direction-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner-tiny {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Route Info Panel */
+.route-info-panel {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.route-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.route-info-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.route-close-btn {
+  background: transparent;
+  border: none;
+  color: #a1a1a8;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.route-close-btn:hover {
+  color: #f4f4f5;
+}
+
+.route-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.route-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #a1a1a8;
+}
+
+.route-detail-item svg {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.route-detail-label {
+  font-weight: 500;
+  color: #a1a1a8;
+}
+
+.route-detail-value {
+  font-weight: 600;
+  color: #10b981;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.hospitals-list {
+  background: rgba(15, 15, 18, 0.5);
+  border-radius: 12px;
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid rgba(63, 63, 70, 0.3);
+}
+
+.hospitals-list h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hospitals-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hospital-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(39, 39, 42, 0.6);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hospital-card:hover {
+  background: rgba(39, 39, 42, 0.9);
+  border-color: rgba(16, 185, 129, 0.3);
+  transform: translateX(4px);
+}
+
+.hospital-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hospital-info {
+  min-width: 0;
+}
+
+.hospital-info h5 {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f4f4f5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hospital-info p {
+  margin: 0;
+  font-size: 11px;
+  color: #a1a1a8;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: #71717a;
+}
+
+.empty-state svg {
+  opacity: 0.5;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Scrollbar styling */
+.hospitals-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hospitals-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hospitals-list::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.3);
+  border-radius: 3px;
+}
+
+.hospitals-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.5);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .map-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .hospitals-list {
+    max-height: 250px;
+  }
+
+  .map-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .find-hospitals-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .map-title {
+    font-size: 16px;
+  }
+
+  .nearby-hospitals-container {
+    padding: 16px;
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hospitals-list {
+    max-height: 200px;
+  }
+
+  .hospital-info h5 {
+    font-size: 12px;
+  }
+
+  .hospital-info p {
+    font-size: 10px;
+  }
+}

@@ -27,6 +27,7 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
       // Import the print utilities
       const { printMedicalSummary } = await import('../../utils/printer');
       
+      
       // Prepare data for printing based on selected options
       const printData = {
         userProfile: selectedOptions.medicalHistory ? userProfile : null,

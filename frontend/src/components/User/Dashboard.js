@@ -212,7 +212,11 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
         <div className="flex space-x-3">
           <button
-            onClick={() => setIsPrintModalOpen(true)}
+            onClick={() => 
+              {
+                setIsPrintModalOpen(true);
+              }
+            }
             className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
           >
             <Printer className="w-4 h-4" />

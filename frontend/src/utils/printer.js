@@ -1,4 +1,5 @@
 // printer.js - Print utility functions for health profiles
+import { userInfoAPI } from '../services/api';
 
 /**
  * Prints a health profile with professional medical formatting
@@ -251,12 +252,21 @@ const generateVisitSummaries = (visits = []) => {
  * Prints a comprehensive medical summary with selected sections
  * @param {Object} printData - Object containing selected data sections
  */
-export const printMedicalSummary = (printData) => {
+export const printMedicalSummary = async (printData) => {
   const { userProfile, healthProfile, visitSummaries } = printData;
 
   if (!userProfile && !healthProfile && !visitSummaries) {
     console.error('No data selected for printing');
     return;
+  }
+
+  let medicalSummary = {};
+  try {
+    const response = await userInfoAPI.getMedicalSummary();
+    medicalSummary = response?.data.medicalSummary || {};
+    console.log('Fetched medical summary for printing:', medicalSummary);
+  } catch (error) {
+    console.error('Failed to fetch medical summary for printing:', error);
   }
 
   // Calculate age from date of birth
@@ -273,6 +283,60 @@ export const printMedicalSummary = (printData) => {
     
     return age;
   };
+
+  const escapeHtml = (value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  const formatText = (text, fallback = 'Not provided.') => {
+    if (typeof text === 'string' && text.trim().length > 0) {
+      return escapeHtml(text).replace(/\n/g, '<br>');
+    }
+    return fallback;
+  };
+
+  const formatList = (listOrText, fallback = 'Not provided.') => {
+    if (Array.isArray(listOrText) && listOrText.length > 0) {
+      // Create styled boxes for each item in the array
+      const items = listOrText
+        .map((item) => escapeHtml(String(item)))
+        .map((item) => `<span class="list-item-badge">${item}</span>`)
+        .join('');
+      return `<div class="list-items-container">${items}</div>`;
+    }
+    if (typeof listOrText === 'string' && listOrText.trim().length > 0) {
+      return escapeHtml(listOrText);
+    }
+    return fallback;
+  };
+
+  const historyOfIllness = formatText(medicalSummary.history_of_illness, 'No recent illness documented.');
+  const pastMedicalHistory = formatText(medicalSummary.past_medical_history, 'No past medical history recorded.');
+  const medicationHistory = formatList(
+    medicalSummary.medications,
+    'No medication history recorded.'
+  );
+  const allergyHistory = formatList(
+    medicalSummary.allergies,
+    'No known allergies reported.'
+  );
+  const familyHistory = formatText(medicalSummary.family_history, 'No family history recorded.');
+  const personalHistory = formatText(
+    medicalSummary.social_history,
+    'No personal or social history recorded.'
+  );
+  const surgicalHistory = formatText(
+    medicalSummary.surgical_history,
+    'No surgical history recorded.'
+  );
 
   // Compact, elegant medical report styles - 1-2 page design
   const printStyles = `
@@ -495,6 +559,25 @@ export const printMedicalSummary = (printData) => {
           margin: 0;
           text-align: justify;
         }
+        .list-items-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 6px;
+        }
+        .list-item-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+          color: white;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 600;
+          box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+          white-space: nowrap;
+        }
         @media print {
           .vital-card { break-inside: avoid; }
           .visit-item { break-inside: avoid; }
@@ -654,56 +737,37 @@ export const printMedicalSummary = (printData) => {
       <div class="section-content">
         <div class="history-subsection">
           <h4 class="subsection-title">History of Present Illness</h4>
-          <p class="history-text">
-            Afham experienced high-grade fever with accompanying rash, body weakness, and joint pain in September 2025. He was subsequently diagnosed with Dengue fever, which was managed symptomatically. Treatment included antipyretics (Napa) and topical ointments for rash relief under the supervision of Dr. Shafin and Dr. Dip.
-            No complications or adverse drug reactions were reported. The illness has since resolved, and the patient's current health status is stable with vital signs (blood pressure and heart rate) within the normal range for his age.
-          </p>
+          <p class="history-text">${historyOfIllness}</p>
         </div>
         
         <div class="history-subsection">
           <h4 class="subsection-title">Past Medical History</h4>
-          <p class="history-text">
-            Hypertension – ongoing management.<br>
-            Diabetes Mellitus – ongoing management.<br>
-            No history of tuberculosis, asthma, stroke, or cardiac disease.<br>
-            No prior major surgeries, hospitalizations, or blood transfusions.<br>
-            Previous illnesses were mild and self-limiting.
-          </p>
+          <p class="history-text">${pastMedicalHistory}</p>
         </div>
         
         <div class="history-subsection">
           <h4 class="subsection-title">Drug and Treatment History</h4>
-          <p class="history-text">
-            Regular medication for hypertension and diabetes.<br>
-            Antipyretics (Napa) during dengue episode.<br>
-            No history of prolonged steroid use.<br>
-            No adverse drug reactions reported.
-          </p>
+          <p class="history-text">${medicationHistory}</p>
         </div>
         
         <div class="history-subsection">
           <h4 class="subsection-title">Allergic History</h4>
-          <p class="history-text">
-            Allergic to dust and pollen.
-          </p>
+          <p class="history-text">${allergyHistory}</p>
         </div>
         
         <div class="history-subsection">
           <h4 class="subsection-title">Family History</h4>
-          <p class="history-text">
-            Positive family history of hypertension and diabetes on both maternal and paternal sides, indicating a hereditary predisposition.
-            No history of congenital or genetic disorders reported.
-          </p>
+          <p class="history-text">${familyHistory}</p>
         </div>
         
         <div class="history-subsection">
           <h4 class="subsection-title">Personal History</h4>
-          <p class="history-text">
-            Maintains good personal hygiene and balanced diet with adequate hydration.<br>
-            Engages in moderate physical activity suitable for his age.<br>
-            Denies tobacco, alcohol, or substance use.<br>
-            Immunizations are up to date.
-          </p>
+          <p class="history-text">${personalHistory}</p>
+        </div>
+
+        <div class="history-subsection">
+          <h4 class="subsection-title">Surgical History</h4>
+          <p class="history-text">${surgicalHistory}</p>
         </div>
       </div>
     </div>

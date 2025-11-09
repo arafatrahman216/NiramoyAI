@@ -278,7 +278,7 @@ public class UserKGService {
         final PromptTemplate RELATIONSHIP_EXTRACTION_PROMPT = PromptTemplate.from(
             """
             You are a Medical Knowledge Expert. Analyze the medical data to identify relationships between different medical entities. Think critically about how symptoms, tests, diagnoses, and medicines relate to each other.
-            Extract Medications is for different purpose, it is not related to the relationship extraction(frequency in 24 hr format(like "8:00", "22:00")-> must me hr:min format).)
+            Extract Medications is for different purpose, it is not related to the relationship extraction(frequency in 24 hr format(like "8:00", "22:00")-> must me hr:min format).) if you are unsure about the time, twice a day is ["08:00", "20:00"]. once may be ["08:00"] or ["20:00"]. thrice may be ["08:00", "14:00", "20:00"].
             (default duration= 7 days, dosage means how many you have to take in per take(default 1), type is in Tab,Injection, Syrup, Capsule, Drop etc(default Tab))
             Based on the following medical data, extract relationships between entities:
             Symptoms: {{symptoms}}
@@ -928,4 +928,54 @@ public class UserKGService {
             return null;
         }
     }
+
+
+    public String getMedicalSummary(Long patientID) {
+       String cypherQuery = """
+          MATCH (p:Patient {patientID: $patientID})
+          OPTIONAL MATCH (p)-[:HAS_VISIT]->(v:Visit)
+          WITH p, v
+          ORDER BY v.date DESC
+          WITH p, collect({ visit_summary: v.visit_summary, visit_date: v.date })[0..3] AS last_five_visits
+          OPTIONAL MATCH (d:Diagnosis)-[:TREATED_BY]->(med:Medicine)
+          WITH p, last_five_visits,
+              collect(DISTINCT CASE WHEN d IS NULL OR med IS NULL THEN NULL ELSE { diagnosis: d.name, medicine_name: med.medicine_name } END) AS raw_treatments
+          WITH p, last_five_visits, [t IN raw_treatments WHERE t IS NOT NULL][0..10] AS treatments
+          RETURN
+             p.name AS patient_name,
+             p.allergies AS allergies,
+             p.chronic_diseases AS chronic_diseases,
+             last_five_visits,
+             treatments
+       """;
+
+        try {
+            List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, Map.of("patientID", patientID));
+            if (results == null || results.isEmpty()) {
+                log.warn("No medical summary found for patient {}", patientID);
+                return "No medical summary found.";
+            }
+
+            Map<String, Object> row = results.get(0);
+            Map<String, Object> summary = new HashMap<>();
+            summary.put("patient_name", row.getOrDefault("patient_name", ""));
+            summary.put("allergies", row.getOrDefault("allergies", ""));
+            summary.put("chronic_diseases", row.getOrDefault("chronic_diseases", ""));
+            summary.put("last_five_visits", row.getOrDefault("last_five_visits", List.of()));
+            summary.put("treatments", row.getOrDefault("treatments", List.of()));
+            String medicalSummary = "Patient Name: " + summary.get("patient_name").toString() + "\n" +
+                                "Allergies: " + summary.get("allergies").toString() + "\n" +
+                                "Chronic Diseases: " + summary.get("chronic_diseases").toString() + "\n" +
+                                "Last Five Visits: " + summary.get("last_five_visits").toString() + "\n" +
+                                "Treatments: " + summary.get("treatments").toString();
+            // log.info("Medical Summary for patient {}: \n{}", patientID, medicalSummary);
+            return medicalSummary;
+        } catch (Exception e) {
+            log.error("Error fetching medical summary for patient {}: {}", patientID, e.getMessage(), e);
+            return "Error fetching medical summary.";
+        }   
+    }
+
+
 }
+
