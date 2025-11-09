@@ -34,6 +34,7 @@ import Timeline from './components/Timeline/Timeline';
 import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
 import PatientProfile from './components/PatientProfile/PatientProfile';
 import SharedProfile from './components/SharedProfile';
+import { default as UserDoctorProfile } from './components/User/DoctorProfile';
 
 
 const theme = createTheme({
@@ -437,6 +438,16 @@ function App() {
                     </PatientRoute>
                   }
                 />
+
+                <Route 
+                path = '/doctor-profile'
+                element = {
+                  <PatientRoute>
+                    <UserDoctorProfile />
+                  </PatientRoute>
+                }
+                />
+
 
                 <Route
                   path='/patient/profile'
