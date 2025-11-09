@@ -707,8 +707,7 @@ public class UserKGService {
             List<Map<String, Object>> existingPatient = graphDB.executeQuery(checkQuery, Map.of("patientID", patientID));
             
             if (!existingPatient.isEmpty()) {
-                log.warn("Patient with ID {} already exists in Knowledge Graph", patientID);
-                return false;
+                log.info("Patient with ID {} already exists in Knowledge Graph - will update existing record", patientID);
             }
             
             // Generate patient summary using AI

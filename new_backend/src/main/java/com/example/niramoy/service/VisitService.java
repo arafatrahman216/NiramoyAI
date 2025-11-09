@@ -119,7 +119,8 @@ public class VisitService {
     public List<VisitDTO> getRecentVisits(User user, int i) {
 
         List<Visits> visits = visitsRepository.findByUserOrderByAppointmentDateDesc(user);
-
+        java.util.Collections.reverse(visits);
+        
         //FIXME: FIX LIMIT
         i = Math.max(i, visits.size());
 

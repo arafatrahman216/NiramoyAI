@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // Start with loading = true
   const [error, setError] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false); // Track if onboarding should show
 
   // Configure axios defaults and check if user is already logged in when the app starts
   useEffect(() => {
@@ -69,6 +70,14 @@ export const AuthProvider = ({ children }) => {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
         setUser(userData);
+        
+        // Check if this is a new user (no health data) - show onboarding
+        // This can be determined by checking if health data exists
+        const isNewUser = !userData.hasHealthData; // Backend should provide this flag
+        if (isNewUser && userData.role === 'PATIENT') {
+          setShowOnboarding(true);
+        }
+        
         return true;
       } else {
         setError(response.data.message || 'Login failed');
@@ -198,6 +207,8 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     loading,
     error,
+    showOnboarding,
+    setShowOnboarding,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

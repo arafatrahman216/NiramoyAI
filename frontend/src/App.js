@@ -30,10 +30,12 @@ import DoctorAppointments from './components/Doctor/DoctorAppointments';
 import DoctorSchedule from './components/Doctor/DoctorSchedule';
 import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterface';
 import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
+import UpdatedHealthDataForm from './components/HealthDataInterface/UpdatedHealthDataForm'
 import Timeline from './components/Timeline/Timeline';
 import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
 import PatientProfile from './components/PatientProfile/PatientProfile';
 import SharedProfile from './components/SharedProfile';
+import AppWrapper from './components/AppWrapper';
 
 
 const theme = createTheme({
@@ -273,8 +275,9 @@ function App() {
       <AuthProvider>
         <Router>
           <NavigationGuard />
-          <div className="App">
-            <Routes>
+          <AppWrapper>
+            <div className="App">
+              <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/shared/profile/:encryptedId" element={<SharedProfile />} />
               <Route
@@ -421,6 +424,14 @@ function App() {
                     </PatientRoute>
                   }
                 />
+                <Route 
+                  path='/updatedHealthDataform'
+                  element={
+                    <PatientRoute>
+                      <UpdatedHealthDataForm />
+                    </PatientRoute>
+                  }
+                />
                 <Route
                 path='/healthlog'
                 element={
@@ -456,6 +467,7 @@ function App() {
                 } />
             </Routes>
           </div>
+          </AppWrapper>
         </Router>
       </AuthProvider>
       
