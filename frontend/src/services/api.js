@@ -296,7 +296,8 @@ export const userInfoAPI = {
   deleteMedicine : (id) => api.delete(`/user/medicines/${id}`),
 
   //CONTEXT: Fetch detailed visit information by visit ID
-  getVisitDetails: (visitId) => api.get(`/user/visit/${visitId}`)
+  getVisitDetails: (visitId) => api.get(`/user/visit/${visitId}`),
+  getMedicalSummary: () => api.get(`/user/medical-summary`)
 
 };
 

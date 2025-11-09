@@ -10,6 +10,8 @@ import com.example.niramoy.repository.ChatSessionRepository;
 import com.example.niramoy.repository.MessageRepository;
 
 import lombok.RequiredArgsConstructor;
+
+import org.json.JSONObject;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -807,5 +809,26 @@ public class UserController {
         return prompt.toString();
     }
 
+    @GetMapping("/medical-summary")
+    public ResponseEntity<Map<String,Object>> getMedicalSummary (){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        response.put("success", true);
+        JSONObject medicalSummary = userService.generateMedicalSummary(user.getId());
+        log.info("Medical Summary JSON: {}", medicalSummary.toString(4));
+        // Map<
+        response.put("medicalSummary", medicalSummary.toMap());
+        return ResponseEntity.ok(response);
+    }
+    
+
+
+    // @GetMapping("/visit-context")
 }
 

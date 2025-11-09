@@ -1,7 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { doctorAPI, testCenterAPI, symptomsAPI } from '../services/api';
+import { doctorAPI, symptomsAPI } from '../services/api';
+import hospitalsDatasetRaw from '../utils/all_hospitals_incremental_1755095601280.json';
+import testCentersCsv from '../utils/test_centers.csv';
+import { HospitalSearchInput, HospitalSearchResults } from './HospitalSearch';
+
+const getHospitalDisplayName = (item) => {
+  if (!item) return '';
+
+  if (typeof item.name === 'string' && item.name.trim()) {
+    return item.name.trim();
+  }
+
+  if (typeof item.hospital === 'string' && item.hospital.trim()) {
+    return item.hospital.trim();
+  }
+
+  if (typeof item?.doctor?.hospitalName === 'string' && item?.doctor?.hospitalName.trim()) {
+    return item.doctor.hospitalName.trim();
+  }
+
+  return '';
+};
 
 // Scroll to top component
 function ScrollTop() {
@@ -72,7 +93,221 @@ const LandingPage = () => {
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [hospitalSearchTerm, setHospitalSearchTerm] = useState('');
+  const [hospitalPage, setHospitalPage] = useState(1);
+  const [testCenterPage, setTestCenterPage] = useState(1);
+  const [testCenterSort, setTestCenterSort] = useState('default');
+  const hospitalsPerPage = 9;
+  const testCentersPerPage = 9;
+  
+  const hospitalsDataset = useMemo(() => {
+    const formatFeeRange = (value) => {
+      if (!value) return 'Fee range unavailable';
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase().includes('n/a')) {
+        return 'Fee range unavailable';
+      }
+
+      const withoutCurrency = trimmed.replace(/৳/g, '').replace(/Taka/gi, '').trim();
+      const parts = withoutCurrency
+        .split('-')
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      const sanitize = (part) => {
+        if (!part) return null;
+        const numeric = part.replace(/[^0-9.]/g, '');
+        if (!numeric) return null;
+        return `৳${numeric}`;
+      };
+
+      if (parts.length === 0) {
+        return 'Fee range unavailable';
+      }
+
+      if (parts.length === 1) {
+        const valueLabel = sanitize(parts[0]);
+        return valueLabel || 'Fee range unavailable';
+      }
+
+      const minLabel = sanitize(parts[0]);
+      const maxLabel = sanitize(parts[1]);
+
+      if (minLabel && maxLabel) {
+        return `${minLabel} – ${maxLabel}`;
+      }
+
+      return minLabel || maxLabel || 'Fee range unavailable';
+    };
+
+    return (hospitalsDatasetRaw || [])
+      .filter((hospital) => hospital && hospital.name)
+      .map((hospital, index) => {
+        const feeRangeDisplay = formatFeeRange(hospital.feeRange);
+        return {
+          id: hospital.id || `hospital-${index}`,
+          name: hospital.name.trim(),
+          location: hospital.location?.trim() || 'Location not specified',
+          email: hospital.email?.trim() || 'Not provided',
+          profileUrl: hospital.profileurl || '#',
+          feeRange: feeRangeDisplay,
+        };
+      });
+  }, []);
+
+  const parseTestCentersCsv = (csvText) => {
+    const lines = csvText.split(/\r?\n/).filter((line) => line.trim().length > 0);
+    if (lines.length <= 1) {
+      return [];
+    }
+
+    const [, ...rows] = lines;
+    return rows.map((line, index) => {
+      const firstComma = line.indexOf(',');
+      const secondComma = firstComma !== -1 ? line.indexOf(',', firstComma + 1) : -1;
+      const thirdComma = secondComma !== -1 ? line.indexOf(',', secondComma + 1) : -1;
+
+      if (firstComma === -1 || secondComma === -1 || thirdComma === -1) {
+        return null;
+      }
+
+      const hospitalName = line.slice(0, firstComma).trim();
+      const testName = line.slice(firstComma + 1, secondComma).trim();
+      const category = line.slice(secondComma + 1, thirdComma).trim();
+      const price = line.slice(thirdComma + 1).trim();
+
+      const normalizedCategory = category || '';
+      const numericPrice = price.replace(/[^0-9.]/g, '');
+      const costLabel = numericPrice ? `৳${numericPrice}` : 'Price unavailable';
+
+      return {
+        id: `test-center-${index}`,
+        name: hospitalName || 'Unknown Test Center',
+        testName: testName || 'Test name unavailable',
+        category: normalizedCategory,
+        cost: costLabel,
+        priceValue: numericPrice ? Number(numericPrice) : null,
+        searchHospital: (hospitalName || '').toLowerCase(),
+        searchTest: (testName || '').toLowerCase(),
+      };
+    }).filter(Boolean);
+  };
+
+  const buildUniqueHospitalSummaries = React.useCallback((centers) => {
+    const summaryMap = new Map();
+
+    centers.forEach((center) => {
+      const key = center.name?.trim().toLowerCase();
+      if (!key) return;
+
+      if (!summaryMap.has(key)) {
+        summaryMap.set(key, {
+          name: center.name.trim(),
+          testCount: 0,
+          categories: new Set(),
+        });
+      }
+
+      const summary = summaryMap.get(key);
+      summary.testCount += 1;
+      if (center.category) {
+        summary.categories.add(center.category);
+      }
+    });
+
+    return Array.from(summaryMap.values()).map((summary, index) => ({
+      id: `unique-hospital-${index}`,
+      name: summary.name,
+      uniqueHospital: true,
+      testCount: summary.testCount,
+      categories: Array.from(summary.categories).slice(0, 4),
+    }));
+  }, []);
+
+  const filteredHospitals = useMemo(() => {
+    const term = hospitalSearchTerm.trim().toLowerCase();
+    if (!term) {
+      return hospitalsDataset;
+    }
+
+    return hospitalsDataset.filter((hospital) =>
+      hospital.name.toLowerCase().includes(term) ||
+      hospital.location.toLowerCase().includes(term)
+    );
+  }, [hospitalSearchTerm, hospitalsDataset]);
+
+  const visibleHospitals = useMemo(() => {
+    return filteredHospitals.slice(0, hospitalPage * hospitalsPerPage);
+  }, [filteredHospitals, hospitalPage, hospitalsPerPage]);
+
+  const hasMoreHospitals = visibleHospitals.length < filteredHospitals.length;
+  const totalHospitals = filteredHospitals.length;
+  const sortedTestCenterResults = useMemo(() => {
+    if (searchType !== 'testCenters') return [];
+
+    if (testCenterSort === 'default') {
+      return filteredResults;
+    }
+
+    const copy = [...filteredResults];
+
+    if (testCenterSort === 'nameAsc') {
+      return copy.sort((a, b) =>
+        getHospitalDisplayName(a).localeCompare(getHospitalDisplayName(b))
+      );
+    }
+
+    if (testCenterSort === 'priceLowHigh' || testCenterSort === 'priceHighLow') {
+      const isAscending = testCenterSort === 'priceLowHigh';
+
+      copy.sort((a, b) => {
+        const ascendingFallback = isAscending ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+        const aPrice = a.priceValue ?? ascendingFallback;
+        const bPrice = b.priceValue ?? ascendingFallback;
+
+        if (aPrice === bPrice) {
+          return getHospitalDisplayName(a).localeCompare(getHospitalDisplayName(b));
+        }
+
+        return isAscending ? aPrice - bPrice : bPrice - aPrice;
+      });
+
+      return copy;
+    }
+
+    return copy;
+  }, [filteredResults, searchType, testCenterSort]);
+
+  const visibleTestCenters = useMemo(() => {
+    if (searchType !== 'testCenters') return [];
+    return sortedTestCenterResults.slice(0, testCenterPage * testCentersPerPage);
+  }, [sortedTestCenterResults, searchType, testCenterPage, testCentersPerPage]);
+
+  const hasMoreTestCenters =
+    searchType === 'testCenters' && visibleTestCenters.length < sortedTestCenterResults.length;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTestCenters = async () => {
+      try {
+        const response = await fetch(testCentersCsv);
+        const text = await response.text();
+        if (!isMounted) return;
+        const parsedTestCenters = parseTestCentersCsv(text);
+        setTestCenters(parsedTestCenters);
+      } catch (err) {
+        console.error('Failed to load test centers CSV:', err);
+      }
+    };
+
+    loadTestCenters();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Check if user is logged in
   useEffect(() => {
@@ -105,87 +340,19 @@ const LandingPage = () => {
   // Load data from API
   useEffect(() => {
     const loadData = async () => {
-      if (searchType === 'symptoms') return; // Don't auto-load for symptoms
-      
+      if (searchType === 'symptoms' || searchType === 'hospitals') return; // Hospitals use local dataset
+
       setLoading(true);
       setError(null);
-      
+
       try {
         if (searchType === 'doctors') {
           const response = await doctorAPI.getAllDoctors();
           const doctorsData = response.data?.data || response.data || [];
           setDoctors(doctorsData);
           setFilteredResults(doctorsData);
-        } else {
-          // Use demo data for test centers instead of API
-          const demoTestCenters = [
-            {
-              id: 1,
-              name: 'Square Hospitals Ltd.',
-              location: 'Panthapath, Dhaka',
-              phone: '+88-02-8159457',
-              services: ['Blood Tests', 'Pathology', 'Radiology', 'Cardiology'],
-              rating: 4.8
-            },
-            {
-              id: 2,
-              name: 'United Hospital Limited',
-              location: 'Gulshan, Dhaka',
-              phone: '+88-02-9883311',
-              services: ['Hematology', 'Lab Services', 'Imaging', 'Emergency'],
-              rating: 4.9
-            },
-            {
-              id: 3,
-              name: 'Apollo Hospitals Dhaka',
-              location: 'Bashundhara, Dhaka',
-              phone: '+88-10678',
-              services: ['Blood Analysis', 'Diagnostic Services', 'CT Scan', 'MRI'],
-              rating: 4.7
-            },
-            {
-              id: 4,
-              name: 'Labaid Specialized Hospital',
-              location: 'Dhanmondi, Dhaka',
-              phone: '+88-02-9611233',
-              services: ['Blood Count', 'Pathology', 'Biochemistry', 'Microbiology'],
-              rating: 4.6
-            },
-            {
-              id: 5,
-              name: 'Ibn Sina Hospital',
-              location: 'Kallyanpur, Dhaka',
-              phone: '+88-02-9002513',
-              services: ['Hematology Tests', 'Lab Tests', 'X-Ray', 'Ultrasound'],
-              rating: 4.5
-            },
-            {
-              id: 6,
-              name: 'Green Life Medical College Hospital',
-              location: 'Panthapath, Dhaka',
-              phone: '+88-02-58151275',
-              services: ['Blood Screening', 'Medical Tests', 'ECG', 'Endoscopy'],
-              rating: 4.4
-            },
-            {
-              id: 7,
-              name: 'Bangladesh Medical College Hospital',
-              location: 'Dhanmondi, Dhaka',
-              phone: '+88-02-9665188',
-              services: ['Clinical Pathology', 'Blood Tests', 'Urine Tests', 'Stool Tests'],
-              rating: 4.3
-            },
-            {
-              id: 8,
-              name: 'Holy Family Red Crescent Medical College Hospital',
-              location: 'Maghbazar, Dhaka',
-              phone: '+88-02-9337513',
-              services: ['Laboratory Medicine', 'Blood Bank', 'Histopathology', 'Cytology'],
-              rating: 4.2
-            }
-          ];
-          setTestCenters(demoTestCenters);
-          setFilteredResults(demoTestCenters);
+        } else if (searchType === 'testCenters') {
+          setFilteredResults(testCenters);
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -199,16 +366,22 @@ const LandingPage = () => {
     };
 
     loadData();
-  }, [searchType]);
+  }, [searchType, testCenters]);
 
   // Search functionality
   useEffect(() => {
     const performSearch = async () => {
-      if (searchType === 'symptoms') return; // Symptoms search is handled separately
+      if (searchType === 'symptoms' || searchType === 'hospitals') return; // Hospitals handled locally
       
       if (!searchTerm.trim()) {
-        const results = searchType === 'doctors' ? doctors : testCenters;
-        setFilteredResults(results);
+        if (searchType === 'testCenters') {
+          const uniqueHospitals = buildUniqueHospitalSummaries(testCenters);
+          setFilteredResults(uniqueHospitals);
+          setTestCenterPage(1);
+        } else {
+          const results = searchType === 'doctors' ? doctors : testCenters;
+          setFilteredResults(results);
+        }
         return;
       }
 
@@ -219,190 +392,40 @@ const LandingPage = () => {
         let searchResults = [];
         
         if (searchType === 'doctors') {
-          if (searchTerm== null || searchTerm.trim()=="") return;
-          console.log(searchTerm);
+          if (searchTerm == null || searchTerm.trim() == "") return;
           const response = await doctorAPI.searchDoctors(searchTerm);
           if (response.data && response.data) {
             searchResults = response.data || [];
           }
-          } else {
-            // Use demo data for test centers instead of API calls
-            if (searchTerm.toLowerCase().includes('cbc') || searchTerm.toLowerCase().includes('complete blood count')) {
-              // Show CBC-specific data with pricing
-              searchResults = [
-                {
-                  id: 1,
-                  name: 'Square Hospitals Ltd.',
-                  location: 'Panthapath, Dhaka',
-                  phone: '+88-02-8159457',
-                  services: ['CBC Test', 'Blood Tests', 'Pathology'],
-                  testName: 'Complete Blood Count (CBC)',
-                  cost: '৳650',
-                  duration: '30 minutes',
-                  reportTime: '6-8 hours',
-                  availability: 'Daily 7:00 AM - 11:00 PM',
-                  department: 'Pathology Lab',
-                  fasting: 'Not Required',
-                  rating: 4.8
-                },
-                {
-                  id: 2,
-                  name: 'United Hospital Limited',
-                  location: 'Gulshan, Dhaka',
-                  phone: '+88-02-9883311',
-                  services: ['CBC Test', 'Hematology', 'Lab Services'],
-                  testName: 'Complete Blood Count (CBC)',
-                  cost: '৳700',
-                  duration: '25 minutes',
-                  reportTime: '4-6 hours',
-                  availability: 'Daily 6:00 AM - 12:00 AM',
-                  department: 'Clinical Laboratory',
-                  fasting: 'Not Required',
-                  rating: 4.9
-                },
-                {
-                  id: 3,
-                  name: 'Apollo Hospitals Dhaka',
-                  location: 'Bashundhara, Dhaka',
-                  phone: '+88-10678',
-                  services: ['CBC Test', 'Blood Analysis', 'Diagnostic Services'],
-                  testName: 'Complete Blood Count (CBC)',
-                  cost: '৳720',
-                  duration: '20 minutes',
-                  reportTime: '3-5 hours',
-                  availability: 'Daily 24/7',
-                  department: 'Laboratory Medicine',
-                  fasting: 'Not Required',
-                  rating: 4.7
-                },
-                {
-                  id: 4,
-                  name: 'Labaid Specialized Hospital',
-                  location: 'Dhanmondi, Dhaka',
-                  phone: '+88-02-9611233',
-                  services: ['CBC Test', 'Blood Count', 'Pathology'],
-                  testName: 'Complete Blood Count (CBC)',
-                  cost: '৳580',
-                  duration: '35 minutes',
-                  reportTime: '6-12 hours',
-                  availability: 'Daily 7:00 AM - 10:00 PM',
-                  department: 'Pathology Department',
-                  fasting: 'Not Required',
-                  rating: 4.6
-                },
-                {
-                  id: 5,
-                  name: 'Ibn Sina Hospital',
-                  location: 'Kallyanpur, Dhaka',
-                  phone: '+88-02-9002513',
-                  services: ['CBC Test', 'Hematology Tests', 'Lab Tests'],
-                  testName: 'Complete Blood Count (CBC)',
-                  cost: '৳520',
-                  duration: '40 minutes',
-                  reportTime: '8-12 hours',
-                  availability: 'Daily 6:00 AM - 11:00 PM',
-                  department: 'Laboratory Services',
-                  fasting: 'Not Required',
-                  rating: 4.5
-                },
-                {
-                  id: 6,
-                  name: 'Green Life Medical College Hospital',
-                  location: 'Panthapath, Dhaka',
-                  phone: '+88-02-58151275',
-                  services: ['CBC Test', 'Blood Screening', 'Medical Tests'],
-                  testName: 'Complete Blood Count (CBC)',
-                  cost: '৳600',
-                  duration: '30 minutes',
-                  reportTime: '6-10 hours',
-                  availability: 'Daily 8:00 AM - 10:00 PM',
-                  department: 'Clinical Pathology',
-                  fasting: 'Not Required',
-                  rating: 4.4
-                }
-              ];
-            } else {
-              // Filter from existing demo test centers data
-              const allTestCenters = testCenters.length > 0 ? testCenters : [
-                {
-                  id: 1,
-                  name: 'Square Hospitals Ltd.',
-                  location: 'Panthapath, Dhaka',
-                  phone: '+88-02-8159457',
-                  services: ['Blood Tests', 'Pathology', 'Radiology', 'Cardiology'],
-                  rating: 4.8
-                },
-                {
-                  id: 2,
-                  name: 'United Hospital Limited',
-                  location: 'Gulshan, Dhaka',
-                  phone: '+88-02-9883311',
-                  services: ['Hematology', 'Lab Services', 'Imaging', 'Emergency'],
-                  rating: 4.9
-                },
-                {
-                  id: 3,
-                  name: 'Apollo Hospitals Dhaka',
-                  location: 'Bashundhara, Dhaka',
-                  phone: '+88-10678',
-                  services: ['Blood Analysis', 'Diagnostic Services', 'CT Scan', 'MRI'],
-                  rating: 4.7
-                },
-                {
-                  id: 4,
-                  name: 'Labaid Specialized Hospital',
-                  location: 'Dhanmondi, Dhaka',
-                  phone: '+88-02-9611233',
-                  services: ['Blood Count', 'Pathology', 'Biochemistry', 'Microbiology'],
-                  rating: 4.6
-                },
-                {
-                  id: 5,
-                  name: 'Ibn Sina Hospital',
-                  location: 'Kallyanpur, Dhaka',
-                  phone: '+88-02-9002513',
-                  services: ['Hematology Tests', 'Lab Tests', 'X-Ray', 'Ultrasound'],
-                  rating: 4.5
-                },
-                {
-                  id: 6,
-                  name: 'Green Life Medical College Hospital',
-                  location: 'Panthapath, Dhaka',
-                  phone: '+88-02-58151275',
-                  services: ['Blood Screening', 'Medical Tests', 'ECG', 'Endoscopy'],
-                  rating: 4.4
-                },
-                {
-                  id: 7,
-                  name: 'Bangladesh Medical College Hospital',
-                  location: 'Dhanmondi, Dhaka',
-                  phone: '+88-02-9665188',
-                  services: ['Clinical Pathology', 'Blood Tests', 'Urine Tests', 'Stool Tests'],
-                  rating: 4.3
-                },
-                {
-                  id: 8,
-                  name: 'Holy Family Red Crescent Medical College Hospital',
-                  location: 'Maghbazar, Dhaka',
-                  phone: '+88-02-9337513',
-                  services: ['Laboratory Medicine', 'Blood Bank', 'Histopathology', 'Cytology'],
-                  rating: 4.2
-                }
-              ];
-              
-              // Filter based on search term
-              searchResults = allTestCenters.filter(center => 
-                center.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                center.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                center.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()))
-              );
+        } else {
+          const normalizedTerm = searchTerm.trim().toLowerCase();
+          const centers = testCenters;
+          const uniqueRecords = new Map();
+
+          centers.forEach((center) => {
+            if (
+              center.searchHospital.includes(normalizedTerm) ||
+              center.searchTest.includes(normalizedTerm)
+            ) {
+              const key = `${center.searchHospital}|${center.searchTest}`;
+              if (!uniqueRecords.has(key)) {
+                uniqueRecords.set(key, center);
+              }
             }
-          }
+          });
+
+          searchResults = Array.from(uniqueRecords.values());
+          setTestCenterPage(1);
+        }
 
         setFilteredResults(searchResults);
       } catch (error) {
         console.error('Search error:', error);
-        setError(`Search failed. Please check if the backend server is running.`);
+        setError(
+          searchType === 'doctors'
+            ? 'Search failed. Please check if the backend server is running.'
+            : 'Search failed. Please try again.'
+        );
         setFilteredResults([]);
       } finally {
         setLoading(false);
@@ -411,7 +434,7 @@ const LandingPage = () => {
 
     const debounceTimer = setTimeout(performSearch, 300);
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm, searchType, doctors, testCenters]);
+  }, [searchTerm, searchType, doctors, testCenters, buildUniqueHospitalSummaries]);
 
   // Symptoms search functionality
   const handleSymptomsSearch = async () => {
@@ -443,6 +466,41 @@ const LandingPage = () => {
     setSearchTerm('');
     setSymptomsQuery('');
     setError(null);
+    setHospitalSearchTerm('');
+    setHospitalPage(1);
+    setTestCenterPage(1);
+    setTestCenterSort('default');
+  };
+
+  const handleHospitalSearchChange = (value) => {
+    setHospitalSearchTerm(value);
+    setHospitalPage(1);
+  };
+
+  const handleLoadMoreHospitals = () => {
+    setHospitalPage((prev) => prev + 1);
+  };
+
+  const handleLoadMoreTestCenters = () => {
+    setTestCenterPage((prev) => prev + 1);
+  };
+
+  const handleTestCenterSortChange = (value) => {
+    setTestCenterSort(value);
+    setTestCenterPage(1);
+  };
+
+  const handleContactClick = (item) => {
+    if (searchType === 'testCenters') {
+      const hospitalName = getHospitalDisplayName(item);
+      if (hospitalName) {
+        setSearchTerm(hospitalName);
+        setTestCenterPage(1);
+      }
+      return;
+    }
+
+    navigate(isLoggedIn ? '/dashboard' : '/login');
   };
 
   return (
@@ -590,14 +648,16 @@ const LandingPage = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex justify-center lg:justify-end"
             >
-                            <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-lg font-semibold transition-all duration-200 text-lg shadow-xl hover:shadow-2xl animate-float"
-                onClick={() => navigate(isLoggedIn ? '/diagnosis' : '/signup')}
-              >
-                {isLoggedIn ? 'Start Diagnosis' : 'Get Started'}
-              </motion.button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-lg font-semibold transition-all duration-200 text-lg shadow-xl hover:shadow-2xl animate-float"
+                  onClick={() => navigate(isLoggedIn ? '/diagnosis' : '/signup')}
+                >
+                  {isLoggedIn ? 'Start Diagnosis' : 'Get Started'}
+                </motion.button>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -659,6 +719,18 @@ const LandingPage = () => {
               >
                 Test Centers
               </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 border ${
+                  searchType === 'hospitals'
+                    ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg'
+                    : 'border-emerald-500/40 bg-zinc-900/60 text-emerald-300 hover:bg-zinc-800/80 hover:text-emerald-200'
+                }`}
+                onClick={() => handleSearchTypeChange('hospitals')}
+              >
+                Hospitals
+              </motion.button>
             </div>
 
             {/* Search Input */}
@@ -697,6 +769,12 @@ const LandingPage = () => {
                   )}
                 </motion.button>
               </div>
+            ) : searchType === 'hospitals' ? (
+              <HospitalSearchInput
+                searchTerm={hospitalSearchTerm}
+                onSearchChange={handleHospitalSearchChange}
+                totalCount={totalHospitals}
+              />
             ) : (
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -713,6 +791,23 @@ const LandingPage = () => {
                 />
               </div>
             )}
+            {searchType === 'testCenters' && (
+              <div className="mt-4 flex justify-end">
+                <label className="text-sm text-zinc-400 flex items-center gap-3">
+                  <span>Sort by</span>
+                  <select
+                    className="bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white focus:border-white focus:ring-2 focus:ring-white/20 focus:outline-none"
+                    value={testCenterSort}
+                    onChange={(e) => handleTestCenterSortChange(e.target.value)}
+                  >
+                    <option value="default">Default</option>
+                    <option value="priceLowHigh">Price: Low to High</option>
+                    <option value="priceHighLow">Price: High to Low</option>
+                    <option value="nameAsc">Hospital Name</option>
+                  </select>
+                </label>
+              </div>
+            )}
             </div>
           </motion.div>
         </div>
@@ -727,223 +822,276 @@ const LandingPage = () => {
             className="text-3xl font-bold text-center mb-12 text-white"
             style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}
           >
-            {searchType === 'symptoms' ? 'Recommended Doctors' : 
-             searchType === 'doctors' ? 'Available Doctors' : 'Test Centers'}
+            {searchType === 'symptoms'
+              ? 'Recommended Doctors'
+              : searchType === 'doctors'
+              ? 'Available Doctors'
+              : searchType === 'hospitals'
+              ? 'Hospitals'
+              : 'Test Centers'}
           </motion.h2>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg mb-8"
-            >
-              {error}
-            </motion.div>
-          )}
-
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            </div>
+          {searchType === 'hospitals' ? (
+            <HospitalSearchResults
+              hospitals={visibleHospitals}
+              hasMore={hasMoreHospitals}
+              onLoadMore={handleLoadMoreHospitals}
+            />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredResults.map((item, index) => (
+            <>
+              {error && (
                 <motion.div
-                  key={item.id || index}
-                  initial={{ opacity: 0, y: 50 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-zinc-600 transition-all hover:shadow-lg"
+                  className="bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg mb-8"
                 >
-                  {/* Doctor/Test Center Card Content */}
-                  <div className="flex items-center mb-4">
-                    <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mr-4 overflow-hidden flex-shrink-0">
-                      {searchType === 'doctors' || searchType === 'symptoms' ? (
-                        item.imageFile ? (
-                          <>
-                            <img 
-                              src={`data:${item.mimeType};base64,${item.imageFile}`}
-                              alt={item.name || 'Doctor'}
-                              className="w-full h-full object-cover rounded-full"
-                              onError={(e) => {
-                                console.log('Image failed to load:', item.imageFile);
-                                e.target.style.display = 'none';
-                                e.target.parentNode.querySelector('.fallback-icon').style.display = 'block';
-                              }}
-                              onLoad={() => {
-                                console.log('Image loaded successfully:');
-                              }}
-                            />
-                            <svg className="w-8 h-8 text-white fallback-icon" style={{display: 'none'}} fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                            </svg>
-                          </>
-                        ) : (
-                          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                          </svg>
-                        )
-                      ) : (
-                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
-                        </svg>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">{item.name 
-                      || item?.doctor?.name
-                        
-                        }</h3>
-                      {(item.degree || item?.doctor?.degree) && (
-                        <p className="text-sm text-gray-400">{item.degree
-                        || item?.doctor?.degree}</p>
-                      )}
-                      {item.rating && (
-                        <div className="flex items-center mt-1">
-                          <div className="flex text-yellow-400">
-                            {[...Array(5)].map((_, i) => (
-                              <svg key={i} className={`w-4 h-4 ${i < Math.floor(item.rating) ? 'fill-current' : 'text-gray-600'}`} viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                              </svg>
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-400 ml-2">{item.rating}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Specialty/Services */}
-                  {(item.specialty || item?.doctor?.specialization) && (
-                    <div className="mb-3">
-                      <span className="inline-block bg-emerald-600/20 text-emerald-400 px-3 py-1 rounded-full text-sm">
-                        {item.specialty || item?.doctor?.specialization}
-                      </span>
-                    </div>
-                  )}
-
-                  {item.services && item.services.length > 0 && (
-                    <div className="mb-3">
-                      <div className="flex flex-wrap gap-2">
-                        {item.services.slice(0, 3).map((service, idx) => (
-                          <span key={idx} className="inline-block bg-purple-600/20 text-purple-400 px-2 py-1 rounded text-xs">
-                            {service}
-                          </span>
-                        ))}
-                        {item.services.length > 3 && (
-                          <span className="text-xs text-gray-400">+{item.services.length - 3} more</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Hospital/Location */}
-                  {(item.hospital || item?.doctor?.hospitalName)&& (
-                    <p className="text-sm text-gray-300 mb-2">🏥 {item.hospital || item?.doctor?.hospitalName}</p>
-                  )}
-                  {item.location && (
-                    <p className="text-sm text-gray-400 mb-2">📍 {item.location}</p>
-                  )}
-
-                  {/* Experience */}
-                  {(item.experience|| item?.doctor?.experience) && (
-                    <p className="text-sm text-gray-400 mb-3">⏱️ {item.experience || (item?.doctor?.experience + " years of")} experience</p>
-                  )}
-
-                  {/* Contact Info */}
-                  {item.phone && (
-                    <p className="text-sm text-gray-400 mb-2">📞 {item.phone}</p>
-                  )}
-                  {item.email && (
-                    <p className="text-sm text-gray-400 mb-4">✉️ {item.email}</p>
-                  )}
-
-                  {/* Test-Specific Information (for test centers) */}
-                  {searchType === 'testCenters' && item.testName && (
-                    <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mb-4">
-                      <h4 className="text-blue-300 font-semibold mb-2">🧪 {item.testName}</h4>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {item.cost && (
-                          <div className="flex items-center">
-                            <span className="text-gray-400">💰 Cost:</span>
-                            <span className="text-green-400 font-semibold ml-1">{item.cost}</span>
-                          </div>
-                        )}
-                        {item.duration && (
-                          <div className="flex items-center">
-                            <span className="text-gray-400">⏱️ Duration:</span>
-                            <span className="text-white ml-1">{item.duration}</span>
-                          </div>
-                        )}
-                        {item.reportTime && (
-                          <div className="flex items-center">
-                            <span className="text-gray-400">📋 Report:</span>
-                            <span className="text-white ml-1">{item.reportTime}</span>
-                          </div>
-                        )}
-                        {item.fasting && (
-                          <div className="flex items-center">
-                            <span className="text-gray-400">🍽️ Fasting:</span>
-                            <span className="text-white ml-1">{item.fasting}</span>
-                          </div>
-                        )}
-                      </div>
-                      {item.availability && (
-                        <div className="mt-2 pt-2 border-t border-blue-700/30">
-                          <span className="text-gray-400 text-xs">🕒 Available: </span>
-                          <span className="text-white text-xs">{item.availability}</span>
-                        </div>
-                      )}
-                      {item.department && (
-                        <div className="mt-1">
-                          <span className="text-gray-400 text-xs">🏥 Department: </span>
-                          <span className="text-blue-300 text-xs">{item.department}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-md"
-                      onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')}
-                    >
-                      Contact
-                    </motion.button>
-                    {item.profileLink && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="px-4 py-3 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg text-sm transition-all duration-200 bg-transparent hover:bg-zinc-800/50"
-                        onClick={() => window.open(item.profileLink, '_blank')}
-                      >
-                        Profile
-                      </motion.button>
-                    )}
-                  </div>
+                  {error}
                 </motion.div>
-              ))}
-            </div>
-          )}
+              )}
 
-          {!loading && filteredResults.length === 0 && (searchTerm || symptomsQuery) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-zinc-300 mb-2">
-                No {searchType === 'symptoms' ? 'doctors' : searchType} found
-              </h3>
-              <p className="text-zinc-500">
-                Try adjusting your search terms or browse all available options.
-              </p>
-            </motion.div>
+              {loading ? (
+                <div className="flex justify-center py-16">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {(searchType === 'testCenters' ? visibleTestCenters : filteredResults).map((item, index) => {
+                      const isTestCenterCard = searchType === 'testCenters';
+                      const primaryButtonLabel = isTestCenterCard ? 'View Tests' : 'Contact';
+
+                      return (
+                        <motion.div
+                          key={item.id || index}
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          whileHover={{ y: -8 }}
+                          className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-zinc-600 transition-all hover:shadow-lg"
+                        >
+                      {/* Doctor/Test Center Card Content */}
+                      <div className="flex items-center mb-4">
+                        <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mr-4 overflow-hidden flex-shrink-0">
+                          {searchType === 'doctors' || searchType === 'symptoms' ? (
+                            item.imageFile ? (
+                              <>
+                                <img 
+                                  src={`data:${item.mimeType};base64,${item.imageFile}`}
+                                  alt={item.name || 'Doctor'}
+                                  className="w-full h-full object-cover rounded-full"
+                                  onError={(e) => {
+                                    console.log('Image failed to load:', item.imageFile);
+                                    e.target.style.display = 'none';
+                                    e.target.parentNode.querySelector('.fallback-icon').style.display = 'block';
+                                  }}
+                                  onLoad={() => {
+                                    console.log('Image loaded successfully:');
+                                  }}
+                                />
+                                <svg className="w-8 h-8 text-white fallback-icon" style={{display: 'none'}} fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                              </>
+                            ) : (
+                              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                              </svg>
+                            )
+                          ) : (
+                            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">{item.name 
+                          || item?.doctor?.name
+                            
+                            }</h3>
+                          {(item.degree || item?.doctor?.degree) && (
+                            <p className="text-sm text-gray-400">{item.degree
+                            || item?.doctor?.degree}</p>
+                          )}
+                          {item.rating && (
+                            <div className="flex items-center mt-1">
+                              <div className="flex text-yellow-400">
+                                {[...Array(5)].map((_, i) => (
+                                  <svg key={i} className={`w-4 h-4 ${i < Math.floor(item.rating) ? 'fill-current' : 'text-gray-600'}`} viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                  </svg>
+                                ))}
+                              </div>
+                              <span className="text-sm text-gray-400 ml-2">{item.rating}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Specialty/Services */}
+                      {(item.specialty || item?.doctor?.specialization) && (
+                        <div className="mb-3">
+                          <span className="inline-block bg-emerald-600/20 text-emerald-400 px-3 py-1 rounded-full text-sm">
+                            {item.specialty || item?.doctor?.specialization}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.services && item.services.length > 0 && (
+                        <div className="mb-3">
+                          <div className="flex flex-wrap gap-2">
+                            {item.services.slice(0, 3).map((service, idx) => (
+                              <span key={idx} className="inline-block bg-purple-600/20 text-purple-400 px-2 py-1 rounded text-xs">
+                                {service}
+                              </span>
+                            ))}
+                            {item.services.length > 3 && (
+                              <span className="text-xs text-gray-400">+{item.services.length - 3} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Hospital/Location */}
+                      {(item.hospital || item?.doctor?.hospitalName)&& (
+                        <p className="text-sm text-gray-300 mb-2">🏥 {item.hospital || item?.doctor?.hospitalName}</p>
+                      )}
+                      {item.location && (
+                        <p className="text-sm text-gray-400 mb-2">📍 {item.location}</p>
+                      )}
+
+                      {searchType === 'testCenters' && item.uniqueHospital && (
+                        <div className="bg-purple-900/10 border border-purple-700/30 rounded-lg p-3 mb-4 text-sm text-purple-200">
+                          <p className="font-semibold text-purple-300">
+                            {item.testCount} diagnostic test{item.testCount === 1 ? '' : 's'} available
+                          </p>
+                          {item.categories && item.categories.length > 0 && (
+                            <p className="mt-1 text-purple-200">
+                              Popular categories: <span className="text-white">{item.categories.join(', ')}</span>
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Experience */}
+                      {(item.experience|| item?.doctor?.experience) && (
+                        <p className="text-sm text-gray-400 mb-3">⏱️ {item.experience || (item?.doctor?.experience + " years of")} experience</p>
+                      )}
+
+                      {/* Contact Info */}
+                      {item.phone && (
+                        <p className="text-sm text-gray-400 mb-2">📞 {item.phone}</p>
+                      )}
+                      {item.email && (
+                        <p className="text-sm text-gray-400 mb-4">✉️ {item.email}</p>
+                      )}
+
+                      {/* Test-Specific Information (for test centers) */}
+                      {searchType === 'testCenters' && item.testName && (
+                        <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3 mb-4">
+                          <h4 className="text-blue-300 font-semibold mb-2">🧪 {item.testName}</h4>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            {item.cost && (
+                              <div className="flex items-center">
+                                <span className="text-gray-400">💰 Cost:</span>
+                                <span className="text-green-400 font-semibold ml-1">{item.cost}</span>
+                              </div>
+                            )}
+                            {item.category && (
+                              <div className="col-span-2 flex items-center">
+                                <span className="text-gray-400">🏷️ Category:</span>
+                                <span className="text-white ml-1">{item.category}</span>
+                              </div>
+                            )}
+                            {item.duration && (
+                              <div className="flex items-center">
+                                <span className="text-gray-400">⏱️ Duration:</span>
+                                <span className="text-white ml-1">{item.duration}</span>
+                              </div>
+                            )}
+                            {item.reportTime && (
+                              <div className="flex items-center">
+                                <span className="text-gray-400">📋 Report:</span>
+                                <span className="text-white ml-1">{item.reportTime}</span>
+                              </div>
+                            )}
+                            {item.fasting && (
+                              <div className="flex items-center">
+                                <span className="text-gray-400">🍽️ Fasting:</span>
+                                <span className="text-white ml-1">{item.fasting}</span>
+                              </div>
+                            )}
+                          </div>
+                          {item.availability && (
+                            <div className="mt-2 pt-2 border-t border-blue-700/30">
+                              <span className="text-gray-400 text-xs">🕒 Available: </span>
+                              <span className="text-white text-xs">{item.availability}</span>
+                            </div>
+                          )}
+                          {item.department && (
+                            <div className="mt-1">
+                              <span className="text-gray-400 text-xs">🏥 Department: </span>
+                              <span className="text-blue-300 text-xs">{item.department}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-md"
+                          onClick={() => handleContactClick(item)}
+                        >
+                          {primaryButtonLabel}
+                        </motion.button>
+                        {item.profileLink && (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-4 py-3 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg text-sm transition-all duration-200 bg-transparent hover:bg-zinc-800/50"
+                            onClick={() => window.open(item.profileLink, '_blank')}
+                          >
+                            Profile
+                          </motion.button>
+                        )}
+                      </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                  {searchType === 'testCenters' && hasMoreTestCenters && (
+                    <div className="mt-8 flex justify-center">
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleLoadMoreTestCenters}
+                        className="px-6 py-3 border border-emerald-500/50 text-emerald-300 rounded-xl font-semibold hover:bg-emerald-500/10 transition-all"
+                      >
+                        Load more test centers
+                      </motion.button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {!loading && filteredResults.length === 0 && (searchTerm || symptomsQuery) && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-16"
+                >
+                  <div className="text-6xl mb-4">🔍</div>
+                  <h3 className="text-xl font-semibold text-zinc-300 mb-2">
+                    No {searchType === 'symptoms' ? 'doctors' : searchType} found
+                  </h3>
+                  <p className="text-zinc-500">
+                    Try adjusting your search terms or browse all available options.
+                  </p>
+                </motion.div>
+              )}
+            </>
           )}
         </div>
       </section>
