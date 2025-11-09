@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // Start with loading = true
   const [error, setError] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false); // Track if onboarding should show
+  const [isNewUserSignup, setIsNewUserSignup] = useState(false); // Flag for newly signed-up users
 
   // Configure axios defaults and check if user is already logged in when the app starts
   useEffect(() => {
@@ -71,11 +72,16 @@ export const AuthProvider = ({ children }) => {
         
         setUser(userData);
         
-        // Check if this is a new user (no health data) - show onboarding
-        // This can be determined by checking if health data exists
-        const isNewUser = !userData.hasHealthData; // Backend should provide this flag
-        if (isNewUser && userData.role === 'PATIENT') {
+        // Check if this is a newly signed-up user by looking at localStorage flag
+        const isNewSignup = localStorage.getItem('newUserSignup') === 'true';
+        
+        // ONLY show onboarding if this is a newly signed-up user
+        // Don't show onboarding for existing users logging in
+        if (isNewSignup && userData.role === 'PATIENT') {
           setShowOnboarding(true);
+          // Clear the flag after using it so it doesn't show again
+          localStorage.removeItem('newUserSignup');
+          setIsNewUserSignup(false);
         }
         
         return true;
@@ -100,6 +106,9 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(`${API_BASE_URL}/signup`, userData);
 
       if (response.data.success) {
+        // Store flag in localStorage so it persists even if page refreshes
+        localStorage.setItem('newUserSignup', 'true');
+        setIsNewUserSignup(true);
         // Don't store token or user - just return success
         // User will need to login after signup
         return true;
@@ -209,6 +218,8 @@ export const AuthProvider = ({ children }) => {
     error,
     showOnboarding,
     setShowOnboarding,
+    isNewUserSignup,
+    setIsNewUserSignup,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

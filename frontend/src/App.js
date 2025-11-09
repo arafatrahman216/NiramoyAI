@@ -101,7 +101,9 @@ const theme = createTheme({
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -126,7 +128,9 @@ const ProtectedRoute = ({ children }) => {
 const PatientRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -164,7 +168,9 @@ const PatientRoute = ({ children }) => {
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -207,7 +213,9 @@ const AdminRoute = ({ children }) => {
 const DoctorRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -250,7 +258,9 @@ const DoctorRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
