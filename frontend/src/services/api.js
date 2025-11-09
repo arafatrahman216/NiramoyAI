@@ -2,10 +2,10 @@ import axios from 'axios';
 
 
 //For Deployment
-// const API_BASE_URL = 'https://niramoyai.up.railway.app/api';
+const API_BASE_URL = 'https://niramoy-ai.up.railway.app/api';
 
 // For local development
-const API_BASE_URL = 'http://localhost:8080/api';
+// const API_BASE_URL = 'http://localhost:8080/api';
 
 
 // Create axios instance with default config

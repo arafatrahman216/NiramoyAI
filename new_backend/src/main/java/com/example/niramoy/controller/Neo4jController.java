@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@CrossOrigin(origins = "*") 
 @RequestMapping("/neo4j")
 public class Neo4jController {
 

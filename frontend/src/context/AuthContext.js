@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-// const API_BASE_URL = 'https://niramoyai.up.railway.app/api/auth';
+const API_BASE_URL = 'https://niramoy-ai.up.railway.app/api/auth';
 
-const API_BASE_URL = 'http://localhost:8080/api/auth';
+// const API_BASE_URL = 'http://localhost:8080/api/auth';
 
 const AuthContext = createContext();
 

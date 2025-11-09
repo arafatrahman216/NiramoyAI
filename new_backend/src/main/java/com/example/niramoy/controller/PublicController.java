@@ -26,6 +26,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*") 
 @RequestMapping("/public")
 public class PublicController {
 

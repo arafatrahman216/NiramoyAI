@@ -37,6 +37,7 @@ import static com.example.niramoy.utils.JsonParser.objectMapper;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*") 
 @RequestMapping("/user")
 public class UserController {
 
