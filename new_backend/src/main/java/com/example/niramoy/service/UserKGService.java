@@ -95,7 +95,8 @@ public class UserKGService {
 
         //FIX: DOCTOR SPECIALIZATION NOT CORRECT
         String promptText = SYMPTOMS_AND_SPECIALIZATION_EXTRACTION_PROMPT.apply(
-            Map.of("symptoms", "Patient complains of persistent cough, shortness of breath, and occasional chest pain.")
+            // Map.of("symptoms", "Patient complains of persistent cough, shortness of breath, and occasional chest pain.")
+            Map.of("symptoms", visit.getSymptoms())
         ).text();
 
         String response = AiService.generateContent(promptText);
