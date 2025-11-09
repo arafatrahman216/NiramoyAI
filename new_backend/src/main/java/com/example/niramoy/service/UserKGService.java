@@ -859,7 +859,7 @@ public class UserKGService {
 
         try {
             List<Map<String, Object>> results = graphDB.executeQuery(cypherQuery, 
-                Map.of("visitID", visitID.toString()));
+                Map.of("visitID", visitID));
             
             if (results == null || results.isEmpty()) {
                 log.warn("No visit found with ID: {}", visitID);

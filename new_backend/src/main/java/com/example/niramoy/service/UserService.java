@@ -63,11 +63,17 @@ public class UserService implements UserDetailsService {
         String phoneNumber = newUser.get("phoneNumber");
         String gender = newUser.get("gender");
         String foundRole = newUser.get("role");
-        Role role = Role.valueOf(foundRole.toUpperCase());
+        // Default to PATIENT role if not specified
+        Role role = (foundRole != null && !foundRole.isEmpty())
+            ? Role.valueOf(foundRole.toUpperCase())
+            : Role.PATIENT;
 
         String profilePictureUrl = newUser.get("profilePictureUrl");
         String status = "ACTIVE";
-        LocalDate dateOfBirth = LocalDate.parse(newUser.get("dateOfBirth"));
+        LocalDate dateOfBirth = null;
+        if (newUser.get("dateOfBirth") != null && !newUser.get("dateOfBirth").isEmpty()) {
+            dateOfBirth = LocalDate.parse(newUser.get("dateOfBirth"));
+        }
         User user = userRepository.findUserByUsernameOrEmail(username,email);
         if (user != null) {
             throw new DuplicateUserException("User already exists with username or email: " + username + " or " + email);
