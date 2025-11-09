@@ -63,6 +63,12 @@ public class PublicController {
         }
     }
 
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Public Controller is up and running!");
+    }
+    
+
     
 
 
