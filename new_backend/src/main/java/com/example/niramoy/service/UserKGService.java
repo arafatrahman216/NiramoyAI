@@ -138,7 +138,8 @@ public class UserKGService {
         JSONObject extractedVisitJson = JsonParser.parseJsonToObject(extractedVisitDetails);
         
         
-        String doctorName = visitData.getOrDefault("doctor_name", "").toString();
+        Object doctorNameObj = visitData.getOrDefault("doctor_name", "");
+        String doctorName = doctorNameObj != null ? doctorNameObj.toString() : "";
         String specialization = "";
         String doctorIdString = "";
         if(doctorID != -1L ) doctorIdString = doctorID.toString();
@@ -620,7 +621,8 @@ public class UserKGService {
                 return "No patient data found.";
             }
 
-            return results.get(0).getOrDefault("patientSummary", "No summary available.").toString();
+            Object summaryObj = results.get(0).getOrDefault("patientSummary", "No summary available.");
+            return summaryObj != null ? summaryObj.toString() : "No summary available.";
         } catch (Exception e) {
             log.error("Error fetching patient summary: {}", e.getMessage(), e);
             return "Error fetching patient summary.";
@@ -646,7 +648,9 @@ public class UserKGService {
 
             StringBuilder testNames = new StringBuilder("Latest Test Names for Patient " + patientID + ":\n");
             for (Map<String, Object> result : results) {
-                testNames.append("- ").append(result.getOrDefault("testName", "Unknown Test")).append("\n");
+                Object testNameObj = result.getOrDefault("testName", "Unknown Test");
+                String testName = testNameObj != null ? testNameObj.toString() : "Unknown Test";
+                testNames.append("- ").append(testName).append("\n");
             }
             return testNames.toString();
         } catch (Exception e) {
