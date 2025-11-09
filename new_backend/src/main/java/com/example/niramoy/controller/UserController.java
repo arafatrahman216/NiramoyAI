@@ -6,7 +6,9 @@ import com.example.niramoy.dto.Request.UploadVisitReqDTO;
 import com.example.niramoy.entity.*;
 import com.example.niramoy.service.*;
 import com.example.niramoy.service.AIServices.AIService;
-import com.example.niramoy.service.AIServices.AIService;
+import com.example.niramoy.repository.ChatSessionRepository;
+import com.example.niramoy.repository.MessageRepository;
+
 import lombok.RequiredArgsConstructor;
 
 import org.json.JSONObject;
@@ -23,6 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,6 +47,11 @@ public class UserController {
     private final HealthService healthService;
     private final ElevenLabService elevenLabService;
     private final QRService qrService;
+    private final UserKGService userKGService;
+
+    //FIXME : Has to refactor these into a service 
+    private final ChatSessionRepository chatSessionRepository;
+    private final MessageRepository messageRepository;
 
 
 
@@ -174,7 +182,7 @@ public class UserController {
 
 
     @PostMapping("/chat")
-    public ResponseEntity<HashMap<String, Object>> sendMessage(@RequestBody Map<String, String> body){
+    public ResponseEntity<HashMap<String, Object>> sendMessage(@RequestBody Map<String, Object> body){
         HashMap<String, Object> response = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
@@ -185,12 +193,21 @@ public class UserController {
         
         try {
             User user = (User) authentication.getPrincipal();
-            String message = body.get("message");
-            String chatIdStr = body.get("chatId");
-            String mode = body.get("mode");
+            String message = (String) body.get("message");
+            String chatIdStr = (String) body.get("chatId");
+            String mode = (String) body.get("mode");
+            
+            //CONTEXT: Extract previous messages and visit context if provided
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> previousMessages = (List<Map<String, String>>) body.get("previousMessages");
+            
+            @SuppressWarnings("unchecked")
+            Map<String, Object> visitContext = (Map<String, Object>) body.get("visitContext");
 
             log.info("Received message: {}", message);
             log.info("Received mode: {}", mode);
+            // log.info("Previous messages count: {}", previousMessages != null ? previousMessages.size() : 0);
+            // log.info("Visit context provided: {}", visitContext != null);
 
             if (message == null || message.trim().isEmpty()) {
                 response.put("success", false);
@@ -207,8 +224,26 @@ public class UserController {
             Long chatId = Long.parseLong(chatIdStr);
             Long userId = user.getId();
             
-            // Process message and get AI reply (synchronous for now, but DB saves are async internally)
-            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message, mode, userId);
+            //CONTEXT: Build context prompt from previous messages and visit context
+            String contextPrompt = buildContextPrompt(previousMessages, visitContext);
+            String fullMessage = contextPrompt.isEmpty() ? message : contextPrompt + "\n\nCurrent User Query: " + message;
+            
+            log.info("\nFull message with context: {}", fullMessage);
+            
+
+            //FIXME : Refactor in service
+            // Save user message to database
+            ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
+            Messages userMessage = Messages.builder()
+                    .content(message)
+                    .isAgent(false)
+                    .isPlan(false)
+                    .chatSession(chatSession)
+                    .build();
+            messageRepository.save(userMessage);
+
+            // Process message and get AI reply (with context)
+            Messages aiReply = messageService.sendMessageAndGetReply(chatId, fullMessage, mode, userId);
 
             response.put("success", true);
             response.put("message", "Message sent and processed successfully");
@@ -622,6 +657,8 @@ public class UserController {
         response.put("success", true);
         response.put("message", "Shareable link generated successfully" );
         String data = profile.getUsername() + "###" + (System.currentTimeMillis() + 24*60*60*1000); // 1 day expiry
+        
+        //FIXME : Fix hardcoded url
         String profileLink = "https://niramoyai.netlify.app/shared/profile/" + (profile.getUsername() != null ? qrService.encrypt(data): "user123");
         response.put("link", profileLink);
         response.put("user", qrService.decrypt(qrService.encrypt(data)));
@@ -670,6 +707,108 @@ public class UserController {
     }
 
 
+    //CONTEXT: Endpoint to get visit details by visit ID from Knowledge Graph
+    @GetMapping("/visit/{visitId}")
+    public ResponseEntity<Map<String, Object>> getVisitDetails(@PathVariable Long visitId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            log.info("Fetching visit details for visit ID: {}", visitId);
+            
+            // Fetch visit context from Knowledge Graph
+            VisitContextDTO visitData = userKGService.getVisitContextByID(visitId);
+            
+            if (visitData == null) {
+                log.warn("Visit not found with ID: {}", visitId);
+                response.put("success", false);
+                response.put("message", "Visit not found with ID: " + visitId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            
+            response.put("success", true);
+            response.put("data", visitData);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error fetching visit details: {}", e.getMessage(), e);
+            response.put("success", false);
+            response.put("message", "Failed to fetch visit details: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+
+
+    //CONTEXT: Helper method to build context prompt from previous messages and visit context
+    private String buildContextPrompt(List<Map<String, String>> previousMessages, Map<String, Object> visitContext) {
+        StringBuilder prompt = new StringBuilder();
+        
+        // Add previous conversation context
+        if (previousMessages != null && !previousMessages.isEmpty()) {
+            prompt.append("Previous conversation:\n");
+            for (Map<String, String> msg : previousMessages) {
+                String role = msg.getOrDefault("role", "user").toUpperCase();
+                String content = msg.getOrDefault("content", "");
+                if (!content.isEmpty()) {
+                    prompt.append(role).append(": ").append(content).append("\n");
+                }
+            }
+            prompt.append("\n");
+        }
+        
+        // Add visit context
+        if (visitContext != null) {
+            prompt.append("Relevant Visit Information:\n");
+            
+            if (visitContext.containsKey("visitId")) {
+                prompt.append("Visit ID: ").append(visitContext.get("visitId")).append("\n");
+            }
+            if (visitContext.containsKey("doctorName")) {
+                prompt.append("Doctor: ").append(visitContext.get("doctorName")).append("\n");
+            }
+            if (visitContext.containsKey("appointmentDate")) {
+                prompt.append("Date: ").append(visitContext.get("appointmentDate")).append("\n");
+            }
+            if (visitContext.containsKey("diagnosis") && visitContext.get("diagnosis") != null) {
+                prompt.append("Diagnosis: ").append(visitContext.get("diagnosis")).append("\n");
+            }
+            if (visitContext.containsKey("symptoms") && visitContext.get("symptoms") != null) {
+                Object symptomsObj = visitContext.get("symptoms");
+                if (symptomsObj instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<String> symptoms = (List<String>) symptomsObj;
+                    if (!symptoms.isEmpty()) {
+                        prompt.append("Symptoms: ").append(String.join(", ", symptoms)).append("\n");
+                    }
+                } else {
+                    // Handle as string
+                    prompt.append("Symptoms: ").append(symptomsObj.toString()).append("\n");
+                }
+            }
+            if (visitContext.containsKey("prescription") && visitContext.get("prescription") != null) {
+                Object prescriptionObj = visitContext.get("prescription");
+                if (prescriptionObj instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<String> prescription = (List<String>) prescriptionObj;
+                    if (!prescription.isEmpty()) {
+                        prompt.append("Prescription: ").append(String.join(", ", prescription)).append("\n");
+                    }
+                } else {
+                    // Handle as string
+                    prompt.append("Prescription: ").append(prescriptionObj.toString()).append("\n");
+                }
+            }
+            if (visitContext.containsKey("summary") && visitContext.get("summary") != null) {
+                prompt.append("Summary: ").append(visitContext.get("summary")).append("\n");
+            }
+            
+            prompt.append("\n");
+        }
+        
+        return prompt.toString();
+    }
+
     @GetMapping("/medical-summary")
     public ResponseEntity<Map<String,Object>> getMedicalSummary (){
         Map<String, Object> response = new HashMap<>();
@@ -692,3 +831,4 @@ public class UserController {
 
     // @GetMapping("/visit-context")
 }
+

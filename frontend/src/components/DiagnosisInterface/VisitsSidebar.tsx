@@ -11,6 +11,7 @@ interface VisitsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onVisitContextSet?: (context: any) => void;
+  onVisitLoading?: (isLoading: boolean) => void; //CONTEXT: Loading handler for visit context
   visits?: Array<{
     visitId: number;
     appointmentDate: string;
@@ -24,7 +25,7 @@ interface VisitsSidebarProps {
   isLoading?: boolean; // Loading state from parent
 }
 
-const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, onVisitContextSet, visits = [], isLoading = false }) => {
+const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, onVisitContextSet, onVisitLoading, visits = [], isLoading = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -53,7 +54,7 @@ const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, onVisitC
               <p className="text-sm">Loading visits timeline...</p>
             </div>
           ) : (
-            <Timeline visits={visits as any} onVisitContextSet={onVisitContextSet} />
+            <Timeline visits={visits as any} onVisitContextSet={onVisitContextSet} onVisitLoading={onVisitLoading} />
           )}
         </div>
       </div>

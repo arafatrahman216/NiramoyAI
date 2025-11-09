@@ -1,6 +1,10 @@
 import axios from 'axios';
 
+
+//For Deployment
 // const API_BASE_URL = 'https://niramoyai.up.railway.app/api';
+
+// For local development
 const API_BASE_URL = 'http://localhost:8080/api';
 
 
@@ -83,11 +87,44 @@ export const testCenterAPI = {
 // AI Chatbot API endpoints
 export const chatbotAPI = {
   // Send message to AI chatbot
-  sendMessage: (message, chatId, mode = 'explain') => 
-    api.post('/user/chat', { message, chatId: chatId.toString(), mode }),
+  sendMessage: (message, chatId, mode = 'explain', contextData = null) => {
+    const payload = { 
+      message, 
+      chatId: chatId.toString(), 
+      mode 
+    };
+    
+    //CONTEXT: Include previous messages as separate attribute
+    if (contextData) {
+      if (contextData.previousMessages && contextData.previousMessages.length > 0) {
+        // Send previous messages as array of objects
+        payload.previousMessages = contextData.previousMessages.map((msg) => ({
+          role: (msg.role || 'user').toString(),
+          content: (msg.content || msg.text || msg.message || '').toString().trim()
+        })).filter(msg => msg.content); // Remove empty messages
+      }
+
+      //CONTEXT: Include visit context as separate attribute
+      if (contextData.visitContext) {
+        payload.visitContext = {
+          visitId: contextData.visitContext.visitId,
+          doctorName: contextData.visitContext.doctorName,
+          appointmentDate: contextData.visitContext.appointmentDate,
+          diagnosis: contextData.visitContext.diagnosis,
+          symptoms: contextData.visitContext.symptoms,
+          prescription: contextData.visitContext.prescription,
+          summary: contextData.visitContext.summary,
+          otherInfo: contextData.visitContext.otherInfo
+        };
+      }
+    }
+    
+    console.log('Sending payload to backend:', payload);
+    return api.post('/user/chat', payload);
+  },
   
   // Send message with attachment to AI chatbot
-  sendMessageWithAttachment: (message, chatId, attachment, mode = 'explain') => {
+  sendMessageWithAttachment: (message, chatId, attachment, mode = 'explain', contextData = null) => {
     const formData = new FormData();
     formData.append('message', message || '');
     formData.append('chatId', chatId.toString());
@@ -95,6 +132,34 @@ export const chatbotAPI = {
     if (attachment) {
       formData.append('attachment', attachment);
     }
+    
+    //CONTEXT: Include previous messages and visit context as JSON strings
+    if (contextData) {
+      if (contextData.previousMessages && contextData.previousMessages.length > 0) {
+        const cleanMessages = contextData.previousMessages.map((msg) => ({
+          role: (msg.role || 'user').toString(),
+          content: (msg.content || msg.text || msg.message || '').toString().trim()
+        })).filter(msg => msg.content);
+        
+        formData.append('previousMessages', JSON.stringify(cleanMessages));
+      }
+      
+      if (contextData.visitContext) {
+        const visitData = {
+          visitId: contextData.visitContext.visitId,
+          doctorName: contextData.visitContext.doctorName,
+          appointmentDate: contextData.visitContext.appointmentDate,
+          diagnosis: contextData.visitContext.diagnosis,
+          symptoms: contextData.visitContext.symptoms,
+          prescription: contextData.visitContext.prescription,
+          summary: contextData.visitContext.summary,
+          otherInfo: contextData.visitContext.otherInfo
+        };
+        formData.append('visitContext', JSON.stringify(visitData));
+      }
+    }
+    
+    console.log('Sending FormData with context to backend');
     return api.post('/user/chat-attachment', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -185,11 +250,8 @@ export const appointmentAPI = {
 
 // Diagnosis Interface Job
 export const agentAPI = {
-
   searchAPI: (query) => 
     api.post('/agent/search', { query })
-  
-
 };
 
 
@@ -233,6 +295,8 @@ export const userInfoAPI = {
 
   deleteMedicine : (id) => api.delete(`/user/medicines/${id}`),
 
+  //CONTEXT: Fetch detailed visit information by visit ID
+  getVisitDetails: (visitId) => api.get(`/user/visit/${visitId}`),
   getMedicalSummary: () => api.get(`/user/medical-summary`)
 
 };

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 // const API_BASE_URL = 'https://niramoyai.up.railway.app/api/auth';
+
 const API_BASE_URL = 'http://localhost:8080/api/auth';
 
 const AuthContext = createContext();
@@ -89,16 +90,8 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(`${API_BASE_URL}/signup`, userData);
 
       if (response.data.success) {
-        const { token, user: newUser } = response.data;
-        
-        // Store token and user data
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(newUser));
-        
-        // Set axios authorization header for future requests
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        setUser(newUser);
+        // Don't store token or user - just return success
+        // User will need to login after signup
         return true;
       } else {
         setError(response.data.message || 'Registration failed');
@@ -178,16 +171,8 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(`${API_BASE_URL}/admin/register`, userData);
 
       if (response.data.success) {
-        const { token, user: newUser } = response.data;
-        
-        // Store token and user data
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(newUser));
-        
-        // Set axios authorization header for future requests
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        setUser(newUser);
+        // Don't store token or user - just return success
+        // User will need to login after registration
         return true;
       } else {
         setError(response.data.message || 'Admin registration failed');

@@ -55,6 +55,31 @@ public class AuthService {
             user.put("password", passwordEncoder.encode(user.get("password")));
         }
         return userService.createUser(user);
+    }
 
+    public LoginResponseDTO signupAndLogin(Map<String, String> userData){
+        // Create the user
+        User newUser = signup(userData);
+        
+        if (newUser == null) {
+            return LoginResponseDTO.builder()
+                    .success(false)
+                    .build();
+        }
+        
+        // Generate token for the new user
+        String token = authUtil.generateToken(newUser);
+        
+        // Convert to DTO
+        UserDTO userDTO = userService.convertToUserDTO(newUser);
+        userDTO.setCreatedAt(newUser.getCreatedAt().toLocalDate().toString());
+        
+        return LoginResponseDTO.builder()
+                .success(true)
+                .jwt(token)
+                .userId(newUser.getId())
+                .role(newUser.getRole())
+                .user(userDTO)
+                .build();
     }
 }

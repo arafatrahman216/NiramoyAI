@@ -1,31 +1,65 @@
 import React, { useMemo, useState } from 'react';
+import { userInfoAPI } from '../../services/api'; //CONTEXT: Import API for fetching visit details
 
-const VisitGraph = ({ visits = [], onVisitContextSet }) => {
+const VisitGraph = ({ visits = [], onVisitContextSet, onVisitLoading }) => {
   const [hoveredVisit, setHoveredVisit] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [loadingVisitId, setLoadingVisitId] = useState(null); //CONTEXT: Track which visit is being loaded
 
-  // Handle visit click to set context
-    const handleVisitClick = (visit, e) => {
+  // Handle visit click to fetch details from backend and set context
+  const handleVisitClick = async (visit, e) => {
     if (e) {
       e.stopPropagation();
     }
     
     if (onVisitContextSet) {
-      // Extract visit context information
-      const visitContext = {
-        visitId: visit.visitId,
-        doctorName: visit.doctorName,
-        appointmentDate: visit.appointmentDate,
-        symptoms: visit.symptoms || [],
-        prescription: visit.prescription || [],
-        otherInfo: visit.otherInfo || {},
-        summary : "You visited Dr. " + visit.doctorName + " on " + visit.appointmentDate + ". Main symptoms were: " + (Array.isArray(visit.symptoms) ? visit.symptoms.join(', ') : visit.symptoms) + ". Prescribed: " + (Array.isArray(visit.prescription) ? visit.prescription.join(', ') : visit.prescription) + "."+
-        " Please note that this is a summary and may not include all relevant information."+
-                " As a reminder, please follow the prescribed treatment and consult your doctor if symptoms persist or worsen."+
-                " For more details, refer to your full medical history in the app."
-      };
+      //CONTEXT: Set loading state
+      setLoadingVisitId(visit.visitId);
+      if (onVisitLoading) onVisitLoading(true); //CONTEXT: Notify parent that loading started
       
-      onVisitContextSet(visitContext);
+      try {
+        //CONTEXT: Fetch visit details from backend
+        const response = await userInfoAPI.getVisitDetails(visit.visitId);
+        
+        //CONTEXT: Extract visit context from API response (backend wraps in data.data)
+        const visitData = response.data.data || response.data;
+        const visitContext = {
+          visitId: visitData.visitId || visit.visitId,
+          doctorName: visitData.doctorName || visit.doctorName,
+          appointmentDate: visitData.appointmentDate || visit.appointmentDate,
+          symptoms: visitData.symptoms || visit.symptoms || [],
+          prescription: visitData.prescription || visit.prescription || [],
+          diagnosis: visitData.diagnosis || null, //CONTEXT: Additional field from backend
+          summary: visitData.summary || null, //CONTEXT: Summary from backend
+          otherInfo: visitData.otherInfo || visit.otherInfo || {}
+        };
+        
+        console.log('Fetched visit context from backend:', visitContext);
+        onVisitContextSet(visitContext);
+      } catch (error) {
+        console.error('Error fetching visit details:', error);
+        
+        //CONTEXT: Fallback to local data if API fails
+        const visitContext = {
+          visitId: visit.visitId,
+          doctorName: visit.doctorName,
+          appointmentDate: visit.appointmentDate,
+          symptoms: visit.symptoms || [],
+          prescription: visit.prescription || [],
+          otherInfo: visit.otherInfo || {},
+          summary: "You visited Dr. " + visit.doctorName + " on " + visit.appointmentDate + ". Main symptoms were: " + (Array.isArray(visit.symptoms) ? visit.symptoms.join(', ') : visit.symptoms) + ". Prescribed: " + (Array.isArray(visit.prescription) ? visit.prescription.join(', ') : visit.prescription) + "." +
+            " Please note that this is a summary and may not include all relevant information." +
+            " As a reminder, please follow the prescribed treatment and consult your doctor if symptoms persist or worsen." +
+            " For more details, refer to your full medical history in the app."
+        };
+        
+        console.warn('Using fallback visit context:', visitContext);
+        onVisitContextSet(visitContext);
+      } finally {
+        //CONTEXT: Clear loading state
+        setLoadingVisitId(null);
+        if (onVisitLoading) onVisitLoading(false); //CONTEXT: Notify parent that loading finished
+      }
     }
   };
   // ------------------------------
@@ -218,19 +252,23 @@ const VisitGraph = ({ visits = [], onVisitContextSet }) => {
           {graphData.processedVisits.map((visit, index) => {
             const x = GRAPH_PADDING + visit.trackIndex * TRACK_WIDTH + TRACK_WIDTH/2;
             const y = GRAPH_PADDING + index * ROW_HEIGHT;
+            const isLoading = loadingVisitId === visit.visitId; //CONTEXT: Check if this visit is loading
 
             return (
               <g 
                 key={visit.visitId} 
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: isLoading ? 'wait' : 'pointer' }} //CONTEXT: Show wait cursor when loading
                 onMouseEnter={(e) => {
-                  setHoveredVisit(visit);
-                  setMousePosition({ x: e.clientX, y: e.clientY });
+                  if (!isLoading) { //CONTEXT: Don't show hover when loading
+                    setHoveredVisit(visit);
+                    setMousePosition({ x: e.clientX, y: e.clientY });
+                  }
                 }}
                 onMouseLeave={() => setHoveredVisit(null)}
                 onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
                 onClick={(e) => handleVisitClick(visit, e)}
               >
+                {/* CONTEXT: Outer ring - show animation when loading */}
                 <circle
                   cx={x}
                   cy={y}
@@ -238,18 +276,33 @@ const VisitGraph = ({ visits = [], onVisitContextSet }) => {
                   fill="#18181b" // zinc-900
                   stroke={visit.color}
                   strokeWidth="3"
-                />
+                  opacity={isLoading ? "0.5" : "1"}
+                >
+                  {isLoading && (
+                    <animate
+                      attributeName="r"
+                      from={NODE_RADIUS + 2}
+                      to={NODE_RADIUS + 5}
+                      dur="0.8s"
+                      repeatCount="indefinite"
+                    />
+                  )}
+                </circle>
+                {/* CONTEXT: Inner circle */}
                 <circle
                   cx={x}
                   cy={y}
                   r={NODE_RADIUS - 2}
                   fill={visit.color}
+                  opacity={isLoading ? "0.5" : "1"}
                 />
+                {/* CONTEXT: Visit ID text */}
                 <text
                   x={x}
                   y={y + 2}
                   textAnchor="middle"
                   className="text-xs font-bold fill-zinc-200"
+                  opacity={isLoading ? "0.5" : "1"}
                 >
                   {visit.visitId}
                 </text>

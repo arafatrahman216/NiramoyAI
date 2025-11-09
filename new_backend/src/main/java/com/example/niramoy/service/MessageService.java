@@ -104,17 +104,17 @@ public class MessageService {
 
     public Messages sendMessageAndGetReply(Long chatId, String message, String mode, Long userId) {
         try {
-            // 1. Save user message to database
+            // // 1. Save user message to database
             ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
-            Messages userMessage = Messages.builder()
-                    .content(message)
-                    .isAgent(false)
-                    .isPlan(false)
-                    .chatSession(chatSession)
-                    .build();
-            messageRepository.save(userMessage);
+            // Messages userMessage = Messages.builder()
+            //         .content(message)
+            //         .isAgent(false)
+            //         .isPlan(false)
+            //         .chatSession(chatSession)
+            //         .build();
+            // messageRepository.save(userMessage);
 
-            // 2. Process message and generate AI reply
+            // 1. Process message and generate AI reply
             String aiReply;
             Agent agentWithMode = agentSelector.selectAgent(mode);
             log.info("Message : " + message);
@@ -152,7 +152,7 @@ public class MessageService {
                     .build();
 
 
-            // 3. Save AI reply to database
+            // 2. Save AI reply to database
             Messages savedAiMessage = messageRepository.save(aiMessage);
 
             return savedAiMessage;

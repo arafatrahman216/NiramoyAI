@@ -71,11 +71,17 @@ public class UserService implements UserDetailsService {
         String phoneNumber = newUser.get("phoneNumber");
         String gender = newUser.get("gender");
         String foundRole = newUser.get("role");
-        Role role = Role.valueOf(foundRole.toUpperCase());
+        // Default to PATIENT role if not specified
+        Role role = (foundRole != null && !foundRole.isEmpty())
+            ? Role.valueOf(foundRole.toUpperCase())
+            : Role.PATIENT;
 
         String profilePictureUrl = newUser.get("profilePictureUrl");
         String status = "ACTIVE";
-        LocalDate dateOfBirth = LocalDate.parse(newUser.get("dateOfBirth"));
+        LocalDate dateOfBirth = null;
+        if (newUser.get("dateOfBirth") != null && !newUser.get("dateOfBirth").isEmpty()) {
+            dateOfBirth = LocalDate.parse(newUser.get("dateOfBirth"));
+        }
         User user = userRepository.findUserByUsernameOrEmail(username,email);
         if (user != null) {
             throw new DuplicateUserException("User already exists with username or email: " + username + " or " + email);
@@ -87,11 +93,24 @@ public class UserService implements UserDetailsService {
                 .status(status).dateOfBirth(dateOfBirth).role(role)
                 .build();
         System.out.println("hi");
-        userRepository.save(newUser1);
-//        return convertToUserDTO(newUser1);
 
+        User savedUser = null;
+        try{
+            savedUser = userRepository.save(newUser1);
+        } catch (Exception e) {
+            System.out.println("Error saving user: " + e.getMessage());
+        }
+
+        try{
+            if (savedUser != null) {
+                userKGService.createPatientDuringSignup(savedUser.getId(), savedUser.getName());
+            } else {
+                throw new Exception("Saved user is null, cannot create patient in Knowledge Graph.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error creating patient in Knowledge Graph: " + e.getMessage());
+        }
         return newUser1;
-
     }
 
     @Transactional(readOnly = true)
@@ -209,7 +228,7 @@ public class UserService implements UserDetailsService {
         healthProfile.setMajorEvents(dto.getMajorEvents() != null ? String.join(",", dto.getMajorEvents()) : null);
         healthProfile.setChronicDiseases(dto.getChronicDiseases() != null ? String.join(",", dto.getChronicDiseases()) : null);
 
-        boolean success = userKGService.createNewPatient( healthProfile.getUserId(), healthProfile.getUser().getName(), healthProfile.getGender(), 21, healthProfile.getWeight(),
+        boolean success = userKGService.createOrUpdatePatient( healthProfile.getUserId(), healthProfile.getUser().getName(), healthProfile.getGender(), 21, healthProfile.getWeight(),
                 healthProfile.getHeight(), healthProfile.getBloodType(), healthProfile.getAllergies(), healthProfile.getChronicDiseases(), healthProfile.getLifestyle(), healthProfile.getMajorEvents());
         if (!success) {
             throw new RuntimeException("Failed to create patient in knowledge graph");

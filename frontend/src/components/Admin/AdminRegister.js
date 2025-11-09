@@ -85,9 +85,9 @@ const AdminRegister = () => {
     
     const success = await adminRegister(formData);
     if (success) {
-      // Get user data and redirect based on role
-      const userData = JSON.parse(localStorage.getItem('user'));
-      redirectBasedOnRole(userData, navigate);
+      // Redirect to login page after successful registration
+      alert('Admin account created successfully! Please login with your credentials.');
+      navigate('/admin/login', { replace: true });
     }
   };
 
