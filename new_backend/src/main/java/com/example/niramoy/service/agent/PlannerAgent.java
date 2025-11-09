@@ -158,7 +158,7 @@ public class PlannerAgent implements Agent {
             Now i have tools get information from web like Test costs, Test Time, Treatment costs, Doctor fees, Hospital fees, Hospital locations.
             I have to generate natural  language query to search for these informations.
             Given the user query, extract the relevant keywords and generate a concise search query that can be used to find the required information.
-            You can generate 0-5 search quaries if needed.
+            Generate only the most relevent 2-4 questions.
             Also Extract location from user query if mentioned(default dhaka)
             Must provide answer in a JSON.
             
@@ -177,8 +177,9 @@ public class PlannerAgent implements Agent {
     @Override
     public String processQuery(String query, Long userId) {
 
+        log.info("1. Getting Latest Test Names");
         String lastVisitTestNames = userKGService.getLatestTestNames(userId);
-        log.info("Latest Test Names: {}", lastVisitTestNames);  
+        // log.info("Latest Test Names: {}", lastVisitTestNames);  
 
         Map<String, Object> extractionVariables = Map.of(
             "query", query
@@ -197,9 +198,9 @@ public class PlannerAgent implements Agent {
         } 
         else 
         {
-            log.info("Extraction response: {}", extractionResponse);
+            log.info("2. Processing Extraction Response for Web Search");
             JSONObject extractionJson = JsonParser.parseJsonToObject(extractionResponse);
-            log.info("Extraction JSON: {}", extractionJson);
+            // log.info("Extraction JSON: {}", extractionJson);
             if (extractionJson == null) {
                 log.error("Failed to parse extraction response to JSON.");
             } 
@@ -216,10 +217,10 @@ public class PlannerAgent implements Agent {
                     }
                     
                     //Search web for results
-                    searchResult = plannerAgentTools.searchWeb(searchQuery);    
+                    log.info("{}th web search for query: {}", i + 1, searchQuery);
+                    searchResult = plannerAgentTools.searchWeb(searchQuery);
                     kgContextBuilder.append("Q:    " + searchQuery + " A:     " + searchResult).append("\n");
                 }
-                log.info("KG Context: {}", kgContextBuilder.toString());
                 searchResultsString = kgContextBuilder.toString();
             }
         }
@@ -239,12 +240,14 @@ public class PlannerAgent implements Agent {
         Prompt prompt = PLAN_PROMPT.apply(chainVariables);
         String response;
         try{
-            log.info(prompt.text());
+          // log.info(prompt.text());
+          log.info("3. Generating Plan Response from AI");
           response = aiService.generateContent(prompt.text());
         } catch (Exception e) {
             log.error("Error generating content: {}", e.getMessage());
             return "{\"Plan\": {\"Error\": \"Failed to generate plan due to internal error.\"}}";
         }
+
         log.info("Got answer from AI " + response);
         return response;
     }

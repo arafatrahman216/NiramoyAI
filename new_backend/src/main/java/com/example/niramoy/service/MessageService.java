@@ -117,7 +117,7 @@ public class MessageService {
             // 1. Process message and generate AI reply
             String aiReply;
             Agent agentWithMode = agentSelector.selectAgent(mode);
-            log.info("Message : " + message);
+            // log.info("Message : " + message);
             
             try{
                 aiReply = agentWithMode.processQuery(message, userId);
@@ -137,7 +137,6 @@ public class MessageService {
             String parsedAiReply;
             if(isPlanMessage){
                 // For plan messages, store the entire JSON so frontend can parse it
-                // log.info("Plan Message detected");
                 parsedAiReply = parsedAiReplyJson.toString();
             } else {
                 // For non-plan messages, extract just the explanation
@@ -184,7 +183,7 @@ public class MessageService {
             // 2. Process message and generate AI reply
             String aiReply;
             Agent agentWithMode = agentSelector.selectAgent(mode);
-            log.info("Message : " + message);
+            // log.info("Message : " + message);
 
             try {
                 if (file != null && !file.isEmpty()) {
@@ -210,7 +209,6 @@ public class MessageService {
             String parsedAiReply;
             if (isPlanMessage) {
                 // For plan messages, store the entire JSON so frontend can parse it
-                // log.info("Plan Message detected");
                 parsedAiReply = parsedAiReplyJson.toString();
             } else {
                 // For non-plan messages, extract just the explanation

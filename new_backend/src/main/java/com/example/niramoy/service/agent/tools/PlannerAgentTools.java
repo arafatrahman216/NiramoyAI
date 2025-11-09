@@ -32,8 +32,8 @@ public class PlannerAgentTools {
             StringBuilder formattedResults = new StringBuilder();
             formattedResults.append("Search results for '").append(query).append("':\n\n");
             
-            // Take top 2 results
-            int count = Math.min(2, organicResults.size());
+            // Take top 1 results
+            int count = Math.min(1, organicResults.size());
             for (int i = 0; i < count; i++) {
                 Map<String, Object> result = organicResults.get(i);
                 String title = (String) result.get("title");

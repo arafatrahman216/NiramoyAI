@@ -49,6 +49,19 @@ const DiagnosisInterface = () => {
   //CONTEXT: Loading state for visit context
   const [isLoadingVisitContext, setIsLoadingVisitContext] = useState(false);
 
+  // PLANNING MODE STEPS - dummy progress indicator
+  const [planningSteps, setPlanningSteps] = useState([]);
+  const [currentPlanningStep, setCurrentPlanningStep] = useState(0);
+  const [showPlanningProgress, setShowPlanningProgress] = useState(false);
+
+  // Define planning steps
+  const PLANNING_STEPS = [
+    { id: 1, text: "Analyzing medical history...", duration: 2500 },
+    { id: 2, text: "Searching knowledge base...", duration: 3500 },
+    { id: 3, text: "Consulting guidelines...", duration: 4500 },
+    { id: 4, text: "Generating health plan...", duration: 5500 }
+  ];
+
   // Handle visit context from timeline clicks
   const handleVisitContextSet = (context) => {
     setVisitContext(context);
@@ -153,6 +166,21 @@ const DiagnosisInterface = () => {
 
       // Set processing state to show loading indicator
       setIsProcessing(true);
+      
+      // If in planning mode, show step-by-step progress
+      if (mode === 'plan') {
+        setShowPlanningProgress(true);
+        setCurrentPlanningStep(0);
+        setPlanningSteps([]);
+        
+        // Simulate step progression
+        PLANNING_STEPS.forEach((step, index) => {
+          setTimeout(() => {
+            setCurrentPlanningStep(index + 1);
+            setPlanningSteps(prev => [...prev, step]);
+          }, step.duration * index);
+        });
+      }
       
       // Add user message immediately to local state (show original query)
       const userMessage = {
@@ -270,6 +298,10 @@ const DiagnosisInterface = () => {
       } finally {
         // Always clear processing state
         setIsProcessing(false);
+        // Hide planning progress
+        setShowPlanningProgress(false);
+        setPlanningSteps([]);
+        setCurrentPlanningStep(0);
       }
     } else {
       // If not in chat mode, create new chat (default search behavior)
@@ -459,6 +491,9 @@ const DiagnosisInterface = () => {
                   visitContext={visitContext}
                   onClearVisitContext={clearVisitContext}
                   embedded={true}
+                  showPlanningProgress={showPlanningProgress}
+                  planningSteps={PLANNING_STEPS}
+                  currentPlanningStep={currentPlanningStep}
                 />
               </div>
 
