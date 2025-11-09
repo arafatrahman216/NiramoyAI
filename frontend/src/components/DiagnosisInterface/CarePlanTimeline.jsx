@@ -300,7 +300,7 @@ const CarePlanTimeline = ({ careData }) => {
             <CheckCircle className="w-4 h-4 mr-2 text-emerald-400" />
             <h2 className="text-base font-medium text-zinc-200">Action Items</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
             {planData.ActionChecklist.map((item, index) => (
               <label key={index} className="flex items-start p-2 rounded-lg hover:bg-zinc-800/30 transition-colors cursor-pointer group">
                 <input 
