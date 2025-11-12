@@ -9,23 +9,15 @@ import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.VisitsRepository;
-import com.example.niramoy.service.AIServices.AIService;
-import com.example.niramoy.utils.JsonParser;
 
-import dev.langchain4j.model.input.PromptTemplate;
+
 
 import com.example.niramoy.repository.UserRepository;
-import com.example.niramoy.service.AIServices.AIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service

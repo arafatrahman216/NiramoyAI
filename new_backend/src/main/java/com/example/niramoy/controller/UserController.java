@@ -476,7 +476,7 @@ public class UserController {
             } else {
                 log.warn("No test report file provided");
             }
-
+            
             log.info("=== UPLOAD SUMMARY ===");
             log.info("Prescription File URL: {}", prescriptionFileUrl != null ? prescriptionFileUrl : "Not uploaded");
             log.info("Test Report File URL: {}", testReportFileUrl != null ? testReportFileUrl : "Not uploaded");
