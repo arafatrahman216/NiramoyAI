@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Sidebar from './Sidebar';
 import SearchInput from './SearchInput';
 import MainLogo from './MainLogo';
@@ -16,6 +17,8 @@ import { chatbotAPI, doctorAPI, userInfoAPI } from '../../services/api'
 // Combines all components and handles main search logic
 // Edit handleSearch() to add your search implementation
 const DiagnosisInterface = () => {
+  const { t } = useTranslation();
+  
   // SEARCH STATE
   const [query, setQuery] = useState('');
   
@@ -145,7 +148,7 @@ const DiagnosisInterface = () => {
     // Check if user is authenticated
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Please log in to send messages.');
+      alert(t('diagnosis.messages.authFailed'));
       return;
     }
     
@@ -254,7 +257,7 @@ const DiagnosisInterface = () => {
 
           const errorMessage = {
             messageId: Date.now() + 2,
-            content: "Something went wrong. Please try again.",
+            content: t('diagnosis.messages.errorSendingMessage'),
             isAgent: true,
             timestamp: new Date().toISOString(),
             isPlan: false
@@ -275,25 +278,25 @@ const DiagnosisInterface = () => {
 
           setQuery(originalQuery); // Restore original query, not the context-enhanced version
           if (error.response?.status === 401) {
-            alert('Authentication failed. Please log in again.');
+            alert(t('diagnosis.messages.authenticationFailed'));
           } else if (error.response?.status === 403) {
-            alert('Access denied. You don\'t have permission to send messages.');
+            alert(t('diagnosis.messages.accessDenied'));
           } else if (error.response?.status === 500) {
             window.dispatchEvent(new CustomEvent('addMessage', { detail: {
             messageId: Date.now() + 1,
             isAgent: true,
-            content: 'Sorry, there was a server error. Please try again later.',
+            content: t('diagnosis.messages.serverError'),
 
           } }));
-            alert('Server error. Please try again later.');
+            alert(t('diagnosis.messages.serverError'));
           } else if (error.response == 400){
-            alert('Bad request. Please check your message and try again.');
+            alert(t('diagnosis.messages.badRequest'));
           } else if (error.response?.status === 429) {
-            alert('Too many requests. Please slow down.');
+            alert(t('diagnosis.messages.tooManyRequests'));
           } else if (error.response?.status === 503) {
-            alert('Service unavailable. Try again.');
+            alert(t('diagnosis.messages.serviceUnavailable'));
           } else {
-            alert('Error sending message. Please try again.');
+            alert(t('diagnosis.messages.errorSendingMessage'));
           }
       } finally {
         // Always clear processing state
@@ -321,7 +324,7 @@ const DiagnosisInterface = () => {
         }
       } catch (error) {
         console.error('Error creating new chat:', error);
-        alert('Unable to start new chat. Please try again.');
+        alert(t('diagnosis.messages.unableToStartChat'));
       } finally {
         setIsProcessing(false);
       }
@@ -444,7 +447,7 @@ const DiagnosisInterface = () => {
                 <button
                   onClick={handleBackToSearch}
                   className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                  title="Back to search"
+                  title={t('diagnosis.backToSearch')}
                 >
                   <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -452,10 +455,10 @@ const DiagnosisInterface = () => {
                 </button>
                 <div>
                   <h2 className="text-lg font-semibold text-white">
-                    Chat Conversation
+                    {t('diagnosis.chatConversation')}
                   </h2>
                   <p className="text-sm text-zinc-400">
-                    Active chat
+                    {t('diagnosis.activeChat')}
                   </p>
                 </div>
               </>
@@ -471,7 +474,7 @@ const DiagnosisInterface = () => {
               <svg className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              <span className="text-white font-medium">Upload Visit</span>
+              <span className="text-white font-medium">{t('diagnosis.uploadVisit')}</span>
             </div>
           </button>
         </div>
@@ -513,7 +516,7 @@ const DiagnosisInterface = () => {
                     query={query} 
                     setQuery={setQuery} 
                     onSearch={handleSearch}
-                    placeholder="Continue conversation or search..."
+                    placeholder={t('diagnosis.continueConversation')}
                     disabled={isProcessing}
                   />
                 </div>

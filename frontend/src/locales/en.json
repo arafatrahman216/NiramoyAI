@@ -114,5 +114,90 @@
     "failedLoadDoctors": "Failed to load doctors. Please check if the backend server is running.",
     "symptomsSearchError": "Failed to search for doctors based on symptoms. Please try again.",
     "failedLoadTestCenters": "Failed to load test centers CSV"
+  },
+  "diagnosis": {
+    "uploadVisit": "Upload Visit",
+    "chatConversation": "Chat Conversation",
+    "activeChat": "Active chat",
+    "backToSearch": "Back to search",
+    "continueConversation": "Continue conversation or search...",
+    "planningSteps": {
+      "step1": "Analyzing medical history...",
+      "step2": "Searching knowledge base...",
+      "step3": "Consulting guidelines...",
+      "step4": "Generating health plan..."
+    },
+    "messages": {
+      "authFailed": "Please log in to send messages.",
+      "serverError": "Sorry, there was a server error. Please try again later.",
+      "badRequest": "Bad request. Please check your message and try again.",
+      "tooManyRequests": "Too many requests. Please slow down.",
+      "serviceUnavailable": "Service unavailable. Try again.",
+      "errorSendingMessage": "Error sending message. Please try again.",
+      "unableToStartChat": "Unable to start new chat. Please try again.",
+      "authenticationFailed": "Authentication failed. Please log in again.",
+      "accessDenied": "Access denied. You don't have permission to send messages.",
+      "sendingMessage": "Sending..."
+    }
+  },
+  "uploadVisit": {
+    "title": "Upload Visit",
+    "subtitle": "Add your appointment details and medical documents",
+    "appointmentDetails": "Appointment Details",
+    "medicalDocuments": "Medical Documents",
+    "appointmentDate": "Appointment Date",
+    "doctorName": "Doctor Name",
+    "doctorId": "Doctor ID (if any)",
+    "doctorIdPlaceholder": "Enter doctor's ID (optional)",
+    "symptoms": "Symptoms (Reason for visit)",
+    "symptomsPlaceholder": "Describe why you visited the doctor...",
+    "prescription": "What the doctor prescribed",
+    "prescriptionPlaceholder": "Enter prescribed medications, treatments, or recommendations...",
+    "uploadPrescription": "Upload Prescription",
+    "uploadPrescriptionRequired": "Upload Prescription * (Required)",
+    "uploadTestReports": "Upload Test Reports (Optional)",
+    "testReportsSubtitle": "JPG, PNG, PDF files. Multiple files allowed (Optional)",
+    "testReports": "Test Reports",
+    "close": "Close",
+    "upload": "Upload Visit",
+    "requiredFields": "* Required fields. Prescription image is mandatory.",
+    "fileError": "Please fill in all required fields and upload a prescription image.",
+    "uploading": "Uploading visit data...",
+    "uploadSuccess": "Visit uploaded successfully! 🎉",
+    "uploadError": "Upload failed. Please try again.",
+    "authError": "Authentication failed. Please log in again.",
+    "serverError": "Server error. Please try again later.",
+    "badRequestError": "Bad request. Please check your data.",
+    "enterDoctorName": "Enter doctor's name"
+  },
+  "sidebar": {
+    "newChat": "New Chat",
+    "home": "Home",
+    "chats": "Chats",
+    "visits": "Visits",
+    "signIn": "Sign In"
+  },
+  "searchInput": {
+    "placeholder": "Ask anything in {{mode}} mode...",
+    "processing": "AI is processing...",
+    "explainMode": "Explain - Get detailed explanations and step-by-step breakdowns",
+    "qnaMode": "Q&A - Structured question-answer format for quick insights",
+    "consultMode": "Consult - Professional advice and expert recommendations",
+    "planMode": "Plan - Create strategies, schedules and action plans",
+    "moreOptions": "More options",
+    "focusMode": "Focus mode",
+    "attachFile": "Attach file (PDF, Image)",
+    "voiceInput": "Voice input",
+    "stopRecording": "Click to stop recording",
+    "processingAudio": "Processing audio...",
+    "recordingStarted": "Recording...",
+    "fileSize": "{{size}} MB",
+    "search": "Search in {{mode}} mode",
+    "modes": {
+      "explain": "Explain",
+      "qna": "Q&A",
+      "consult": "Consult",
+      "plan": "Plan"
+    }
   }
 }

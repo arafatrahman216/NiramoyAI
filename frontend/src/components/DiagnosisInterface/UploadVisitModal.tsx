@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { diagnosisAPI } from '../../services/api';
 
@@ -26,6 +27,7 @@ interface VisitData {
 
 const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // MODAL STATE MANAGEMENT
   const [visitData, setVisitData] = useState<VisitData>({
@@ -65,7 +67,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     // Validate required fields
     if (!visitData.appointmentDate || !visitData.doctorName || !visitData.symptoms || 
         !visitData.prescription || !visitData.prescriptionFile) {
-      toast.error('Please fill in all required fields and upload a prescription image.', {
+      toast.error(t('uploadVisit.fileError'), {
         style: {
           background: '#7f1d1d',
           color: '#fff',
@@ -105,20 +107,20 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     toast.promise(
       diagnosisAPI.uploadVisitData(formData),
       {
-        loading: 'Uploading visit data...',
-        success: 'Visit uploaded successfully! 🎉',
+        loading: t('uploadVisit.uploading'),
+        success: t('uploadVisit.uploadSuccess'),
         error: (err) => {
           console.error('Upload error:', err);
           
           // Handle different error status codes
           if (err.response?.status === 401) {
-            return 'Authentication failed. Please log in again.';
+            return t('uploadVisit.authError');
           } else if (err.response?.status === 500) {
-            return 'Server error. Please try again later.';
+            return t('uploadVisit.serverError');
           } else if (err.response?.status === 400) {
-            return 'Bad request. Please check your data.';
+            return t('uploadVisit.badRequestError');
           } else {
-            return 'Upload failed. Please try again.';
+            return t('uploadVisit.uploadError');
           }
         }
       },
@@ -209,9 +211,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
           {/* MODAL HEADER */}
           <div className="p-6 border-b border-zinc-700 flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-semibold text-white">Upload Visit</h2>
+              <h2 className="text-2xl font-semibold text-white">{t('uploadVisit.title')}</h2>
               <p className="text-zinc-400 text-sm mt-1">
-                Add your appointment details and medical documents
+                {t('uploadVisit.subtitle')}
               </p>
             </div>
             <button
@@ -231,12 +233,12 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
               
               {/* LEFT COLUMN: APPOINTMENT DETAILS */}
               <div className="space-y-6">
-                <h3 className="text-lg font-medium text-white mb-4">Appointment Details</h3>
+                <h3 className="text-lg font-medium text-white mb-4">{t('uploadVisit.appointmentDetails')}</h3>
                 
                 {/* APPOINTMENT DATE */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Appointment Date *
+                    {t('uploadVisit.appointmentDate')} *
                   </label>
                   <input
                     type="date"
@@ -250,13 +252,13 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 {/* DOCTOR NAME */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Doctor Name *
+                    {t('uploadVisit.doctorName')} *
                   </label>
                   <input
                     type="text"
                     value={visitData.doctorName}
                     onChange={(e) => handleInputChange('doctorName', e.target.value)}
-                    placeholder="Enter doctor's name"
+                    placeholder={t('uploadVisit.enterDoctorName')}
                     className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                     required
                   />
@@ -264,13 +266,13 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 {/* DOCTOR ID */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Doctor ID (if any)
+                    {t('uploadVisit.doctorId')}
                   </label>
                   <input
                     type="text"
                     value={visitData.doctorId}
                     onChange={(e) => handleInputChange('doctorId', e.target.value)}
-                    placeholder="Enter doctor's ID (optional)"
+                    placeholder={t('uploadVisit.doctorIdPlaceholder')}
                     className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                   />
                 </div>
@@ -279,12 +281,12 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 {/* SYMPTOMS */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Symptoms (Reason for visit) *
+                    {t('uploadVisit.symptoms')} *
                   </label>
                   <textarea
                     value={visitData.symptoms}
                     onChange={(e) => handleInputChange('symptoms', e.target.value)}
-                    placeholder="Describe why you visited the doctor..."
+                    placeholder={t('uploadVisit.symptomsPlaceholder')}
                     rows={4}
                     className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
                     required
@@ -294,12 +296,12 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 {/* PRESCRIPTION */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    What the doctor prescribed *
+                    {t('uploadVisit.prescription')} *
                   </label>
                   <textarea
                     value={visitData.prescription}
                     onChange={(e) => handleInputChange('prescription', e.target.value)}
-                    placeholder="Enter prescribed medications, treatments, or recommendations..."
+                    placeholder={t('uploadVisit.prescriptionPlaceholder')}
                     rows={4}
                     className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
                     required
@@ -312,9 +314,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 
                 {/* PRESCRIPTION FILE UPLOAD (MANDATORY) */}
                 <div>
-                  <h3 className="text-lg font-medium text-white mb-4">Medical Documents</h3>
+                  <h3 className="text-lg font-medium text-white mb-4">{t('uploadVisit.medicalDocuments')}</h3>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Upload Prescription * (Required)
+                    {t('uploadVisit.uploadPrescriptionRequired')}
                   </label>
                   <div className="border-2 border-dashed border-emerald-600 rounded-lg p-6 text-center hover:border-emerald-500 transition-colors bg-emerald-500/5">
                     <input
@@ -332,9 +334,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
                       <span className="text-emerald-400 font-medium">
-                        {visitData.prescriptionFile ? visitData.prescriptionFile.name : 'Click to upload prescription'}
+                        {visitData.prescriptionFile ? visitData.prescriptionFile.name : t('uploadVisit.uploadPrescription')}
                       </span>
-                      <span className="text-zinc-400 text-xs">JPG, PNG, PDF files accepted (Required)</span>
+                      <span className="text-zinc-400 text-xs">JPG, PNG, PDF {t('uploadVisit.uploadPrescriptionRequired').split('*')[1]}</span>
                     </label>
                   </div>
                 </div>
@@ -342,7 +344,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 {/* TEST REPORTS UPLOAD (OPTIONAL) */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Upload Test Reports (Optional)
+                    {t('uploadVisit.uploadTestReports')}
                   </label>
                   <div className="border-2 border-dashed border-zinc-600 rounded-lg p-6 text-center hover:border-zinc-500 transition-colors">
                     <input
@@ -361,9 +363,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
                       <span className="text-zinc-400">
-                        Click to upload test reports
+                        {t('uploadVisit.uploadTestReports')}
                       </span>
-                      <span className="text-zinc-500 text-xs">JPG, PNG, PDF files. Multiple files allowed (Optional)</span>
+                      <span className="text-zinc-500 text-xs">{t('uploadVisit.testReportsSubtitle')}</span>
                     </label>
                   </div>
                 </div>
@@ -371,7 +373,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 {/* UPLOADED TEST REPORTS LIST */}
                 {visitData.testReports.length > 0 && (
                   <div>
-                    <h4 className="text-white font-medium mb-3">Test Reports ({visitData.testReports.length})</h4>
+                    <h4 className="text-white font-medium mb-3">{t('uploadVisit.testReports')} ({visitData.testReports.length})</h4>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {visitData.testReports.map((file, index) => (
                         <div key={index} className="flex items-center justify-between bg-zinc-800 p-3 rounded-lg">
@@ -406,7 +408,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
             
             {/* REQUIRED FIELDS NOTICE */}
             <div className="text-sm text-zinc-400">
-              * Required fields. Prescription image is mandatory.
+              {t('uploadVisit.requiredFields')}
             </div>
 
             {/* UPLOAD BUTTON */}
@@ -415,7 +417,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
               disabled={!isFormValid()}
               className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              Upload Visit
+              {t('uploadVisit.upload')}
             </button>
           </div>
 
