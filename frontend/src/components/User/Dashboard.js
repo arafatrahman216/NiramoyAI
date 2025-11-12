@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { MiniSpeedometer} from "./MiniSpeedoMeter"
 import MedicationTimeline from "./MedicationTimeline";
 import Chart from "./Chart";
@@ -22,6 +23,7 @@ import {
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [healthVitals, setHealthVitals] = useState(fallbackDashboardVitals);
   const [recentVisits, setRecentVisits] = useState(fallbackDashboardVisits);
@@ -36,7 +38,7 @@ const Dashboard = () => {
 
 
   useEffect( () => {
-    document.title = "Dashboard - NiramoyAI";
+    document.title = t('dashboard.pageTitle');
 
     const dashboardStats = async () =>{
 
@@ -75,7 +77,7 @@ const Dashboard = () => {
       console.log("Fetched profile:", response.data.medications);
       }
     catch(error){
-        console.error("Error fetching dashboard stats:", error);
+        console.error(t('dashboard.errorFetchingDashboard'), error);
         return null;
     }
 
@@ -85,7 +87,7 @@ const Dashboard = () => {
       console.log("Fetched recent visits:", response.data);
     }
     catch(error){
-        console.error("Error fetching recent visits:", error);
+        console.error(t('dashboard.errorFetchingVisits'), error);
         return null;
     }
   }
@@ -176,7 +178,7 @@ const Dashboard = () => {
                 className="flex items-center px-3 py-2 text-emerald-400 hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <Home className="w-4 h-4 mr-2" />
-                Home
+                {t('dashboard.navHome')}
               </button>
 
               <button
@@ -184,7 +186,7 @@ const Dashboard = () => {
                 className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <HealthAndSafetyRounded className="w-4 h-4 mr-2" />
-                Diagnosis
+                {t('dashboard.navDiagnosis')}
               </button>
 
               <button
@@ -192,14 +194,14 @@ const Dashboard = () => {
                 className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <User className="w-4 h-4 mr-2" />
-                Profile
+                {t('dashboard.navProfile')}
               </button>
               <button
                 onClick={handleLogout}
                 className="flex items-center px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Logout
+                {t('dashboard.navLogout')}
               </button>
             </div>
           </div>
@@ -209,7 +211,7 @@ const Dashboard = () => {
       <div className="p-6">
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Welcome back, {profile.name}!</h1>
+        <h1 className="text-3xl font-bold">{t('dashboard.welcomeBack', { name: profile.name })}</h1>
         <div className="flex space-x-3">
           <button
             onClick={() => 
@@ -220,14 +222,14 @@ const Dashboard = () => {
             className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
           >
             <Printer className="w-4 h-4" />
-            <span>Print Summary</span>
+            <span>{t('dashboard.printSummary')}</span>
           </button>
           <button
             onClick={() => navigate("/healthdataform")}
             className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
           >
             <User className="w-4 h-4" />
-            <span>Health Data Form</span>
+            <span>{t('dashboard.healthDataForm')}</span>
           </button>
           <button
             onClick={generateQRCode}
@@ -239,13 +241,13 @@ const Dashboard = () => {
             ) : (
               <QrCode className="w-4 h-4" />
             )}
-            <span>{loadingQR ? 'Generating...' : 'Get Shareable Link & QR'}</span>
+            <span>{loadingQR ? t('dashboard.generating') : t('dashboard.getSharableLink')}</span>
           </button>
           <button
             onClick={() => navigate("/healthlog")}
             className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
           >
-            + Add Health Log
+            + {t('dashboard.addHealthLog')}
           </button>
         </div>
       </header>
@@ -278,7 +280,7 @@ const Dashboard = () => {
       <span className="text-xs">📧</span>
     </div>
     <div>
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Email</p>
+      <p className="text-[10px] text-gray-400 uppercase tracking-wide">{t('dashboard.email')}</p>
       <p className="text-sm font-medium text-white">{profile.email}</p>
     </div>
   </div>
@@ -289,7 +291,7 @@ const Dashboard = () => {
       <span className="text-xs">📱</span>
     </div>
     <div>
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Phone</p>
+      <p className="text-[10px] text-gray-400 uppercase tracking-wide">{t('dashboard.phone')}</p>
       <p className="text-sm font-medium text-white">{profile.phoneNumber}</p>
     </div>
   </div>
@@ -301,10 +303,10 @@ const Dashboard = () => {
     <div className="flex items-center justify-between mt-5 pt-3 border-t border-gray-700">
       <div className="flex items-center space-x-2">
         <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
-        <span className="text-green-400 text-sm font-medium">{profile.status}</span>
+        <span className="text-green-400 text-sm font-medium">{t('dashboard.status')}</span>
       </div>
       <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-full shadow-md">
-        {profile.role}
+        {t('dashboard.role')}
       </span>
     </div>
   </div>
@@ -315,7 +317,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Health Profile - Static Information Cards */}
           <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">Health Profile</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('dashboard.healthProfile')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {Object.entries(healthProfile).map(([key, value]) => {
                 // Only show non-vital cards in health profile
@@ -339,7 +341,14 @@ const Dashboard = () => {
                          key === 'lifestyle' ? '🏃' : '🩺'}
                       </span>
                       <span className="text-xs font-semibold capitalize text-emerald-400 text-center">
-                        {key.replace(/([A-Z])/g, ' $1')}
+                        {key === 'bloodGroup' ? t('dashboard.bloodGroup') :
+                         key === 'height' ? t('dashboard.height') :
+                         key === 'allergies' ? t('dashboard.allergies') :
+                         key === 'chronicDiseases' ? t('dashboard.chronicDiseases') :
+                         key === 'majorHealthEvents' ? t('dashboard.majorHealthEvents') :
+                         key === 'majorEvents' ? t('dashboard.majorHealthEvents') :
+                         key === 'lifestyle' ? t('dashboard.lifestyle') :
+                         key.replace(/([A-Z])/g, ' $1')}
                       </span>
                     </div>
                     
@@ -358,7 +367,7 @@ const Dashboard = () => {
 
         {/* Current Vitals - Speedometer Cards */}
         <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4">Current Vitals</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('dashboard.currentVitals')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {Object.entries(healthProfile).map(([key, value]) => {
               const ranges = getHealthRanges(key);
@@ -379,8 +388,10 @@ const Dashboard = () => {
                        key === 'heartRate' ? '❤️' : '🩺'}
                     </span>
                     <span className="text-xs font-semibold capitalize text-emerald-400 text-center">
-                      {key === 'systolic' ? 'Systolic BP' :
-                       key === 'diastolic' ? 'Diastolic BP' :
+                      {key === 'systolic' ? t('dashboard.systolicBP') :
+                       key === 'diastolic' ? t('dashboard.diastolicBP') :
+                       key === 'weight' ? t('dashboard.weight') :
+                       key === 'heartRate' ? t('dashboard.heartRate') :
                        key.replace(/([A-Z])/g, ' $1')}
                     </span>
                   </div>
@@ -408,8 +419,8 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           <Chart
             chartType="bloodPressure"
-            title="Blood Pressure Trends"
-            subtitle="Systolic & Diastolic readings over time"
+            title={t('dashboard.bloodPressureTrends')}
+            subtitle={t('dashboard.bloodPressureSubtitle')}
             icon="💉"
             color="#22c55e"
             unit="mmHg"
@@ -419,8 +430,8 @@ const Dashboard = () => {
           <Chart
             chartType="diabetes"
             dataKey="sugar"
-            title="Blood Sugar Monitoring"
-            subtitle="Glucose levels tracking"
+            title={t('dashboard.bloodSugarMonitoring')}
+            subtitle={t('dashboard.bloodSugarSubtitle')}
             icon="🍯"
             color="#eab308"
             gradientId="sugarGradient"
@@ -431,8 +442,8 @@ const Dashboard = () => {
           <Chart
             chartType="heartRate"
             dataKey="bpm"
-            title="Heart Rate Monitor"
-            subtitle="Cardiovascular health tracking"
+            title={t('dashboard.heartRateMonitor')}
+            subtitle={t('dashboard.heartRateSubtitle')}
             icon="❤️"
             color="#ef4444"
             gradientId="heartRateGradient"
@@ -446,7 +457,7 @@ const Dashboard = () => {
         {/* Recent Visits */}
         <RecentVisits 
           visits={recentVisits}
-          title="Recent Doctor Visits"
+          title={t('dashboard.recentVisits')}
           viewerType="patient"
           showPrescriptionImage={true}
         />

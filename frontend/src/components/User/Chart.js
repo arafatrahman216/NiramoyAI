@@ -1,5 +1,6 @@
 // src/components/User/Chart.js
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BloodPressureChart,
   HeartRateChart,
@@ -14,6 +15,7 @@ const Chart = ({
   healthVitals,
   chartType // 'bloodPressure', 'diabetes', 'heartRate'
 }) => {
+  const { t } = useTranslation();
   const getDataSource = () => {
     switch(chartType) {
       case 'bloodPressure': return healthVitals.bloodPressure;
@@ -34,7 +36,7 @@ const Chart = ({
       case 'diabetes':
         return <BloodSugarChart data={data} height={280} />;
       default:
-        return <div className="text-gray-400 text-center py-8">No chart available</div>;
+        return <div className="text-gray-400 text-center py-8">{t('chart.noChartAvailable')}</div>;
     }
   };
 

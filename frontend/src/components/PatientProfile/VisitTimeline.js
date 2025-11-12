@@ -1,9 +1,11 @@
 // src/components/PatientProfile/VisitTimeline.js
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Calendar, Clock, FileText, Heart, Pill, TestTube, ChevronDown, ChevronUp, Eye, Download } from 'lucide-react';
 import { fallbackVisits } from '../../utils/dummyData';
 
 const VisitTimeline = ({ patientId, fetchedVisits }) => {
+  const { t } = useTranslation();
   const [visits, setVisits] = useState([]);
   const [expandedVisits, setExpandedVisits] = useState(new Set());
   const [expandedPrescriptions, setExpandedPrescriptions] = useState(new Set());
@@ -69,7 +71,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-white">Visit Timeline</h3>
+        <h3 className="text-xl font-semibold text-white">{t('visitTimeline.title')}</h3>
         <Calendar className="w-6 h-6 text-emerald-400" />
       </div>
 
@@ -81,7 +83,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
         {visits.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-400">No visits found</p>
+            <p className="text-gray-400">{t('visitTimeline.noVisitsFound')}</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -105,7 +107,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                           </div>
                           <div>
                             <h4 className="text-lg font-semibold text-white">
-                              Medical Visit
+                              {t('visitTimeline.medicalVisit')}
                             </h4>
                             <p className="text-emerald-400 font-medium">{visit.doctorName}</p>
                           </div>
@@ -122,7 +124,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                           </div>
                           <div className="flex items-center text-gray-300">
                             <FileText className="w-4 h-4 mr-2 text-gray-400" />
-                            {visit.medicines?.length || 0} Medications
+                            {visit.medicines?.length || 0} {t('visitTimeline.totalMedicines')}
                           </div>
                         </div>
                         
@@ -147,29 +149,29 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                         <div className="space-y-4">
                           {/* Prescription */}
                           <div>
-                            <h5 className="text-sm font-medium text-gray-300 mb-2">Prescription:</h5>
+                            <h5 className="text-sm font-medium text-gray-300 mb-2">{t('visitTimeline.prescription')}</h5>
                             <p className="text-white bg-gray-600/30 rounded-lg p-3">{visit.prescription}</p>
                           </div>
 
                           {/* Health Log/Vitals */}
                           {visit.healthLog && (
                             <div>
-                              <h5 className="text-sm font-medium text-gray-300 mb-2">Health Vitals:</h5>
+                              <h5 className="text-sm font-medium text-gray-300 mb-2">{t('visitTimeline.healthVitals')}</h5>
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="bg-gray-600/30 rounded-lg p-2 text-center">
-                                  <p className="text-xs text-gray-400">Blood Pressure</p>
+                                  <p className="text-xs text-gray-400">{t('visitTimeline.bloodPressure')}</p>
                                   <p className="text-white font-medium">{visit.healthLog.bloodPressure}</p>
                                 </div>
                                 <div className="bg-gray-600/30 rounded-lg p-2 text-center">
-                                  <p className="text-xs text-gray-400">Heart Rate</p>
+                                  <p className="text-xs text-gray-400">{t('visitTimeline.heartRate')}</p>
                                   <p className="text-white font-medium">{visit.healthLog.heartRate}</p>
                                 </div>
                                 <div className="bg-gray-600/30 rounded-lg p-2 text-center">
-                                  <p className="text-xs text-gray-400">Temperature</p>
+                                  <p className="text-xs text-gray-400">{t('visitTimeline.temperature')}</p>
                                   <p className="text-white font-medium">{visit.healthLog.temperature}°F</p>
                                 </div>
                                 <div className="bg-gray-600/30 rounded-lg p-2 text-center">
-                                  <p className="text-xs text-gray-400">Weight</p>
+                                  <p className="text-xs text-gray-400">{t('visitTimeline.weight')}</p>
                                   <p className="text-white font-medium">{visit.healthLog.weight} kg</p>
                                 </div>
                               </div>
@@ -179,7 +181,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                           {/* Test Reports */}
                           {visit.testReportUrls && visit.testReportUrls.length > 0 && (
                             <div>
-                              <h5 className="text-sm font-medium text-gray-300 mb-2">Test Reports:</h5>
+                              <h5 className="text-sm font-medium text-gray-300 mb-2">{t('visitTimeline.testReports')}</h5>
                               <div className="max-h-100 overflow-y-auto space-y-2">
                                 {visit.testReportUrls.map((reportUrl, index) => {
                                   const reportKey = `${visit.visitId}-${index}`;
@@ -277,7 +279,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                           {/* Medicines */}
                           {visit.medicines && visit.medicines.length > 0 && (
                             <div>
-                              <h5 className="text-sm font-medium text-gray-300 mb-2">Prescribed Medicines:</h5>
+                              <h5 className="text-sm font-medium text-gray-300 mb-2">{t('visitTimeline.prescribedMedicines')}</h5>
                               <div className="max-h-64 overflow-y-auto space-y-2">
                                 {visit.medicines.map((medicine) => (
                                   <div key={medicine.medicineId} className="bg-gray-600/30 rounded-lg p-3">
@@ -288,16 +290,16 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                                     </div>
                                     <div className="space-y-1 text-sm">
                                       <p className="text-gray-300">
-                                        <span className="text-gray-400">Dose:</span> {medicine.doses}
+                                        <span className="text-gray-400">{t('visitTimeline.dose')}:</span> {medicine.doses}
                                       </p>
                                       <p className="text-gray-300">
-                                        <span className="text-gray-400">Frequency:</span> {medicine.frequency.length } times/day
+                                        <span className="text-gray-400">{t('visitTimeline.frequency')}:</span> {medicine.frequency.length} {t('visitTimeline.timesPerDay')}
                                       </p>
                                       <p className="text-gray-300">
-                                        <span className="text-gray-400">Duration:</span> {medicine.duration}
+                                        <span className="text-gray-400">{t('visitTimeline.duration')}:</span> {medicine.duration}
                                       </p>
                                       <p className="text-gray-300">
-                                        <span className="text-gray-400">Instructions:</span> {medicine.instructions}
+                                        <span className="text-gray-400">{t('visitTimeline.instructions')}:</span> {medicine.instructions}
                                       </p>
                                     </div>
                                   </div>
@@ -309,7 +311,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                           {/* Prescription File */}
                           {visit.prescriptionFileUrl && (
                             <div>
-                              <h5 className="text-sm font-medium text-gray-300 mb-2">Prescription Document:</h5>
+                              <h5 className="text-sm font-medium text-gray-300 mb-2">{t('visitTimeline.prescriptionDocument')}</h5>
                               <div 
                                 className="bg-gray-600/30 rounded-lg p-3 cursor-pointer hover:bg-gray-600/50 transition-colors"
                                 onClick={() => togglePrescriptionExpansion(visit.visitId)}
@@ -317,7 +319,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center">
                                     <FileText className="w-4 h-4 text-emerald-400 mr-2" />
-                                    <span className="text-white text-sm">View Prescription</span>
+                                    <span className="text-white text-sm">{t('visitTimeline.viewPrescription')}</span>
                                   </div>
                                   <div className="flex space-x-2">
                                     <button 
@@ -352,12 +354,12 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                                       />
                                       <div className="hidden text-center py-8 text-gray-500">
                                         <FileText className="w-12 h-12 mx-auto mb-2" />
-                                        <p>Prescription preview not available</p>
+                                        <p>{t('visitTimeline.prescriptionPreviewNotAvailable')}</p>
                                         <button 
                                           className="mt-2 text-emerald-600 hover:text-emerald-700 underline"
                                           onClick={() => window.open(visit.prescriptionFileUrl, '_blank')}
                                         >
-                                          Download Prescription
+                                          {t('visitTimeline.downloadPrescription')}
                                         </button>
                                       </div>
                                     </div>
@@ -372,7 +374,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
                       {/* Notes */}
                       {visit.healthLog?.notes && (
                         <div className="mt-4">
-                          <h5 className="text-sm font-medium text-gray-300 mb-2">Notes:</h5>
+                          <h5 className="text-sm font-medium text-gray-300 mb-2">{t('visitTimeline.notes')}</h5>
                           <p className="text-gray-300 text-sm bg-gray-600/20 rounded-lg p-3">{visit.healthLog.notes}</p>
                         </div>
                       )}
@@ -388,17 +390,17 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
         <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-1">Total Visits</h4>
+          <h4 className="text-sm font-medium text-gray-400 mb-1">{t('visitTimeline.totalVisits')}</h4>
           <p className="text-2xl font-bold text-white">{visits.length}</p>
         </div>
         <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-1">This Year</h4>
+          <h4 className="text-sm font-medium text-gray-400 mb-1">{t('visitTimeline.thisYear')}</h4>
           <p className="text-2xl font-bold text-blue-400">
             {visits.filter(v => new Date(v.appointmentDate).getFullYear() === 2025).length}
           </p>
         </div>
         <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-1">Last Visit</h4>
+          <h4 className="text-sm font-medium text-gray-400 mb-1">{t('visitTimeline.lastVisit')}</h4>
           <p className="text-lg font-semibold text-white">
             {visits.length > 0 
               ? new Date(visits[0].appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -407,7 +409,7 @@ const VisitTimeline = ({ patientId, fetchedVisits }) => {
           </p>
         </div>
         <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-1">Total Medicines</h4>
+          <h4 className="text-sm font-medium text-gray-400 mb-1">{t('visitTimeline.totalMedicines')}</h4>
           <p className="text-2xl font-bold text-emerald-400">
             {visits.reduce((total, visit) => total + (visit.medicines?.length || 0), 0)}
           </p>

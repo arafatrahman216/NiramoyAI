@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Pill, Clock, Calendar, ChevronDown, ChevronUp, Bell, SyringeIcon,
+import { useTranslation } from 'react-i18next';
+import { Pill, Clock, ChevronDown, ChevronUp, Bell, SyringeIcon,
   Droplet, Trash2
 } from 'lucide-react';
 import { userInfoAPI } from '../../services/api';
@@ -28,6 +29,7 @@ const dummyMedications = [
 ];
 
 const MedicationTimeline = ({fetchedMedications}) => {
+  const { t } = useTranslation();
   const [medications, setMedications] = useState(dummyMedications);
   
   const [expandedId, setExpandedId] = useState(null);
@@ -219,13 +221,13 @@ const MedicationTimeline = ({fetchedMedications}) => {
       <div className="mb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white mb-1">Medication Timeline</h2>
-            <p className="text-sm text-gray-400">Today's schedule</p>
+            <h2 className="text-xl font-semibold text-white mb-1">{t('medicationTimeline.title')}</h2>
+            <p className="text-sm text-gray-400">{t('medicationTimeline.todaySchedule')}</p>
           </div>
           {isLoading && (
             <div className="flex items-center text-sm text-blue-400">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400 mr-2"></div>
-              Updating...
+              <span>{t('medicationTimeline.updating')}</span>
             </div>
           )}
         </div>
@@ -341,15 +343,15 @@ const MedicationTimeline = ({fetchedMedications}) => {
           <div className="flex items-center space-x-3">
             <div className="flex items-center">
               <div className="w-2 h-2 rounded-full bg-indigo-500 mr-1"></div>
-              <span className="text-gray-400">Upcoming</span>
+              <span className="text-gray-400">{t('medicationTimeline.upcoming')}</span>
             </div>
             <div className="flex items-center">
               <div className="w-2 h-2 rounded-full bg-amber-500 mr-1"></div>
-              <span className="text-gray-400">Due now</span>
+              <span className="text-gray-400">{t('medicationTimeline.dueNow')}</span>
             </div>
             <div className="flex items-center">
               <div className="w-2 h-2 rounded-full bg-gray-500 mr-1"></div>
-              <span className="text-gray-400">Past</span>
+              <span className="text-gray-400">{t('medicationTimeline.past')}</span>
             </div>
           </div>
         </div>
@@ -369,14 +371,10 @@ const MedicationTimeline = ({fetchedMedications}) => {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-white mb-2">
-                    Delete Medication
+                    {t('medicationTimeline.deleteMedication')}
                   </h3>
                   <p className="text-gray-300 text-sm leading-relaxed">
-                    Are you sure you want to delete{' '}
-                    <span className="font-medium text-purple-400">
-                      {deleteConfirmation.medicineName}
-                    </span>{' '}
-                    from your medication schedule? This action cannot be undone.
+                    {t('medicationTimeline.deleteConfirmation', { medicineName: deleteConfirmation.medicineName })}
                   </p>
                 </div>
               </div>
@@ -390,7 +388,7 @@ const MedicationTimeline = ({fetchedMedications}) => {
                   disabled={isLoading}
                   className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Cancel
+                  {t('medicationTimeline.cancel')}
                 </button>
                 <button
                   onClick={() => deleteMedication(deleteConfirmation.medicineId)}
@@ -400,12 +398,12 @@ const MedicationTimeline = ({fetchedMedications}) => {
                   {isLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Deleting...</span>
+                      <span>{t('medicationTimeline.deleting')}</span>
                     </>
                   ) : (
                     <>
                       <Trash2 className="w-4 h-4" />
-                      <span>Delete</span>
+                      <span>{t('medicationTimeline.delete')}</span>
                     </>
                   )}
                 </button>
