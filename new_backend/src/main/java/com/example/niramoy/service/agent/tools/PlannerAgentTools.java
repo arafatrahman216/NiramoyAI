@@ -32,7 +32,8 @@ public class PlannerAgentTools {
             StringBuilder formattedResults = new StringBuilder();
             formattedResults.append("Search results for '").append(query).append("':\n\n");
             
-            // Take top 1 results
+            // Take top 1 results Stable angina is chest pain or discomfort that occurs when the heart works harder than usual, such as during physical or emotional stress. It is a symptom of coronary artery disease where the coronary arteries are narrowed by plaque buildup, restricting blood flow and oxygen to the heart during exertion. The pain is predictable, usually relieved by rest or medication like nitroglycerin, and is a sign that the plaque is stable.  
+
             int count = Math.min(1, organicResults.size());
             for (int i = 0; i < count; i++) {
                 Map<String, Object> result = organicResults.get(i);

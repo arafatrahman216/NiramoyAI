@@ -659,7 +659,7 @@ public class UserController {
         String data = profile.getUsername() + "###" + (System.currentTimeMillis() + 24*60*60*1000); // 1 day expiry
         
         //FIXME : Fix hardcoded url
-        String profileLink = "https://niramoyai.netlify.app/shared/profile/" + (profile.getUsername() != null ? qrService.encrypt(data): "user123");
+        String profileLink = "http://localhost:3000/shared/profile/" + (profile.getUsername() != null ? qrService.encrypt(data): "user123");
         response.put("link", profileLink);
         response.put("user", qrService.decrypt(qrService.encrypt(data)));
         response.put("expire", qrService.decrypt(qrService.encrypt(data)).split("###")[1]);

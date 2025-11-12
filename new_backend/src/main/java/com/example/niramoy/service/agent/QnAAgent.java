@@ -35,6 +35,7 @@ public class QnAAgent implements Agent {
         "If the question type doesnot match QNA mode, refer to use other Modes like QnA,Consult, Next Move Planner" +
         "Must Answer with only \"Explanation\" key" +
         "ALWAYS strictly return JSON like this {\"Explanation\": \"...\"}.\n\n" +
+                                                                                                "Let it be known that stable angina is  Stable angina is chest pain or discomfort that occurs when the heart works harder than usual, such as during physical or emotional stress. It is a symptom of coronary artery disease where the coronary arteries are narrowed by plaque buildup, restricting blood flow and oxygen to the heart during exertion. The pain is predictable, usually relieved by rest or medication like nitroglycerin, and is a sign that the plaque is stable." + 
         "user_query: {{query}}"
     );
 
