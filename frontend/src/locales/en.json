@@ -1,0 +1,118 @@
+{
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "bangla": "বাংলা",
+    "logout": "Logout",
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "tryAgain": "Please try again"
+  },
+  "navigation": {
+    "logo": "NiramoyAI",
+    "diagnosis": "Diagnosis",
+    "profile": "Profile",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "hero": {
+    "title": "AI-Powered",
+    "titleSecond": "Healthcare",
+    "description": "Advanced medical diagnosis, doctor recommendations, and comprehensive health insights powered by artificial intelligence."
+  },
+  "buttons": {
+    "getStarted": "Get Started",
+    "startDiagnosis": "Start Diagnosis",
+    "contact": "Contact",
+    "viewTests": "View Tests",
+    "profile": "Profile",
+    "loadMore": "Load more {{type}}",
+    "search": "Search"
+  },
+  "search": {
+    "title": "Search Healthcare Providers",
+    "symptomPlaceholder": "Describe your symptoms... (e.g., headache, fever, chest pain)",
+    "doctorPlaceholder": "Search doctors by name, specialty, or location",
+    "testCenterPlaceholder": "Search test centers by name, services, or location",
+    "hospitalPlaceholder": "Search hospitals by name, services, or location",
+    "symptoms": "Symptoms Search",
+    "doctors": "Doctors",
+    "testCenters": "Test Centers",
+    "hospitals": "Hospitals",
+    "findDoctorsButton": "Find Doctors for Symptoms",
+    "findingDoctors": "Finding Doctors...",
+    "sortBy": "Sort by",
+    "sortDefault": "Default",
+    "sortPriceLow": "Price: Low to High",
+    "sortPriceHigh": "Price: High to Low",
+    "sortName": "Hospital Name"
+  },
+  "results": {
+    "recommendedDoctors": "Recommended Doctors",
+    "availableDoctors": "Available Doctors",
+    "hospitals": "Hospitals",
+    "testCenters": "Test Centers",
+    "searchFailed": "Search failed. Please check if the backend server is running.",
+    "testSearchFailed": "Search failed. Please try again.",
+    "noDoctorsFound": "No doctors found",
+    "noTestCentersFound": "No test centers found",
+    "noHospitalsFound": "No hospitals found",
+    "tryAdjustingSearch": "Try adjusting your search terms or browse all available options.",
+    "noSuggestionsFound": "No doctor suggestions found for your symptoms."
+  },
+  "cards": {
+    "experience": "years of experience",
+    "cost": "Cost",
+    "category": "Category",
+    "duration": "Duration",
+    "reportTime": "Report",
+    "fasting": "Fasting",
+    "available": "Available",
+    "department": "Department",
+    "testsAvailable": "diagnostic test{{count}} available"
+  },
+  "features": {
+    "title": "Complete Healthcare Ecosystem",
+    "subtitle": "Advanced AI-powered platform bridging the gap between patients and healthcare providers",
+    "feature1Title": "Symptom-Based Search",
+    "feature1Desc": "Enter your symptoms and get matched with the right specialists, nearby doctors, and test centers using AI-powered recommendations.",
+    "feature2Title": "AI Diagnosis Review",
+    "feature2Desc": "Upload prescriptions and health documents. Our AI explains diagnoses in simple terms and suggests next steps for better care.",
+    "feature3Title": "Health Knowledge Graph",
+    "feature3Desc": "Automated creation of your personal health timeline and knowledge graph from uploaded documents and medical history.",
+    "advancedTitle": "Advanced Healthcare Features",
+    "chatbotTitle": "Context-Aware Chatbot",
+    "chatbotDesc": "AI-powered assistant using your health data",
+    "dashboardTitle": "Personal Dashboard",
+    "dashboardDesc": "Visualize health trends and diagnosis timeline",
+    "doctorPortalTitle": "Doctor Access Portal",
+    "doctorPortalDesc": "Professionals can access structured patient data",
+    "costTitle": "Cost Estimation",
+    "costDesc": "Estimate treatment costs and required tests",
+    "technologyTitle": "Powered by Modern Technology"
+  },
+  "footer": {
+    "brand": "NiramoyAI",
+    "description": "Your trusted AI-powered healthcare companion. Advanced medical insights, doctor recommendations, and comprehensive health management at your fingertips.",
+    "services": "Services",
+    "aiDiagnosis": "AI Diagnosis",
+    "doctorSearch": "Doctor Search",
+    "testCenters": "Test Centers",
+    "healthAnalytics": "Health Analytics",
+    "company": "Company",
+    "aboutUs": "About Us",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "contact": "Contact",
+    "copyright": "© 2025 NiramoyAI. All rights reserved.",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "security": "Security"
+  },
+  "errors": {
+    "failedLoadDoctors": "Failed to load doctors. Please check if the backend server is running.",
+    "symptomsSearchError": "Failed to search for doctors based on symptoms. Please try again.",
+    "failedLoadTestCenters": "Failed to load test centers CSV"
+  }
+}
