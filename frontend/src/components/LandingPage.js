@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { doctorAPI, symptomsAPI } from '../services/api';
 import hospitalsDatasetRaw from '../utils/all_hospitals_incremental_1755095601280.json';
 import testCentersCsv from '../utils/test_centers.csv';
 import { HospitalSearchInput, HospitalSearchResults } from './HospitalSearch';
 import NearbyHospitalsMap from './HospitalMap/NearbyHospitalsMap';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const getHospitalDisplayName = (item) => {
   if (!item) return '';
@@ -61,6 +63,8 @@ function ScrollTop() {
 }
 
 const LandingPage = () => {
+  const { t } = useTranslation();
+  
   // Add CSS keyframes for gradient animation
   React.useEffect(() => {
     const style = document.createElement('style');
@@ -524,6 +528,8 @@ const LandingPage = () => {
             </motion.div>
             
             <div className="flex items-center space-x-6">
+              <LanguageSwitcher />
+              
               {isLoggedIn && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -568,7 +574,7 @@ const LandingPage = () => {
                           navigate('/dashboard');
                         }}
                       >
-                        Dashboard
+                        {t('common.dashboard')}
                       </button>
                       <button
                         className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all duration-200 rounded-lg font-medium"
@@ -577,14 +583,14 @@ const LandingPage = () => {
                           navigate('/profile');
                         }}
                       >
-                        Profile
+                        {t('common.profile')}
                       </button>
                       <hr className="border-zinc-700 my-2" />
                       <button
                         className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-600 hover:text-white transition-all duration-200 rounded-lg font-medium"
                         onClick={handleLogout}
                       >
-                        Logout
+                        {t('common.logout')}
                       </button>
                     </motion.div>
                   )}
@@ -597,7 +603,7 @@ const LandingPage = () => {
                     className="px-6 py-3 text-zinc-300 hover:text-white transition-all duration-200 font-medium rounded-lg border border-transparent hover:border-zinc-700 bg-transparent hover:bg-zinc-800/50"
                     onClick={() => navigate('/login')}
                   >
-                    Login
+                    {t('common.login')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -605,7 +611,7 @@ const LandingPage = () => {
                     className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-all duration-200"
                     onClick={() => navigate('/signup')}
                   >
-                    Sign Up
+                    {t('common.signup')}
                   </motion.button>
                 </div>
               )}
@@ -634,12 +640,12 @@ const LandingPage = () => {
                     backgroundSize: '200% 200%',
                     animation: 'gradient 8s ease infinite'
                   }}>
-                AI-Powered
+                {t('landing.title')}
                 <br />
-                Healthcare
+                {t('landing.subtitle')}
               </h1>
               <p className="text-xl text-zinc-400 mb-8 leading-relaxed font-medium" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', lineHeight: '1.5'}}>
-                Advanced medical diagnosis, doctor recommendations, and comprehensive health insights powered by artificial intelligence.
+                {t('landing.subtitle')}
               </p>
             </motion.div>
             
@@ -656,7 +662,7 @@ const LandingPage = () => {
                   className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-lg font-semibold transition-all duration-200 text-lg shadow-xl hover:shadow-2xl animate-float"
                   onClick={() => navigate(isLoggedIn ? '/diagnosis' : '/signup')}
                 >
-                  {isLoggedIn ? 'Start Diagnosis' : 'Get Started'}
+                  {isLoggedIn ? t('landing.startDiagnosis') : t('landing.getStarted')}
                 </motion.button>
               </div>
             </motion.div>
@@ -679,7 +685,7 @@ const LandingPage = () => {
             </div>
             <div className="relative z-10">
             <h2 className="text-2xl font-bold text-center mb-6 text-white" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
-              Search Healthcare Providers
+              {t('landing.searchHealthcareProviders')}
             </h2>
             
             {/* Search Type Tabs */}
@@ -694,7 +700,7 @@ const LandingPage = () => {
                 }`}
                 onClick={() => handleSearchTypeChange('symptoms')}
               >
-                Symptoms Search
+                {t('landing.symptomsSearch')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -706,7 +712,7 @@ const LandingPage = () => {
                 }`}
                 onClick={() => handleSearchTypeChange('doctors')}
               >
-                Doctors
+                {t('landing.doctors')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -718,7 +724,7 @@ const LandingPage = () => {
                 }`}
                 onClick={() => handleSearchTypeChange('testCenters')}
               >
-                Test Centers
+                {t('landing.testCenters')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -730,7 +736,7 @@ const LandingPage = () => {
                 }`}
                 onClick={() => handleSearchTypeChange('hospitals')}
               >
-                Hospitals
+                {t('landing.hospitals')}
               </motion.button>
             </div>
 

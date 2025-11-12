@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import './i18n'; // Initialize i18n before importing App
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
