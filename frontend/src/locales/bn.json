@@ -50,7 +50,7 @@
   },
   "results": {
     "recommendedDoctors": "প্রস্তাবিত ডাক্তার",
-    "availableDoctors": "উপলব্ধ ডাক্তার",
+    "availableDoctors": "ডাক্তার",
     "hospitals": "হাসপাতাল",
     "testCenters": "পরীক্ষা কেন্দ্র",
     "searchFailed": "খোঁজ ব্যর্থ। ব্যাকএন্ড চেক করুন।",
@@ -68,7 +68,7 @@
     "duration": "সময়",
     "reportTime": "রিপোর্ট",
     "fasting": "উপবাস",
-    "available": "উপলব্ধ",
+    "available": "উপস্থিত",
     "department": "বিভাগ",
     "testsAvailable": "{{count}} পরীক্ষা"
   },
@@ -386,6 +386,16 @@
     "lastVisit": "শেষ ভিজিট",
     "totalMedicines": "মোট ওষুধ",
     "timesPerDay": "বার/দিন"
+  },
+  "hospitalSearch": {
+    "searchPlaceholder": "হাসপাতালের নাম বা অবস্থান খুঁজুন...",
+    "resultsFound": "{{count}} ফলাফল পাওয়া গেছে",
+    "clearSearch": "খোঁজ পরিষ্কার করুন",
+    "noHospitalsFound": "হাসপাতাল পাওয়া যায়নি",
+    "noHospitalsDescription": "অন্য হাসপাতালের নাম চেষ্টা করুন বা আশেপাশের অবস্থান অন্বেষণ করুন।",
+    "visitProfile": "প্রোফাইল",
+    "verifiedListing": "যাচাইকৃত হাসপাতাল তালিকা",
+    "loadMoreHospitals": "আরও হাসপাতাল লোড করুন"
   },
   "chatConversation": {
     "loadingConversation": "কথোপকথন লোড হচ্ছে...",

@@ -70,7 +70,10 @@
     "fasting": "Fasting",
     "available": "Available",
     "department": "Department",
-    "testsAvailable": "diagnostic test{{count}} available"
+    "testsAvailable": "{{count}} diagnostic test{{count}} available",
+    "popularCategories": "Popular categories:",
+    "profile": "Profile",
+    "yearsOf": "years of"
   },
   "features": {
     "title": "Complete Healthcare Ecosystem",
@@ -386,6 +389,16 @@
     "lastVisit": "Last Visit",
     "totalMedicines": "Total Medicines",
     "timesPerDay": "times/day"
+  },
+  "hospitalSearch": {
+    "searchPlaceholder": "Search hospitals by name or location...",
+    "resultsFound": "{{count}} result{{count}} found",
+    "clearSearch": "Clear search",
+    "noHospitalsFound": "No hospitals found",
+    "noHospitalsDescription": "Try another hospital name or explore nearby locations to discover more healthcare providers.",
+    "visitProfile": "Visit Profile",
+    "verifiedListing": "Verified hospital listing",
+    "loadMoreHospitals": "Load more hospitals"
   },
   "chatConversation": {
     "loadingConversation": "Loading conversation...",

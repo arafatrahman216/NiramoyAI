@@ -982,11 +982,11 @@ const LandingPage = () => {
                       {searchType === 'testCenters' && item.uniqueHospital && (
                         <div className="bg-purple-900/10 border border-purple-700/30 rounded-lg p-3 mb-4 text-sm text-purple-200">
                           <p className="font-semibold text-purple-300">
-                            {item.testCount} diagnostic test{item.testCount === 1 ? '' : 's'} available
+                            {item.testCount} {t('cards.testsAvailable', { count: item.testCount })}
                           </p>
                           {item.categories && item.categories.length > 0 && (
                             <p className="mt-1 text-purple-200">
-                              Popular categories: <span className="text-white">{item.categories.join(', ')}</span>
+                              {t('cards.popularCategories')}: <span className="text-white">{item.categories.join(', ')}</span>
                             </p>
                           )}
                         </div>
@@ -1073,7 +1073,7 @@ const LandingPage = () => {
                             className="px-4 py-3 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg text-sm transition-all duration-200 bg-transparent hover:bg-zinc-800/50"
                             onClick={() => window.open(item.profileLink, '_blank')}
                           >
-                            Profile
+                            {t('cards.profile')}
                           </motion.button>
                         )}
                       </div>
