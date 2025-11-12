@@ -70,7 +70,7 @@
     "fasting": "Fasting",
     "available": "Available",
     "department": "Department",
-    "testsAvailable": "{{count}} diagnostic test{{count}} available",
+    "testsAvailable": "diagnostic tests available",
     "popularCategories": "Popular categories:",
     "profile": "Profile",
     "yearsOf": "years of"
@@ -392,13 +392,14 @@
   },
   "hospitalSearch": {
     "searchPlaceholder": "Search hospitals by name or location...",
-    "resultsFound": "{{count}} result{{count}} found",
+    "resultsCount": "{{count}} result{{count}} found",
     "clearSearch": "Clear search",
     "noHospitalsFound": "No hospitals found",
     "noHospitalsDescription": "Try another hospital name or explore nearby locations to discover more healthcare providers.",
+    "profile": "Profile",
     "visitProfile": "Visit Profile",
-    "verifiedListing": "Verified hospital listing",
-    "loadMoreHospitals": "Load more hospitals"
+    "verifiedHospital": "Verified hospital listing",
+    "loadMore": "Load more hospitals"
   },
   "chatConversation": {
     "loadingConversation": "Loading conversation...",

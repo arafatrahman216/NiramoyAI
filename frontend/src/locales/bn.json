@@ -70,7 +70,8 @@
     "fasting": "উপবাস",
     "available": "উপস্থিত",
     "department": "বিভাগ",
-    "testsAvailable": "{{count}} পরীক্ষা"
+    "testsAvailable": "পরীক্ষা উপলব্ধ",
+    "popularCategories": "জনপ্রিয় বিভাগ:"
   },
   "features": {
     "title": "সম্পূর্ণ স্বাস্থ্যসেবা",
@@ -389,13 +390,14 @@
   },
   "hospitalSearch": {
     "searchPlaceholder": "হাসপাতালের নাম বা অবস্থান খুঁজুন...",
-    "resultsFound": "{{count}} ফলাফল পাওয়া গেছে",
+    "resultsCount": "{{count}} ফলাফল পাওয়া গেছে",
     "clearSearch": "খোঁজ পরিষ্কার করুন",
     "noHospitalsFound": "হাসপাতাল পাওয়া যায়নি",
     "noHospitalsDescription": "অন্য হাসপাতালের নাম চেষ্টা করুন বা আশেপাশের অবস্থান অন্বেষণ করুন।",
-    "visitProfile": "প্রোফাইল",
-    "verifiedListing": "যাচাইকৃত হাসপাতাল তালিকা",
-    "loadMoreHospitals": "আরও হাসপাতাল লোড করুন"
+    "profile": "প্রোফাইল",
+    "visitProfile": "প্রোফাইল দেখুন",
+    "verifiedHospital": "যাচাইকৃত হাসপাতাল তালিকা",
+    "loadMore": "আরও হাসপাতাল লোড করুন"
   },
   "chatConversation": {
     "loadingConversation": "কথোপকথন লোড হচ্ছে...",

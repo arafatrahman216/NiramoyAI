@@ -982,11 +982,11 @@ const LandingPage = () => {
                       {searchType === 'testCenters' && item.uniqueHospital && (
                         <div className="bg-purple-900/10 border border-purple-700/30 rounded-lg p-3 mb-4 text-sm text-purple-200">
                           <p className="font-semibold text-purple-300">
-                            {item.testCount} {t('cards.testsAvailable', { count: item.testCount })}
+                            {item.testCount} {t('cards.testsAvailable')}
                           </p>
                           {item.categories && item.categories.length > 0 && (
                             <p className="mt-1 text-purple-200">
-                              {t('cards.popularCategories')}: <span className="text-white">{item.categories.join(', ')}</span>
+                              {t('cards.popularCategories')} <span className="text-white">{item.categories.join(', ')}</span>
                             </p>
                           )}
                         </div>
