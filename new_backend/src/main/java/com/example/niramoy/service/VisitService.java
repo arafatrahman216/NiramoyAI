@@ -9,8 +9,10 @@ import com.example.niramoy.entity.User;
 import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
 import com.example.niramoy.repository.VisitsRepository;
+import com.example.niramoy.service.AIServices.AIService;
+import com.example.niramoy.utils.JsonParser;
 
-
+import dev.langchain4j.model.input.PromptTemplate;
 
 import com.example.niramoy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -29,10 +32,80 @@ public class VisitService {
     private final DoctorRepository doctorRepository;
     private final DoctorProfileRepository doctorProfileRepository;
     private final UserKGService userKGService;
+    private final AIService AiService;
+
+    // public UploadVisitReqDTO saveVisitData(
+    //         Long userId,
+    //         String appointmentDate,
+    //         String doctorName,
+    //         String doctorId,
+    //         String symptoms,
+    //         String prescription,
+    //         String prescriptionFileUrl,
+    //         List<String> testReportFileUrls)
+    // {
+    //     try {
+    //         log.info("Saving visit data for user ID: {}", userId);
+
+    //         // Find the user
+    //         User user = userRepository.findById(userId)
+    //                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+    //         // Parse appointment date (HTML date input sends yyyy-MM-dd format)
+    //         LocalDate parsedAppointmentDate = LocalDate.parse(appointmentDate);
+
+    //         //Fetching doctor
+    //         Doctor doctor = null ;
+    //         Long fetchedDoctorId = -1L;
+    //         try {
+    //             fetchedDoctorId = Long.parseLong(doctorId);
+    //             doctor = doctorRepository.findByDoctorId(fetchedDoctorId).get();
+    //         } catch (Exception e) {
+    //             log.warn("Doctor with ID {} not found. Proceeding without linking to a doctor entity.", fetchedDoctorId);
+    //         }
+
+    //         // Create and save visit entity
+    //         Visits visit = Visits.builder()
+    //                 .appointmentDate(parsedAppointmentDate)
+    //                 .doctorName(doctorName)
+    //                 .doctor(doctor) // Temporary fix: use doctor ID 1 as default (TODO: implement doctor lookup by name)
+    //                 .symptoms(symptoms)
+    //                 .prescription(prescription)
+    //                 .prescriptionFileUrl(prescriptionFileUrl)
+    //                 .testReportUrls(testReportFileUrls)
+    //                 .user(user)
+    //                 .build();
+
+        
+    //         Visits savedVisit = visitsRepository.save(visit);
+
+    //         // Extrct the entity and relationships and save it to KG
+    //         Boolean kgSavedStatus = userKGService.saveVisitDetails(savedVisit, userId, fetchedDoctorId);
+    //         if(!kgSavedStatus){
+    //             log.error("Failed to save visit data to Knowledge Graph for visit ID: {}", savedVisit.getVisitId());
+    //             throw new RuntimeException("Failed to save visit data to Knowledge Graph");
+    //         }
+    //         log.info("Visit saved successfully with ID: {}", savedVisit.getVisitId());
+
+
+    //         // Return DTO with saved data for confirmation
+    //         return UploadVisitReqDTO.builder()
+    //                 .appointmentDate(appointmentDate)
+    //                 .doctorName(doctorName)
+    //                 .symptoms(symptoms)
+    //                 .prescription(prescription)
+    //                 .build();
+
+    //     } catch (Exception e) {
+    //         log.error("Error saving visit data: {}", e.getMessage(), e);
+    //         throw new RuntimeException("Failed to save visit data: " + e.getMessage());
+    //     }
+    // }
+
 
     public UploadVisitReqDTO saveVisitData(
             Long userId,
-            String appointmentDate,
+            // String appointmentDate,
             String doctorName,
             String doctorId,
             String symptoms,
@@ -47,9 +120,6 @@ public class VisitService {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-            // Parse appointment date (HTML date input sends yyyy-MM-dd format)
-            LocalDate parsedAppointmentDate = LocalDate.parse(appointmentDate);
-
             //Fetching doctor
             Doctor doctor = null ;
             Long fetchedDoctorId = -1L;
@@ -59,6 +129,42 @@ public class VisitService {
             } catch (Exception e) {
                 log.warn("Doctor with ID {} not found. Proceeding without linking to a doctor entity.", fetchedDoctorId);
             }
+
+            // Extract text from prescription file
+            String extractedPrescriptionText = AiService.getTextFromImageUrl(prescriptionFileUrl);
+
+            // Extracting and validating proper date
+            final PromptTemplate DATE_EXTRACTION_PROMPT = PromptTemplate.from(
+                """
+                Extract the date from the following text. Return as a comma-separated list.\n
+                This is a prescription text. Visit date is provided in the text probably at the top.\n
+                RETURN ONLY THE DATE IN JSON FORMAT WITH KEY 'Date'.\n
+                MUST RETURN yyyy-MM-dd format.\n
+                Text: {{Text}}\n
+                Return JSON ONLY like this: {\"Date\": \"...\"}\n
+                """
+            );
+
+            String promptText = DATE_EXTRACTION_PROMPT.apply(
+                Map.of("Text", extractedPrescriptionText)
+            ).text();
+
+            String response = AiService.generateContent(promptText);
+            String extractedDate = JsonParser.parseJsonField(response, "Date");
+
+            if (extractedDate == null || extractedDate.trim().isEmpty()) {
+                log.error("Failed to extract valid date from prescription. Response: {}", response);
+                throw new RuntimeException("Unable to extract appointment date from prescription file");
+            }
+
+            LocalDate parsedAppointmentDate;
+            try {
+                parsedAppointmentDate = LocalDate.parse(extractedDate);
+            } catch (Exception e) {
+                log.error("Failed to parse extracted date: {} with format yyyy-MM-dd", extractedDate);
+                throw new RuntimeException("Invalid date format extracted from prescription: " + extractedDate, e);
+            }
+
 
             // Create and save visit entity
             Visits visit = Visits.builder()
@@ -75,8 +181,9 @@ public class VisitService {
         
             Visits savedVisit = visitsRepository.save(visit);
 
+
             // Extrct the entity and relationships and save it to KG
-            Boolean kgSavedStatus = userKGService.saveVisitDetails(savedVisit, userId, fetchedDoctorId);
+            Boolean kgSavedStatus = userKGService.saveVisitDetails(savedVisit, userId, fetchedDoctorId, extractedPrescriptionText);
             if(!kgSavedStatus){
                 log.error("Failed to save visit data to Knowledge Graph for visit ID: {}", savedVisit.getVisitId());
                 throw new RuntimeException("Failed to save visit data to Knowledge Graph");
@@ -86,7 +193,7 @@ public class VisitService {
 
             // Return DTO with saved data for confirmation
             return UploadVisitReqDTO.builder()
-                    .appointmentDate(appointmentDate)
+                    .appointmentDate(parsedAppointmentDate.toString())
                     .doctorName(doctorName)
                     .symptoms(symptoms)
                     .prescription(prescription)
@@ -97,6 +204,8 @@ public class VisitService {
             throw new RuntimeException("Failed to save visit data: " + e.getMessage());
         }
     }
+
+
 
 
     public List<Visits> getAllVisitsByUser(Long userId) {

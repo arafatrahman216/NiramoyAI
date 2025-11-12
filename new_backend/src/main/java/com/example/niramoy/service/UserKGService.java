@@ -63,10 +63,10 @@ public class UserKGService {
         return healthProfile;
     }
 
-    
-    public boolean saveVisitDetails(Visits visit, Long patientID, Long doctorID) {
-        log.info("Saving visit details to Knowledge Graph for visit ID: {}", visit.getVisitId());   
-        String extractedPrescriptionText = AiService.getTextFromImageUrl(visit.getPrescriptionFileUrl());
+
+    public boolean saveVisitDetails(Visits visit, Long patientID, Long doctorID, String extractedPrescriptionText) {
+        log.info("Saving visit details to Knowledge Graph for visit ID: {}", visit.getVisitId());
+        // String extractedPrescriptionText = AiService.getTextFromImageUrl(visit.getPrescriptionFileUrl());
         List<String> extractedTestReportTexts = visit.getTestReportUrls().stream()
                                     .map(url -> AiService.getTextFromImageUrl(url))
                                     .toList();

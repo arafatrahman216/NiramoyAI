@@ -16,11 +16,8 @@ interface UploadVisitModalProps {
 }
 
 interface VisitData {
-  appointmentDate: string;
   doctorName: string;
   symptoms: string;
-  doctorId: string;
-  prescription: string;
   prescriptionFile: File | null;
   testReports: File[];
 }
@@ -31,11 +28,8 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
   
   // MODAL STATE MANAGEMENT
   const [visitData, setVisitData] = useState<VisitData>({
-    appointmentDate: '',
     doctorName: '',
-    doctorId : '',
     symptoms: '',
-    prescription: '',
     prescriptionFile: null,
     testReports: []
   });
@@ -65,8 +59,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
   // UPLOAD HANDLER
   const handleFinalUpload = async () => {
     // Validate required fields
-    if (!visitData.appointmentDate || !visitData.doctorName || !visitData.symptoms || 
-        !visitData.prescription || !visitData.prescriptionFile) {
+    if (!visitData.doctorName || !visitData.symptoms || !visitData.prescriptionFile) {
       toast.error(t('uploadVisit.fileError'), {
         style: {
           background: '#7f1d1d',
@@ -87,11 +80,8 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     
     // Create FormData for upload
     const formData = new FormData();
-    formData.append('appointmentDate', visitData.appointmentDate);
     formData.append('doctorName', visitData.doctorName);
     formData.append('symptoms', visitData.symptoms);
-    formData.append('doctorId', visitData.doctorId);
-    formData.append('prescription', visitData.prescription);
     
     // Prescription file is mandatory
     if (visitData.prescriptionFile) {
@@ -173,11 +163,8 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
   // UTILITY FUNCTIONS
   const resetForm = () => {
     setVisitData({
-      appointmentDate: '',
       doctorName: '',
-      doctorId: '',
       symptoms: '',
-      prescription: '',
       prescriptionFile: null,
       testReports: []
     });
@@ -190,10 +177,8 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
 
   // VALIDATION
   const isFormValid = () => {
-    return visitData.appointmentDate && 
-           visitData.doctorName && 
-           visitData.symptoms && 
-           visitData.prescription &&
+    return visitData.doctorName && 
+           visitData.symptoms &&
            visitData.prescriptionFile; // Prescription file is mandatory
   };
 
@@ -235,20 +220,6 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
               <div className="space-y-6">
                 <h3 className="text-lg font-medium text-white mb-4">{t('uploadVisit.appointmentDetails')}</h3>
                 
-                {/* APPOINTMENT DATE */}
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    {t('uploadVisit.appointmentDate')} *
-                  </label>
-                  <input
-                    type="date"
-                    value={visitData.appointmentDate}
-                    onChange={(e) => handleInputChange('appointmentDate', e.target.value)}
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    required
-                  />
-                </div>
-
                 {/* DOCTOR NAME */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
@@ -263,19 +234,6 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                     required
                   />
                 </div>
-                {/* DOCTOR ID */}
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    {t('uploadVisit.doctorId')}
-                  </label>
-                  <input
-                    type="text"
-                    value={visitData.doctorId}
-                    onChange={(e) => handleInputChange('doctorId', e.target.value)}
-                    placeholder={t('uploadVisit.doctorIdPlaceholder')}
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                  />
-                </div>
 
 
                 {/* SYMPTOMS */}
@@ -287,21 +245,6 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                     value={visitData.symptoms}
                     onChange={(e) => handleInputChange('symptoms', e.target.value)}
                     placeholder={t('uploadVisit.symptomsPlaceholder')}
-                    rows={4}
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
-                    required
-                  />
-                </div>
-
-                {/* PRESCRIPTION */}
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    {t('uploadVisit.prescription')} *
-                  </label>
-                  <textarea
-                    value={visitData.prescription}
-                    onChange={(e) => handleInputChange('prescription', e.target.value)}
-                    placeholder={t('uploadVisit.prescriptionPlaceholder')}
                     rows={4}
                     className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
                     required
