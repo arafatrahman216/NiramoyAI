@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -15,8 +15,20 @@ interface UploadVisitModalProps {
   onClose: () => void;
 }
 
+// Doctor database with ID mapping
+const DOCTORS_DB: { [key: string]: string } = {
+  "1": "Hasib",
+  "5": "Dr Dip",
+  "6": "Dr Masud",
+  "7": "Dr Ikbal",
+  "8": "S. Ahmed",
+  "9": "S. M. Mahfuzur Rahman",
+  "10": "Shamim Ahmed"
+};
+
 interface VisitData {
   doctorName: string;
+  doctorId: string | null;
   symptoms: string;
   prescriptionFile: File | null;
   testReports: File[];
@@ -29,10 +41,15 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
   // MODAL STATE MANAGEMENT
   const [visitData, setVisitData] = useState<VisitData>({
     doctorName: '',
+    doctorId: null,
     symptoms: '',
     prescriptionFile: null,
     testReports: []
   });
+
+  const [showDoctorSuggestions, setShowDoctorSuggestions] = useState(false);
+  const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
+  const [selectedDoctorIndex, setSelectedDoctorIndex] = useState<number>(-1);
 
   // FORM HANDLERS
   const handleInputChange = (field: keyof VisitData, value: string | boolean) => {
@@ -82,6 +99,11 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     const formData = new FormData();
     formData.append('doctorName', visitData.doctorName);
     formData.append('symptoms', visitData.symptoms);
+    
+    // Append doctorId only if selected from suggestions
+    if (visitData.doctorId) {
+      formData.append('doctorId', visitData.doctorId);
+    }
     
     // Prescription file is mandatory
     if (visitData.prescriptionFile) {
@@ -164,15 +186,100 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
   const resetForm = () => {
     setVisitData({
       doctorName: '',
+      doctorId: null,
       symptoms: '',
       prescriptionFile: null,
       testReports: []
     });
+    setShowDoctorSuggestions(false);
   };
 
   const handleClose = () => {
     resetForm();
     onClose();
+  };
+
+  // DOCTOR AUTOCOMPLETE FUNCTIONS
+  // Get doctor suggestions based on input
+  const getFilteredDoctors = useMemo(() => {
+    if (!visitData.doctorName.trim()) return [];
+    
+    const input = visitData.doctorName.toLowerCase();
+    const doctorsList = Object.entries(DOCTORS_DB);
+    
+    // Filter doctors that match the input
+    return doctorsList.filter(([_, name]) => 
+      name.toLowerCase().includes(input)
+    );
+  }, [visitData.doctorName]);
+
+  // Handle doctor name input change
+  const handleDoctorNameChange = (value: string) => {
+    setVisitData(prev => ({
+      ...prev,
+      doctorName: value,
+      doctorId: null // Clear doctorId when user types
+    }));
+    setSelectedDoctorIndex(-1); // Reset selected index
+    
+    // Show loading state and simulate DB fetch delay
+    if (value.trim().length > 0) {
+      setIsLoadingDoctors(true);
+      setShowDoctorSuggestions(false);
+      
+      // Simulate database fetch delay (300-500ms)
+      const delay = Math.random() * 200 + 300;
+      setTimeout(() => {
+        setIsLoadingDoctors(false);
+        setShowDoctorSuggestions(true);
+      }, delay);
+    } else {
+      setIsLoadingDoctors(false);
+      setShowDoctorSuggestions(false);
+    }
+  };
+
+  // Handle doctor selection from suggestions
+  const handleDoctorSelect = (doctorId: string, doctorName: string) => {
+    setVisitData(prev => ({
+      ...prev,
+      doctorName: doctorName,
+      doctorId: doctorId
+    }));
+    setShowDoctorSuggestions(false);
+    setSelectedDoctorIndex(-1);
+  };
+
+  // Handle keyboard navigation in doctor list
+  const handleDoctorInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showDoctorSuggestions || getFilteredDoctors.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedDoctorIndex(prev => 
+          prev < getFilteredDoctors.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedDoctorIndex(prev => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedDoctorIndex >= 0 && selectedDoctorIndex < getFilteredDoctors.length) {
+          const [doctorId, doctorName] = getFilteredDoctors[selectedDoctorIndex];
+          handleDoctorSelect(doctorId, doctorName);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setShowDoctorSuggestions(false);
+        setSelectedDoctorIndex(-1);
+        break;
+      default:
+        break;
+    }
   };
 
   // VALIDATION
@@ -221,18 +328,82 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 <h3 className="text-lg font-medium text-white mb-4">{t('uploadVisit.appointmentDetails')}</h3>
                 
                 {/* DOCTOR NAME */}
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-white mb-2">
                     {t('uploadVisit.doctorName')} *
                   </label>
-                  <input
-                    type="text"
-                    value={visitData.doctorName}
-                    onChange={(e) => handleInputChange('doctorName', e.target.value)}
-                    placeholder={t('uploadVisit.enterDoctorName')}
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={visitData.doctorName}
+                      onChange={(e) => handleDoctorNameChange(e.target.value)}
+                      onKeyDown={handleDoctorInputKeyDown}
+                      onFocus={() => visitData.doctorName && setShowDoctorSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowDoctorSuggestions(false), 200)}
+                      placeholder={t('uploadVisit.enterDoctorName')}
+                      className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      required
+                    />
+                    
+                    {/* DOCTOR SUGGESTIONS DROPDOWN */}
+                    {(showDoctorSuggestions || isLoadingDoctors) && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl z-10 backdrop-blur-sm bg-zinc-800/95">
+                        
+                        {/* LOADING STATE */}
+                        {isLoadingDoctors && (
+                          <div className="px-4 py-3 flex items-center justify-center gap-2 text-zinc-400">
+                            <div className="inline-block">
+                              <svg className="animate-spin h-4 w-4 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            </div>
+                            <span className="text-sm">{t('uploadVisit.fetchingDoctors')}</span>
+                          </div>
+                        )}
+
+                        {/* DOCTOR LIST */}
+                        {showDoctorSuggestions && getFilteredDoctors.length > 0 && (
+                          <div className="max-h-64 overflow-y-auto">
+                            {getFilteredDoctors.map(([doctorId, doctorName], index) => (
+                              <button
+                                key={doctorId}
+                                onClick={() => handleDoctorSelect(doctorId, doctorName)}
+                                className={`w-full text-left px-4 py-2 text-sm text-white transition-colors ${
+                                  index < getFilteredDoctors.length - 1 ? 'border-b border-zinc-700/50' : ''
+                                } ${
+                                  visitData.doctorId === doctorId 
+                                    ? 'bg-emerald-500/30' 
+                                    : selectedDoctorIndex === index 
+                                    ? 'bg-emerald-500/20 hover:bg-emerald-500/20'
+                                    : 'hover:bg-emerald-500/10'
+                                }`}
+                              >
+                                {doctorName}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* NO RESULTS STATE */}
+                        {showDoctorSuggestions && getFilteredDoctors.length === 0 && (
+                          <div className="px-4 py-6 text-center">
+                            <svg className="w-8 h-8 text-zinc-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 21l-4.35-4.35m0 0a7 7 0 10-9.9 0" />
+                            </svg>
+                            <p className="text-sm text-zinc-400">{t('uploadVisit.noDoctorsFound')}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* SELECTED DOCTOR BADGE */}
+                    {visitData.doctorId && (
+                      <div className="mt-2 inline-block bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm border border-emerald-500/50">
+                        {visitData.doctorName}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
 
