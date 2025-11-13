@@ -17,4 +17,5 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
     Doctor createNewDoctor(@Param("d") Doctor d);
 
     Optional<Doctor> findByDoctorId(Long doctorId);
+
 }

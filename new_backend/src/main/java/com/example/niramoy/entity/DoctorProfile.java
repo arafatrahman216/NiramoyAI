@@ -40,4 +40,7 @@ public class DoctorProfile {
 
     private Boolean isVerified;
 
+    @Column(name = "qr_url")
+    private String qrUrl ;
+
 }

@@ -4,9 +4,11 @@ import com.example.niramoy.dto.DoctorProfileDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
 import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.entity.Doctor;
+import com.example.niramoy.entity.DoctorProfile;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Visits;
 import com.example.niramoy.service.DoctorProfileService;
+import com.example.niramoy.service.QRService;
 import com.example.niramoy.service.VisitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,10 +17,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/doctor")
@@ -26,6 +31,10 @@ public class DoctorController {
 
     private final DoctorProfileService doctorProfileService;
     private final VisitService visitService;
+    private final QRService qrService;
+
+    private final String baseUrl = "http://localhost:3000/link/";
+
 
 //    @GetMapping("/profile")
 //    public DoctorProfileDTO createDoctorProfile(@RequestBody DoctorProfileDTO doctorProfileDTO){
@@ -122,7 +131,82 @@ public class DoctorController {
 
     }
 
+    @GetMapping("/qr")
+    public ResponseEntity<Map<String, Object>> getQRLink(){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User doctor = (User) authentication.getPrincipal();
+        DoctorProfile doctorProfile = doctorProfileService.getDoctorProfileByUserId(doctor.getId());
+        System.out.println(doctorProfile);
+        log.info("Doctor Profile: {}", doctorProfile);
+        String qrUrl, profileLink ;
+
+        if (doctorProfile.getQrUrl() == null || doctorProfile.getQrUrl().isEmpty()){
+            String data = doctor.getUsername() +"###"+ System.currentTimeMillis();
+            String encryptedData = qrService.encrypt(data);
+            profileLink = baseUrl+ (doctor.getUsername()!= null ? encryptedData : "none");
+            doctorProfileService.updateProfile(doctor, Map.of("qrUrl", profileLink));
+            System.out.println("profile link : " + profileLink);
+        }
+        else {
+            profileLink = doctorProfile.getQrUrl();
+        }
+        qrUrl = qrService.generateQrCode(profileLink);
+        response.put("success", true);
+        response.put("link", profileLink);
+        response.put("qrImage", qrUrl);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/data")
+    public ResponseEntity<Map<String, Object>> getPatientsInfo(@RequestBody Map<String, Object> patient){
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Patients data retrieved successfully");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null");
+            return ResponseEntity.ok(response);
+        }
+        User doctor = (User) authentication.getPrincipal();
+        Long patientId = Long.parseLong(patient.get("id").toString());
+
+        Map<String, Object> patientsData = doctorProfileService.getPatientData(doctor, patientId);
+        response.put("vitals", patientsData.get("healthProfile")); 
+        response.put("user", patientsData.get("user"));
+        response.put("healthLogs", patientsData.get("healthLogs"));
+        response.put("visits", doctorProfileService.getPatientVisits(patientId));
+        response.put("charts", patientsData.get("charts"));
+        return ResponseEntity.ok(response);
+    }
 
 
+    @GetMapping("/patients")
+    public ResponseEntity<Map<String, Object>> getaccessedPatients(){
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Patients retrieved successfully");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null");
+            return ResponseEntity.ok(response);
+            
+        }
+        User doctor = (User) authentication.getPrincipal();
+        List<Map<String, Object>> patients = doctorProfileService.getAccessedPatients(doctor);
+        response.put("patients", patients);
+        return ResponseEntity.ok(response);
+        
+    }
 
+    
 }
+
+

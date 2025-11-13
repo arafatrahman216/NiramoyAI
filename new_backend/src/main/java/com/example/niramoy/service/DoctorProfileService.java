@@ -8,6 +8,7 @@ import com.example.niramoy.enumerate.DoctorSource;
 import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
+import com.example.niramoy.repository.PermissionsRepository;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.VisitsRepository;
 import org.modelmapper.ModelMapper;
@@ -15,6 +16,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DoctorProfileService {
 
     private final DoctorRepository doctorRepository;
@@ -34,6 +37,7 @@ public class DoctorProfileService {
     private final ModelMapper modelMapper;
     private final VisitsRepository visitsRepository;
     private final HealthService healthService;
+    private final PermissionsRepository permissionsRepository;
 
     // @Cacheable(value = "doctorProfiles")
     public List<DoctorProfile> findAllDoctor(){
@@ -149,6 +153,9 @@ public class DoctorProfileService {
                 doctorProfile.getDoctor().setExperience((Integer) Integer.parseInt( updates.get("experienceYears").toString()));
                 System.out.println("experience: " + updates.get("experienceYears"));
             }
+            if (updates.containsKey("qrUrl")){
+                doctorProfile.setQrUrl((String) updates.get("qrUrl"));
+            }
         }
         catch (Exception e){
             System.out.println(e.getMessage());
@@ -194,13 +201,7 @@ public class DoctorProfileService {
         response.put("charts",healthService.transformToVitals(healthLog));
         response.put("visits", visits);
 //        System.out.println("Visit :"+ visits);
-
-
-
         return response;
-
-
-
     }
 
     // @Cacheable(value = "doctorProfile", key = "#query")
@@ -208,5 +209,39 @@ public class DoctorProfileService {
         return doctorProfileRepository.findByDoctor_NameContainingIgnoreCaseOrDoctor_SpecializationContainingIgnoreCase(query, query);
     }
 
+    public DoctorProfile getDoctorProfileByUserId(Long userId){
+        return doctorProfileRepository.findByUserId(userId);
+    }
 
+
+    public DoctorProfile verifyQr(String data) {
+        if (data == null) {
+            return null;
+        }
+
+        DoctorProfile doctorProfile = doctorProfileRepository.findByQrUrl(data);
+        return doctorProfile;
+    }
+
+    public List<Visits>  getPatientVisits( Long patientId){
+        return visitsRepository.findByUserIdOrderByAppointmentDateDesc( patientId);
+    }
+
+    public List<Map<String, Object>> getAccessedPatients(User doctor) {
+
+        DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
+        Doctor doc = doctorProfile.getDoctor();
+        List<User> patients = permissionsRepository.findDistinctUserByDoctor(doc);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (User patient : patients) {
+            Map<String, Object> patientData = new HashMap<>();
+            patientData.put("id", patient.getId());
+            patientData.put("name", patient.getName());
+            patientData.put("email", patient.getEmail());
+            patientData.put("phoneNumber", patient.getPhoneNumber());
+            log.info("Accessed patient: {}", patientData);
+            result.add(patientData);
+        }
+        return result;
+    }
 }

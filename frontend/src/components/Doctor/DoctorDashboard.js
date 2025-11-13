@@ -12,18 +12,20 @@ import {
   Phone,
   Mail,
   Activity,
-  FileText
+  FileText,
+  Search
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL, doctorAPI } from '../../services/api';
 import RecentVisits from '../RecentVisits';
 import { 
   fallbackDoctorAppointments,
   fallbackDoctorRecentVisits,
   fallbackDoctorStats,
-  fallbackDoctorDashboardProfile
+  fallbackDoctorDashboardProfile,
+  fallbackDoctorPatients
 } from '../../utils/dummyData';
 
 const DoctorDashboard = () => {
@@ -33,6 +35,9 @@ const DoctorDashboard = () => {
   const [stats, setStats] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [recentVisits, setRecentVisits] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  const [patientSearchTerm, setPatientSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -75,6 +80,17 @@ const DoctorDashboard = () => {
       const recentVisitsResponse = await axios.get(`${API_BASE_URL}/doctor/recent-visits`);
       setRecentVisits(recentVisitsResponse.data.visits || fallbackDoctorRecentVisits);
 
+      // Fetch patients
+      try {
+        const patientsResponse = await doctorAPI.getPatients();
+        setPatients(patientsResponse.data.patients || fallbackDoctorPatients);
+        setFilteredPatients(patientsResponse.data.patients || fallbackDoctorPatients);
+      } catch (err) { 
+        console.error('Error fetching patients:', err); 
+        setPatients(fallbackDoctorPatients);
+        setFilteredPatients(fallbackDoctorPatients);
+      }
+
     } catch (err) {
       // Use fallback data when API calls fail
       
@@ -91,6 +107,22 @@ const DoctorDashboard = () => {
   const handleLogout = () => {
     logout();
     navigate('/doctor/login');
+  };
+
+  const handlePatientSearch = (searchTerm) => {
+    setPatientSearchTerm(searchTerm);
+    if (searchTerm.trim() === '') {
+      setFilteredPatients(patients);
+    } else {
+      const filtered = patients.filter((patient) =>
+        patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredPatients(filtered);
+    }
+  };
+
+  const handleViewPatient = (patientId) => {
+    navigate(`/patient/data?id=${patientId}`);
   };
 
   const handleProfileClick = () => {
@@ -304,6 +336,90 @@ const DoctorDashboard = () => {
             height="500px"
             className="border border-gray-700 shadow-xl"
           />
+        </div>
+
+        {/* Patient Profiles */}
+        <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl mb-8">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">Patient Profiles</h3>
+              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-sm rounded-full">
+                {patients.length} Patients
+              </span>
+            </div>
+            
+            {/* Search Box */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search patients by name..."
+                value={patientSearchTerm}
+                onChange={(e) => handlePatientSearch(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-emerald-400"
+              />
+            </div>
+
+            {/* Patient List */}
+            {filteredPatients.length > 0 ? (
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
+                {filteredPatients.map((patient) => (
+                  <div 
+                    key={patient.id} 
+                    className="bg-gray-700/50 rounded-lg p-4 border border-gray-600 hover:border-emerald-400/30 transition-colors cursor-pointer"
+                    onClick={() => handleViewPatient(patient.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-white mb-1">{patient.name}</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <p className="text-gray-400">
+                            <Mail className="w-3 h-3 inline mr-1" />
+                            {patient.email}
+                          </p>
+                          <p className="text-gray-400">
+                            <Phone className="w-3 h-3 inline mr-1" />
+                            {patient.phone}
+                          </p>
+                          <p className="text-gray-400">
+                            <span className="font-semibold">Blood:</span> {patient.bloodType}
+                          </p>
+                          <p className="text-gray-400">
+                            <span className="font-semibold">Last Visit:</span> {patient.lastVisit}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end space-y-2">
+                        <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                          patient.status === 'Active' 
+                            ? 'bg-emerald-500/20 text-emerald-400' 
+                            : 'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {patient.status}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewPatient(patient.id);
+                          }}
+                          className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-xs font-semibold hover:bg-emerald-500/30 transition-colors"
+                        >
+                          View Profile
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400">
+                  {patientSearchTerm ? 'No patients found matching your search' : 'No patients yet'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Quick Actions */}

@@ -30,5 +30,5 @@ public interface DoctorProfileRepository extends JpaRepository<DoctorProfile, Lo
     List<DoctorProfile> findByDoctor_NameContainingIgnoreCaseOrDoctor_SpecializationContainingIgnoreCase(String name, String specialization);
 
 
-
+    DoctorProfile findByQrUrl(String qrUrl);
 }

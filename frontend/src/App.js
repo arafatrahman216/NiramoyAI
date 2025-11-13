@@ -20,6 +20,7 @@ import DoctorLogin from './components/Doctor/DoctorLogin';
 import DoctorDashboard from './components/Doctor/DoctorDashboard';
 import DoctorProfile from './components/Doctor/DoctorProfile';
 import DoctorSignup from './components/Doctor/DoctorSignup';
+import DoctorPatientView from './components/Doctor/DoctorPatientView';
 import SearchDoctors from './components/SearchDoctors';
 import EnhancedSearchDoctors from './components/EnhancedSearchDoctors';
 import BookAppointment from './components/BookAppointment';
@@ -35,6 +36,7 @@ import Timeline from './components/Timeline/Timeline';
 import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
 import PatientProfile from './components/PatientProfile/PatientProfile';
 import SharedProfile from './components/SharedProfile';
+import PermissionManager from './components/PermissionManager';
 import { default as UserDoctorProfile } from './components/User/DoctorProfile';
 import AppWrapper from './components/AppWrapper';
 
@@ -291,6 +293,7 @@ function App() {
               <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/shared/profile/:encryptedId" element={<SharedProfile />} />
+              <Route path="/link/:encryptedData" element={<PermissionManager />} />
               <Route
                 path="/login"
                 element={
@@ -416,6 +419,14 @@ function App() {
                 element={
                   <DoctorRoute>
                     <DoctorSchedule />
+                  </DoctorRoute>
+                }
+              />
+              <Route
+                path="/patient/data"
+                element={
+                  <DoctorRoute>
+                    <DoctorPatientView />
                   </DoctorRoute>
                 }
               />

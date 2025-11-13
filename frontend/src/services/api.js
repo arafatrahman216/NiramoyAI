@@ -67,6 +67,12 @@ export const doctorAPI = {
   getDoctorById: (id) => api.get(`/public/doctors/${id}`),
 
   getPatientInfo : (id) => api.post('/doctor/patient', {"id": id}),
+
+  //for getting patient data
+  accessPatientData : (id) => api.post('/doctor/patient/data', {"id": id}),
+  
+  // Get list of patients who have given access to doctor
+  getPatients: () => api.get('/doctor/patients'),
   
 };
 
