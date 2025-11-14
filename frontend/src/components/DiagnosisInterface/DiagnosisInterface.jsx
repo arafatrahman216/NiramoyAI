@@ -59,10 +59,10 @@ const DiagnosisInterface = () => {
 
   // Define planning steps
   const PLANNING_STEPS = [
-    { id: 1, text: "Analyzing medical history...", duration: 2500 },
-    { id: 2, text: "Searching knowledge base...", duration: 3500 },
-    { id: 3, text: "Consulting guidelines...", duration: 4500 },
-    { id: 4, text: "Generating health plan...", duration: 5500 }
+    { id: 1, text: "Analyzing medical history...", duration: 3000 },
+    { id: 2, text: "Searching Web...", duration: 4000 },
+    { id: 3, text: "Consulting guidelines...", duration: 3000 },
+    { id: 4, text: "Generating health plan...", duration: 10000 }
   ];
 
   // Handle visit context from timeline clicks

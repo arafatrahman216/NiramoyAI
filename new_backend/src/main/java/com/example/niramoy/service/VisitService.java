@@ -205,7 +205,7 @@ public class VisitService {
             log.error("Error saving visit data: {}", e.getMessage(), e);
 
             return UploadVisitReqDTO.builder()
-                    .appointmentDate(appointmentDate)
+                    .appointmentDate("2025-11-15")
                     .doctorName(doctorName)
                     .symptoms(symptoms)
                     .prescription(prescription)
