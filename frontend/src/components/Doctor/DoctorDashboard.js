@@ -85,67 +85,65 @@ const DoctorDashboard = () => {
   const [showPrescribeModal, setShowPrescribeModal] = useState(false);
 
   useEffect(() => {
-    fetchDoctorData();
+    // Load critical data first (profile & appointments)
+    fetchCriticalData();
+    // Load stats in background (non-blocking)
+    fetchStatsInBackground();
   }, []);
 
-  const fetchDoctorData = async () => {
+  const fetchCriticalData = async () => {
     try {
       setLoading(true);
       
-      // Fetch doctor profile
-      try{
-          const profileResponse = await axios.get(`${API_BASE_URL}/doctor/profile`);
-        console.log('Doctor Profile:', profileResponse.data.doctor);
-        console.log('Doctor Profile:', fallbackDoctorDashboardProfile);
-        setDoctorProfile(profileResponse.data.doctor );
-        console.log(doctorProfile); 
-      }
-      catch(err) { console.error('Error fetching doctor profile:', err); setDoctorProfile(fallbackDoctorDashboardProfile); }
-      // Fetch dashboard stats
+      // Run profile and appointments fetches in parallel (critical for UI)
+      const [profileResult, visitsResult] = await Promise.allSettled([
+        axios.get(`${API_BASE_URL}/doctor/profile`),
+        axios.get(`${API_BASE_URL}/doctor/recent-visits`)
+      ]).then(results => results);
 
-      try{
-          const statsResponse = await axios.get(`${API_BASE_URL}/doctor/dashboard/stats`);
-          console.log('Dashboard Stats:', statsResponse.data.stats);
-          setStats(statsResponse.data.stats || fallbackDoctorStats);
+      // Handle doctor profile result
+      if (profileResult.status === 'fulfilled') {
+        console.log('Doctor Profile:', profileResult.value.data.doctor);
+        setDoctorProfile(profileResult.value.data.doctor);
+      } else {
+        console.error('Error fetching doctor profile:', profileResult.reason);
+        setDoctorProfile(fallbackDoctorDashboardProfile);
       }
-      catch(err) { console.error('Error fetching dashboard stats:', err); setStats(fallbackDoctorStats); }
-      
-      // ========== COMMENTED OUT: Fetch from DB ==========
-      // This was fetching appointments from the database
-      // Uncomment below to enable DB fetch instead of dummy data
-      /*
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        const appointmentsResponse = await axios.get(`${API_BASE_URL}/doctor/appointments`);
-        setAppointments(appointmentsResponse.data.appointments || fallbackDoctorAppointments);
-      } catch(err) { 
-        console.error('Error fetching today\'s appointments:', err); 
-        setAppointments(fallbackDoctorAppointments); 
+
+      // Handle recent visits result
+      if (visitsResult.status === 'fulfilled') {
+        setRecentVisits(visitsResult.value.data.visits || fallbackDoctorRecentVisits);
+      } else {
+        console.error('Error fetching recent visits:', visitsResult.reason);
+        setRecentVisits(fallbackDoctorRecentVisits);
       }
-      */
-      // ========== END COMMENTED OUT ==========
-      
+
       // Using DUMMY DATA for appointments instead
       setAppointments(dummyAppointments);
-      
-      // Fetch recent visits (last 7 days)
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      const recentVisitsResponse = await axios.get(`${API_BASE_URL}/doctor/recent-visits`);
-      setRecentVisits(recentVisitsResponse.data.visits || fallbackDoctorRecentVisits);
 
     } catch (err) {
-      // Use fallback data when API calls fail
-      
-      setAppointments(dummyAppointments);
+      console.error('Error fetching critical data:', err);
+      setDoctorProfile(fallbackDoctorDashboardProfile);
       setRecentVisits(fallbackDoctorRecentVisits);
-      
-      setError('Using demo data - API connection failed');
-      console.error('Error fetching doctor data:', err);
+      setAppointments(dummyAppointments);
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchStatsInBackground = async () => {
+    // This runs WITHOUT blocking the UI - lazy loading stats
+    try {
+      const statsResponse = await axios.get(`${API_BASE_URL}/doctor/dashboard/stats`);
+      console.log('Dashboard Stats:', statsResponse.data.stats);
+      setStats(statsResponse.data.stats || fallbackDoctorStats);
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setStats(fallbackDoctorStats);
+    }
+  };
+
+
 
   const handleLogout = () => {
     logout();
