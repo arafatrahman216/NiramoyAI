@@ -11,6 +11,8 @@ import com.example.niramoy.utils.JsonParser;
 import com.example.niramoy.service.AIServices.AIService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,11 +37,13 @@ public class HealthService {
         return healthLogRepository.findByUser(user, pageable);
     }
 
+    @Cacheable(value = "healthLogs", key = "#user.id")
     public Page<HealthLog> findByUserOrderByDateDesc(User user, Pageable pageable) {
         return healthLogRepository.findByUserOrderByLogDatetimeDesc(user, pageable);
     }
 
     @Transactional
+    @CacheEvict(value = "healthLogs", key = "#user.id")
     public boolean addNewHealthLog( User user ,Map<String, Object> formData) {
         try{
             String systolic = safeGetString(formData, "blood_pressure_systolic", "120");

@@ -53,7 +53,6 @@ public class UserService implements UserDetailsService {
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
     // until then the query result will be stored in persistence context
     @Transactional(readOnly = true)
-//    @Cacheable(value = "users", key = "'all'")
     public List<UserDTO> getAllUsers(){
         List<User> users = userRepository.getAll();
         return users.stream()
@@ -62,7 +61,6 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-//    @CacheEvict(value = "users", allEntries = true)
     public User createUser(Map<String, String> newUser) {
         String username = newUser.get("username");
         String email = newUser.get("email");
@@ -141,7 +139,6 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-//    @Cacheable(value = "users", key = "#userId")
     public User findByUserId(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
@@ -157,7 +154,7 @@ public class UserService implements UserDetailsService {
 
 
     @Transactional
-//    @CachePut(value = "users", key = "#id")
+    @CachePut(value = "users", key = "#id")
     public UserDTO updateUserProfile(Long id, Map<String, Object> updates) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         if (updates.containsKey("name")) {
@@ -268,7 +265,6 @@ public class UserService implements UserDetailsService {
     }
 
 
-//    @Cacheable(value = "dashboards", key = "#user.id")
     public HashMap<String, Object> createUserDashboardMap(User user) {
 
         HashMap<String,Object> healthDashboard = healthService.getHealthDashboardByUser(user);
@@ -277,12 +273,15 @@ public class UserService implements UserDetailsService {
         return healthDashboard;
     }
 
+    @Cacheable(value = "medicines", key = "#userId")
     public List<Medicine> getMedicinesByUserId(Long userId){
         return medicineRepository.findMedicineByVisit_User(userRepository.findById(userId).orElseThrow());
     }
 
     @Transactional
     @Modifying
+//    @CachePut(value = "dashboards", key = "#user.id")
+    @CacheEvict(value = "medicines", key = "#userId")
     public boolean deleteMedicineByIdAndUserId(Long medicineId, Long userId) {
         Medicine medicine = medicineRepository.findById(medicineId).orElseThrow(() -> new RuntimeException("Medicine not found with id: " + medicineId));
         if (medicine.getVisit().getUser().getId().equals(userId)) {

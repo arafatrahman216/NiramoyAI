@@ -63,6 +63,7 @@ public class PublicController {
         return "Service is up and running.";
     }
 
+    @Cacheable(value = "doctorSearchCache", key = "#cityName + '-' + #specialty", unless="#result == null")
     @GetMapping("/search")
     public String searchEndpoint(
             @RequestParam(required = false) String cityName,
