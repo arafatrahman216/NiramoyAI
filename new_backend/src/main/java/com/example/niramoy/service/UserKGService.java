@@ -9,7 +9,6 @@ import com.example.niramoy.utils.JsonParser;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -64,10 +63,10 @@ public class UserKGService {
         return healthProfile;
     }
 
-    
-    public boolean saveVisitDetails(Visits visit, Long patientID, Long doctorID) {
-        log.info("Saving visit details to Knowledge Graph for visit ID: {}", visit.getVisitId());   
-        String extractedPrescriptionText = AiService.getTextFromImageUrl(visit.getPrescriptionFileUrl());
+
+    public boolean saveVisitDetails(Visits visit, Long patientID, Long doctorID, String extractedPrescriptionText) {
+        log.info("Saving visit details to Knowledge Graph for visit ID: {}", visit.getVisitId());
+        // String extractedPrescriptionText = AiService.getTextFromImageUrl(visit.getPrescriptionFileUrl());
         List<String> extractedTestReportTexts = visit.getTestReportUrls().stream()
                                     .map(url -> AiService.getTextFromImageUrl(url))
                                     .toList();
@@ -95,7 +94,6 @@ public class UserKGService {
 
         //FIX: DOCTOR SPECIALIZATION NOT CORRECT
         String promptText = SYMPTOMS_AND_SPECIALIZATION_EXTRACTION_PROMPT.apply(
-            // Map.of("symptoms", "Patient complains of persistent cough, shortness of breath, and occasional chest pain.")
             Map.of("symptoms", visit.getSymptoms())
         ).text();
 

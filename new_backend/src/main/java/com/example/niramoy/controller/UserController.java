@@ -437,6 +437,84 @@ public class UserController {
         return ResponseEntity.ok("healthLogRecord");
     }
 
+    // @PostMapping("/upload-visit")
+    // public ResponseEntity<String> uploadVisit(@ModelAttribute UploadVisitReqDTO visitDTO){
+    //     try {
+
+    //         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();   
+    //         UserDTO userDTO = userService.convertToUserDTO(user);
+        
+    //         String appointmentDate = visitDTO.getAppointmentDate();
+    //         String doctorName = visitDTO.getDoctorName();
+    //         String symptoms = visitDTO.getSymptoms();
+    //         String prescription = visitDTO.getPrescription();
+    //         String doctorId = visitDTO.getDoctorId();
+    //         System.out.println("doctor id : " + doctorId);
+
+    //         String prescriptionFileUrl = null;
+    //         // Check if prescription file is present and upload it
+    //         if (visitDTO.getPrescriptionFile() != null && !visitDTO.getPrescriptionFile().isEmpty()) {
+    //             log.info("Prescription file found: {}", visitDTO.getPrescriptionFile().getOriginalFilename());
+    //             try {
+    //                 prescriptionFileUrl = imageService.uploadImage(visitDTO.getPrescriptionFile());
+    //                 log.info("Prescription file uploaded successfully. URL: {}", prescriptionFileUrl);
+    //             } catch (Exception e) {
+    //                 log.error("Error uploading prescription file: {}", e.getMessage());
+    //                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                         .body("Error uploading prescription file: " + e.getMessage());
+    //             }
+    //         } else {
+    //             log.warn("No prescription file provided");
+    //         }
+            
+    //         List<String> testReportFileUrl = new ArrayList<>();
+    //         if (visitDTO.getTestReports() != null && !visitDTO.getTestReports().isEmpty()) {
+    //             for (MultipartFile testReport : visitDTO.getTestReports()) {
+    //                 log.info("Test report file found: {}", testReport.getOriginalFilename());
+    //                 try {
+    //                     String testReportUrl = imageService.uploadImage(testReport);
+    //                     testReportFileUrl.add(testReportUrl);
+    //                 } catch (Exception e) {
+    //                     log.error("Error uploading test report file: {}", e.getMessage());
+    //                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                             .body("Error uploading test report file: " + e.getMessage());
+    //                 }
+    //             }
+    //         } else {
+    //             log.warn("No test report file provided");
+    //         }
+            
+    //         log.info("=== UPLOAD SUMMARY ===");
+    //         log.info("Prescription File URL: {}", prescriptionFileUrl != null ? prescriptionFileUrl : "Not uploaded");
+    //         log.info("Test Report File URL: {}", testReportFileUrl != null ? testReportFileUrl : "Not uploaded");
+    //         log.info("Visit data processed successfully");
+    
+
+    //         UploadVisitReqDTO uploadedData = visitService.saveVisitData(
+    //                                                         userDTO.getId(),
+    //                                                         appointmentDate,
+    //                                                         doctorName,
+    //                                                         doctorId,
+    //                                                         symptoms,
+    //                                                         prescription,
+    //                                                         prescriptionFileUrl,
+    //                                                         testReportFileUrl
+    //                                                     );
+
+    //         log.info("Visit data saved successfully for user: {}", userDTO.getId());
+
+    //         return ResponseEntity.ok("Visit data received, files uploaded, and saved successfully. Prescription URL: " + prescriptionFileUrl);
+            
+    //     } catch (Exception e) {
+    //         log.error("Error in upload-visit endpoint: {}", e.getMessage(), e);
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                 .body("Error processing visit data: " + e.getMessage());
+    //     }
+    // }
+
+
+
+
     @PostMapping("/upload-visit")
     public ResponseEntity<String> uploadVisit(@ModelAttribute UploadVisitReqDTO visitDTO){
         try {
@@ -449,7 +527,7 @@ public class UserController {
             String symptoms = visitDTO.getSymptoms();
             String prescription = visitDTO.getPrescription();
             String doctorId = visitDTO.getDoctorId();
-            System.out.println("doctor id : " + doctorId);
+            // System.out.println("doctor id : " + doctorId);
 
             String prescriptionFileUrl = null;
             // Check if prescription file is present and upload it
@@ -483,7 +561,7 @@ public class UserController {
             } else {
                 log.warn("No test report file provided");
             }
-
+            
             log.info("=== UPLOAD SUMMARY ===");
             log.info("Prescription File URL: {}", prescriptionFileUrl != null ? prescriptionFileUrl : "Not uploaded");
             log.info("Test Report File URL: {}", testReportFileUrl != null ? testReportFileUrl : "Not uploaded");
@@ -492,7 +570,7 @@ public class UserController {
 
             UploadVisitReqDTO uploadedData = visitService.saveVisitData(
                                                             userDTO.getId(),
-                                                            appointmentDate,
+                                                            // appointmentDate,
                                                             doctorName,
                                                             doctorId,
                                                             symptoms,
@@ -511,6 +589,9 @@ public class UserController {
                     .body("Error processing visit data: " + e.getMessage());
         }
     }
+
+
+
 
 
     @PostMapping("/audio-log")

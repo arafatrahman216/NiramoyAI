@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Printer, X, FileText, Heart, Calendar } from 'lucide-react';
 
 const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recentVisits }) => {
+  const { t } = useTranslation();
   const [selectedOptions, setSelectedOptions] = useState({
     medicalHistory: true,
     healthProfile: true,
@@ -59,7 +61,7 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
             <div className="p-2 bg-blue-100 rounded-lg">
               <Printer className="w-5 h-5 text-blue-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Print Medical Summary</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('printSummaryModal.printMedicalSummary')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -72,7 +74,7 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
         {/* Content */}
         <div className="p-6">
           <p className="text-gray-600 mb-6">
-            Select the information you'd like to include in your medical summary:
+            {t('printSummaryModal.selectInformation')}
           </p>
 
           {/* Options */}
@@ -88,7 +90,7 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
               />
               <label htmlFor="medicalHistory" className="flex items-center space-x-2 cursor-pointer">
                 <FileText className="w-4 h-4 text-gray-500" />
-                <span className="text-gray-700 font-medium">Medical History & Profile</span>
+                <span className="text-gray-700 font-medium">{t('printSummaryModal.medicalHistory')}</span>
               </label>
             </div>
 
@@ -103,7 +105,7 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
               />
               <label htmlFor="healthProfile" className="flex items-center space-x-2 cursor-pointer">
                 <Heart className="w-4 h-4 text-red-500" />
-                <span className="text-gray-700 font-medium">Health Vitals & Metrics</span>
+                <span className="text-gray-700 font-medium">{t('printSummaryModal.healthProfile')}</span>
               </label>
             </div>
 
@@ -118,7 +120,7 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
               />
               <label htmlFor="visitSummaries" className="flex items-center space-x-2 cursor-pointer">
                 <Calendar className="w-4 h-4 text-green-500" />
-                <span className="text-gray-700 font-medium">Recent Visit Summaries</span>
+                <span className="text-gray-700 font-medium">{t('printSummaryModal.visitSummaries')}</span>
               </label>
             </div>
           </div>
@@ -127,7 +129,7 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
           {!hasAnySelection && (
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
               <p className="text-amber-800 text-sm">
-                Please select at least one option to print.
+                {t('printSummaryModal.pleaseSelectOption')}
               </p>
             </div>
           )}
@@ -139,7 +141,7 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
             onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
           >
-            Cancel
+            {t('printSummaryModal.cancel')}
           </button>
           <button
             onClick={handlePrint}
@@ -149,12 +151,12 @@ const PrintSummaryModal = ({ isOpen, onClose, userProfile, healthProfile, recent
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Generating...</span>
+                <span>{t('printSummaryModal.generating')}</span>
               </>
             ) : (
               <>
                 <Printer className="w-4 h-4" />
-                <span>Print Summary</span>
+                <span>{t('printSummaryModal.printSummary')}</span>
               </>
             )}
           </button>

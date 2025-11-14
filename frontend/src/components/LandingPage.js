@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { doctorAPI, symptomsAPI } from '../services/api';
 import hospitalsDatasetRaw from '../utils/all_hospitals_incremental_1755095601280.json';
 import testCentersCsv from '../utils/test_centers.csv';
 import { HospitalSearchInput, HospitalSearchResults } from './HospitalSearch';
 import NearbyHospitalsMap from './HospitalMap/NearbyHospitalsMap';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const getHospitalDisplayName = (item) => {
   if (!item) return '';
@@ -61,6 +63,8 @@ function ScrollTop() {
 }
 
 const LandingPage = () => {
+  const { t } = useTranslation();
+  
   // Add CSS keyframes for gradient animation
   React.useEffect(() => {
     const style = document.createElement('style');
@@ -520,7 +524,7 @@ const LandingPage = () => {
                 animation: 'gradient 6s ease infinite'
               }}
             >
-              NiramoyAI
+              {t('navigation.logo')}
             </motion.div>
             
             <div className="flex items-center space-x-6">
@@ -531,7 +535,7 @@ const LandingPage = () => {
                   className="px-6 py-3 text-zinc-300 hover:text-white transition-all duration-200 font-medium rounded-lg border border-transparent hover:border-zinc-700 bg-transparent hover:bg-zinc-800/50"
                   onClick={() => navigate('/diagnosis')}
                 >
-                  Diagnosis
+                  {t('navigation.diagnosis')}
                 </motion.button>
               )}
 
@@ -548,7 +552,7 @@ const LandingPage = () => {
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                       </svg>
                     </div>
-                    <span>Profile</span>
+                    <span>{t('navigation.profile')}</span>
                     <svg className={`w-4 h-4 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -568,7 +572,7 @@ const LandingPage = () => {
                           navigate('/dashboard');
                         }}
                       >
-                        Dashboard
+                        {t('navigation.dashboard')}
                       </button>
                       <button
                         className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all duration-200 rounded-lg font-medium"
@@ -577,14 +581,14 @@ const LandingPage = () => {
                           navigate('/profile');
                         }}
                       >
-                        Profile
+                        {t('navigation.profile')}
                       </button>
                       <hr className="border-zinc-700 my-2" />
                       <button
                         className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-600 hover:text-white transition-all duration-200 rounded-lg font-medium"
                         onClick={handleLogout}
                       >
-                        Logout
+                        {t('common.logout')}
                       </button>
                     </motion.div>
                   )}
@@ -597,7 +601,7 @@ const LandingPage = () => {
                     className="px-6 py-3 text-zinc-300 hover:text-white transition-all duration-200 font-medium rounded-lg border border-transparent hover:border-zinc-700 bg-transparent hover:bg-zinc-800/50"
                     onClick={() => navigate('/login')}
                   >
-                    Login
+                    {t('navigation.login')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -605,10 +609,13 @@ const LandingPage = () => {
                     className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-all duration-200"
                     onClick={() => navigate('/signup')}
                   >
-                    Sign Up
+                    {t('navigation.signup')}
                   </motion.button>
                 </div>
               )}
+
+              {/* Language Switcher */}
+              <LanguageSwitcher />
             </div>
           </div>
         </div>
@@ -634,12 +641,12 @@ const LandingPage = () => {
                     backgroundSize: '200% 200%',
                     animation: 'gradient 8s ease infinite'
                   }}>
-                AI-Powered
+                {t('hero.title')}
                 <br />
-                Healthcare
+                {t('hero.titleSecond')}
               </h1>
               <p className="text-xl text-zinc-400 mb-8 leading-relaxed font-medium" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', lineHeight: '1.5'}}>
-                Advanced medical diagnosis, doctor recommendations, and comprehensive health insights powered by artificial intelligence.
+                {t('hero.description')}
               </p>
             </motion.div>
             
@@ -656,7 +663,7 @@ const LandingPage = () => {
                   className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-lg font-semibold transition-all duration-200 text-lg shadow-xl hover:shadow-2xl animate-float"
                   onClick={() => navigate(isLoggedIn ? '/diagnosis' : '/signup')}
                 >
-                  {isLoggedIn ? 'Start Diagnosis' : 'Get Started'}
+                  {isLoggedIn ? t('buttons.startDiagnosis') : t('buttons.getStarted')}
                 </motion.button>
               </div>
             </motion.div>
@@ -679,7 +686,7 @@ const LandingPage = () => {
             </div>
             <div className="relative z-10">
             <h2 className="text-2xl font-bold text-center mb-6 text-white" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
-              Search Healthcare Providers
+              {t('search.title')}
             </h2>
             
             {/* Search Type Tabs */}
@@ -694,7 +701,7 @@ const LandingPage = () => {
                 }`}
                 onClick={() => handleSearchTypeChange('symptoms')}
               >
-                Symptoms Search
+                {t('search.symptoms')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -706,7 +713,7 @@ const LandingPage = () => {
                 }`}
                 onClick={() => handleSearchTypeChange('doctors')}
               >
-                Doctors
+                {t('search.doctors')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -718,7 +725,7 @@ const LandingPage = () => {
                 }`}
                 onClick={() => handleSearchTypeChange('testCenters')}
               >
-                Test Centers
+                {t('search.testCenters')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -730,7 +737,7 @@ const LandingPage = () => {
                 }`}
                 onClick={() => handleSearchTypeChange('hospitals')}
               >
-                Hospitals
+                {t('search.hospitals')}
               </motion.button>
             </div>
 
@@ -741,7 +748,7 @@ const LandingPage = () => {
                   <textarea
                     className="w-full p-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-white focus:ring-2 focus:ring-white/20 focus:outline-none resize-none transition-all duration-200"
                     rows="4"
-                    placeholder="Describe your symptoms... (e.g., headache, fever, chest pain)"
+                    placeholder={t('search.symptomPlaceholder')}
                     value={symptomsQuery}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
@@ -763,10 +770,10 @@ const LandingPage = () => {
                   {loading ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Finding Doctors...
+                      {t('search.findingDoctors')}
                     </div>
                   ) : (
-                    'Find Doctors for Symptoms'
+                    t('search.findDoctorsButton')
                   )}
                 </motion.button>
               </div>
@@ -780,7 +787,7 @@ const LandingPage = () => {
                 <input
                   type="text"
                   className="w-full pl-10 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-white focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-200"
-                  placeholder="Search hospitals by name, services, or location"
+                  placeholder={t('search.hospitalPlaceholder')}
                   value={hospitalSearchTerm}
                   onChange={(e) => handleHospitalSearchChange(e.target.value)}
                 />
@@ -795,7 +802,7 @@ const LandingPage = () => {
                 <input
                   type="text"
                   className="w-full pl-10 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:border-white focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-200"
-                  placeholder={`Search ${searchType === 'doctors' ? 'doctors by name, specialty, or location' : 'test centers by name, services, or location'}`}
+                  placeholder={searchType === 'doctors' ? t('search.doctorPlaceholder') : t('search.testCenterPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -804,16 +811,16 @@ const LandingPage = () => {
             {searchType === 'testCenters' && (
               <div className="mt-4 flex justify-end">
                 <label className="text-sm text-zinc-400 flex items-center gap-3">
-                  <span>Sort by</span>
+                  <span>{t('search.sortBy')}</span>
                   <select
                     className="bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white focus:border-white focus:ring-2 focus:ring-white/20 focus:outline-none"
                     value={testCenterSort}
                     onChange={(e) => handleTestCenterSortChange(e.target.value)}
                   >
-                    <option value="default">Default</option>
-                    <option value="priceLowHigh">Price: Low to High</option>
-                    <option value="priceHighLow">Price: High to Low</option>
-                    <option value="nameAsc">Hospital Name</option>
+                    <option value="default">{t('search.sortDefault')}</option>
+                    <option value="priceLowHigh">{t('search.sortPriceLow')}</option>
+                    <option value="priceHighLow">{t('search.sortPriceHigh')}</option>
+                    <option value="nameAsc">{t('search.sortName')}</option>
                   </select>
                 </label>
               </div>
@@ -833,12 +840,12 @@ const LandingPage = () => {
             style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}
           >
             {searchType === 'symptoms'
-              ? 'Recommended Doctors'
+              ? t('results.recommendedDoctors')
               : searchType === 'doctors'
-              ? 'Available Doctors'
+              ? t('results.availableDoctors')
               : searchType === 'hospitals'
-              ? 'Hospitals'
-              : 'Test Centers'}
+              ? t('results.hospitals')
+              : t('results.testCenters')}
           </motion.h2>
 
           {searchType === 'hospitals' ? (
@@ -871,7 +878,7 @@ const LandingPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {(searchType === 'testCenters' ? visibleTestCenters : filteredResults).map((item, index) => {
                       const isTestCenterCard = searchType === 'testCenters';
-                      const primaryButtonLabel = isTestCenterCard ? 'View Tests' : 'Contact';
+                      const primaryButtonLabel = isTestCenterCard ? t('buttons.viewTests') : t('buttons.contact');
 
                       return (
                         <motion.div
@@ -975,11 +982,11 @@ const LandingPage = () => {
                       {searchType === 'testCenters' && item.uniqueHospital && (
                         <div className="bg-purple-900/10 border border-purple-700/30 rounded-lg p-3 mb-4 text-sm text-purple-200">
                           <p className="font-semibold text-purple-300">
-                            {item.testCount} diagnostic test{item.testCount === 1 ? '' : 's'} available
+                            {item.testCount} {t('cards.testsAvailable')}
                           </p>
                           {item.categories && item.categories.length > 0 && (
                             <p className="mt-1 text-purple-200">
-                              Popular categories: <span className="text-white">{item.categories.join(', ')}</span>
+                              {t('cards.popularCategories')} <span className="text-white">{item.categories.join(', ')}</span>
                             </p>
                           )}
                         </div>
@@ -1066,7 +1073,7 @@ const LandingPage = () => {
                             className="px-4 py-3 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg text-sm transition-all duration-200 bg-transparent hover:bg-zinc-800/50"
                             onClick={() => window.open(item.profileLink, '_blank')}
                           >
-                            Profile
+                            {t('cards.profile')}
                           </motion.button>
                         )}
                       </div>
@@ -1082,7 +1089,7 @@ const LandingPage = () => {
                         onClick={handleLoadMoreTestCenters}
                         className="px-6 py-3 border border-emerald-500/50 text-emerald-300 rounded-xl font-semibold hover:bg-emerald-500/10 transition-all"
                       >
-                        Load more test centers
+                        {t('buttons.loadMore', { type: t('search.testCenters') })}
                       </motion.button>
                     </div>
                   )}
@@ -1097,10 +1104,10 @@ const LandingPage = () => {
                 >
                   <div className="text-6xl mb-4">🔍</div>
                   <h3 className="text-xl font-semibold text-zinc-300 mb-2">
-                    No {searchType === 'symptoms' ? 'doctors' : searchType} found
+                    {searchType === 'symptoms' ? t('results.noDoctorsFound') : searchType === 'doctors' ? t('results.noDoctorsFound') : searchType === 'hospitals' ? t('results.noHospitalsFound') : t('results.noTestCentersFound')}
                   </h3>
                   <p className="text-zinc-500">
-                    Try adjusting your search terms or browse all available options.
+                    {t('results.tryAdjustingSearch')}
                   </p>
                 </motion.div>
               )}
@@ -1118,10 +1125,10 @@ const LandingPage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl font-bold text-white mb-4">
-              Complete Healthcare Ecosystem
+              {t('features.title')}
             </h2>
             <p className="text-xl text-zinc-400 max-w-3xl mx-auto">
-              Advanced AI-powered platform bridging the gap between patients and healthcare providers
+              {t('features.subtitle')}
             </p>
           </motion.div>
 
@@ -1129,18 +1136,18 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
             {[
               {
-                title: "Symptom-Based Search",
-                description: "Enter your symptoms and get matched with the right specialists, nearby doctors, and test centers using AI-powered recommendations.",
+                title: t('features.feature1Title'),
+                description: t('features.feature1Desc'),
                 gradient: "from-blue-500 to-cyan-500"
               },
               {
-                title: "AI Diagnosis Review",
-                description: "Upload prescriptions and health documents. Our AI explains diagnoses in simple terms and suggests next steps for better care.",
+                title: t('features.feature2Title'),
+                description: t('features.feature2Desc'),
                 gradient: "from-emerald-500 to-teal-500"
               },
               {
-                title: "Health Knowledge Graph",
-                description: "Automated creation of your personal health timeline and knowledge graph from uploaded documents and medical history.",
+                title: t('features.feature3Title'),
+                description: t('features.feature3Desc'),
                 gradient: "from-purple-500 to-indigo-500"
               }
             ].map((feature, index) => (
@@ -1171,12 +1178,12 @@ const LandingPage = () => {
             viewport={{ once: true }}
             className="bg-gradient-to-r from-zinc-900/80 to-zinc-800/80 border border-zinc-700/50 rounded-3xl p-8 mb-16"
           >
-            <h3 className="text-2xl font-bold text-white text-center mb-8">Advanced Healthcare Features</h3>
+            <h3 className="text-2xl font-bold text-white text-center mb-8">{t('features.advancedTitle')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
-                  title: "Context-Aware Chatbot",
-                  description: "AI-powered assistant using your health data",
+                  title: t('features.chatbotTitle'),
+                  description: t('features.chatbotDesc'),
                   icon: (
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -1184,8 +1191,8 @@ const LandingPage = () => {
                   )
                 },
                 {
-                  title: "Personal Dashboard",
-                  description: "Visualize health trends and diagnosis timeline",
+                  title: t('features.dashboardTitle'),
+                  description: t('features.dashboardDesc'),
                   icon: (
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -1193,8 +1200,8 @@ const LandingPage = () => {
                   )
                 },
                 {
-                  title: "Doctor Access Portal",
-                  description: "Professionals can access structured patient data",
+                  title: t('features.doctorPortalTitle'),
+                  description: t('features.doctorPortalDesc'),
                   icon: (
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1202,8 +1209,8 @@ const LandingPage = () => {
                   )
                 },
                 {
-                  title: "Cost Estimation",
-                  description: "Estimate treatment costs and required tests",
+                  title: t('features.costTitle'),
+                  description: t('features.costDesc'),
                   icon: (
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
@@ -1238,7 +1245,7 @@ const LandingPage = () => {
             viewport={{ once: true }}
             className="text-center"
           >
-            <h3 className="text-2xl font-bold text-white mb-8">Powered by Modern Technology</h3>
+            <h3 className="text-2xl font-bold text-white mb-8">{t('features.technologyTitle')}</h3>
             <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
               {[
                 { name: "React.js" },
@@ -1277,10 +1284,10 @@ const LandingPage = () => {
                     backgroundSize: '200% 200%',
                     animation: 'gradient 4s ease infinite'
                   }}>
-                NiramoyAI
+                {t('footer.brand')}
               </h3>
               <p className="text-zinc-400 mb-6 max-w-md" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
-                Your trusted AI-powered healthcare companion. Advanced medical insights, doctor recommendations, and comprehensive health management at your fingertips.
+                {t('footer.description')}
               </p>
               <div className="flex space-x-4">
                 <motion.div
@@ -1306,23 +1313,23 @@ const LandingPage = () => {
 
             {/* Services */}
             <div>
-              <h4 className="text-white font-semibold mb-4" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>Services</h4>
+              <h4 className="text-white font-semibold mb-4" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>{t('footer.services')}</h4>
               <ul className="space-y-2 text-zinc-400">
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">AI Diagnosis</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Doctor Search</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Test Centers</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Health Analytics</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">{t('footer.aiDiagnosis')}</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">{t('footer.doctorSearch')}</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">{t('footer.testCenters')}</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">{t('footer.healthAnalytics')}</a></li>
               </ul>
             </div>
 
             {/* Company */}
             <div>
-              <h4 className="text-white font-semibold mb-4" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>Company</h4>
+              <h4 className="text-white font-semibold mb-4" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>{t('footer.company')}</h4>
               <ul className="space-y-2 text-zinc-400">
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">{t('footer.aboutUs')}</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">{t('footer.privacyPolicy')}</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">{t('footer.termsOfService')}</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition-colors">{t('footer.contact')}</a></li>
               </ul>
             </div>
           </div>
@@ -1330,12 +1337,12 @@ const LandingPage = () => {
           {/* Bottom Bar */}
           <div className="border-t border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-zinc-500 text-sm" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
-              © 2025 NiramoyAI. All rights reserved.
+              {t('footer.copyright')}
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">Privacy</a>
-              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">Terms</a>
-              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">Security</a>
+              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">{t('footer.privacy')}</a>
+              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">{t('footer.terms')}</a>
+              <a href="#" className="text-zinc-500 hover:text-emerald-400 text-sm transition-colors">{t('footer.security')}</a>
             </div>
           </div>
         </div>

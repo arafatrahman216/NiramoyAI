@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { chatbotAPI } from '../../services/api';
 
 // ==============================================
@@ -26,6 +27,7 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({
   setChatSessions,
   isLoading = false
 }) => {
+  const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [creatingNewChat, setCreatingNewChat] = useState(false);
   
@@ -78,7 +80,7 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({
       {/* SIDEBAR HEADER */}
       <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-semibold text-white">Chat History</h2>
+          <h2 className="text-lg font-semibold text-white">{t('chatsSidebar.chatHistory')}</h2>
           {refreshing && (
             <div className="animate-spin w-4 h-4 border-2 border-zinc-600 border-t-emerald-500 rounded-full"></div>
           )}
@@ -104,14 +106,14 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({
           {creatingNewChat ? (
             <>
               <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-              <span>Creating...</span>
+              <span>{t('chatsSidebar.creating')}</span>
             </>
           ) : (
             <>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span>New Chat</span>
+              <span>{t('chatsSidebar.newChat')}</span>
             </>
           )}
         </button>
@@ -123,7 +125,7 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({
           /* Loading State */
           <div className="text-center text-zinc-500 mt-8">
             <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full mx-auto mb-4"></div>
-            <p className="text-sm">Loading chat history...</p>
+            <p className="text-sm">{t('chatsSidebar.loadingChatHistory')}</p>
           </div>
         ) : chatSessions.length === 0 ? (
           /* Empty State */
@@ -131,8 +133,8 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({
             <svg className="w-12 h-12 mx-auto mb-4 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p className="text-sm">No conversations yet</p>
-            <p className="text-xs text-zinc-600 mt-1">Start a new chat to begin your medical consultation</p>
+            <p className="text-sm">{t('chatsSidebar.noConversations')}</p>
+            <p className="text-xs text-zinc-600 mt-1">{t('chatsSidebar.startNewChat')}</p>
           </div>
         ) : (
           /* Chat History */

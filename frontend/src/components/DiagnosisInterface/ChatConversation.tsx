@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { chatbotAPI, ttsAPI } from '../../services/api';
 import CarePlanTimeline from './CarePlanTimeline';
 
@@ -49,6 +50,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
   planningSteps = [],
   currentPlanningStep = 0
 }) => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
@@ -227,7 +229,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
       // Add error message
       const errorMessage: Message = {
         messageId: Date.now() + 1,
-        content: 'Sorry, there was an error sending your message. Please try again.',
+        content: t('chatConversation.errorSendingMessage'),
         agent: true
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -338,7 +340,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
       audio.onerror = (error) => {
         console.error('Audio playback error:', error);
         stopCurrentAudio();
-        alert('Error playing audio. Please try again.');
+        alert(t('chatConversation.errorPlayingAudio'));
       };
       
       // Start playing the audio
@@ -350,13 +352,13 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
       
       if (error.response) {
         console.error('TTS API error response:', error.response.data);
-        alert(`TTS service error: ${error.response.status}. Please try again.`);
+        alert(t('chatConversation.ttsServiceError', { status: error.response.status }));
       } else if (error.request) {
         console.error('TTS network error:', error.request);
-        alert('Network error. Please check your connection and try again.');
+        alert(t('chatConversation.networkError'));
       } else {
         console.error('TTS unexpected error:', error.message);
-        alert('Unexpected error occurred. Please try again.');
+        alert(t('chatConversation.unexpectedError'));
       }
     }
   };
@@ -389,9 +391,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
       const urlParts = url.split('/');
       const filename = urlParts[urlParts.length - 1];
       // Remove query parameters if any
-      return filename.split('?')[0] || 'Attachment';
+      return filename.split('?')[0] || t('chatConversation.attachment');
     } catch {
-      return 'Attachment';
+      return t('chatConversation.attachment');
     }
   };
 
@@ -438,15 +440,15 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors flex items-center space-x-1"
-                  title="Open attachment in new tab"
+                  title={t('chatConversation.openAttachment')}
                 >
-                  <span>View</span>
+                  <span>{t('chatConversation.view')}</span>
                   <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </a>
               </div>
-              <p className="text-xs text-zinc-400/70 capitalize">{fileInfo.type} attachment</p>
+              <p className="text-xs text-zinc-400/70 capitalize">{fileInfo.type} {t('chatConversation.attachment')}</p>
             </div>
           </div>
         </div>
@@ -517,7 +519,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full"></div>
-            <span className="ml-3 text-zinc-400">Loading conversation...</span>
+            <span className="ml-3 text-zinc-400">{t('chatConversation.loadingConversation')}</span>
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-zinc-500 mt-8">
@@ -604,7 +606,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                               <button
                                 onClick={() => handleCopyMessage(message.messageId, message.content)}
                                 className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-                                title={copiedMessageId === message.messageId ? "Copied!" : "Copy response"}
+                                title={copiedMessageId === message.messageId ? t('chatConversation.copied') : t('chatConversation.copyResponse')}
                               >
                                 {copiedMessageId === message.messageId ? (
                                   /* Checkmark icon when copied */
@@ -627,7 +629,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                                     ? 'bg-emerald-500/20 text-emerald-400' 
                                     : 'hover:bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
                                 }`}
-                                title={speakingMessageId === message.messageId ? "Stop reading" : "Read aloud"}
+                                title={speakingMessageId === message.messageId ? t('chatConversation.stopReading') : t('chatConversation.readAloud')}
                               >
                                 {speakingMessageId === message.messageId ? (
                                   /* Stop icon when speaking */
@@ -665,7 +667,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                       <div className="space-y-3">
                         <div className="flex items-center space-x-2 pb-2 border-b border-zinc-800">
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                          <span className="text-xs font-medium text-zinc-300">Planning...</span>
+                          <span className="text-xs font-medium text-zinc-300">{t('chatConversation.planning')}</span>
                         </div>
                         
                         <div className="space-y-2">
@@ -716,7 +718,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                             <span>Step {currentPlanningStep}/{planningSteps.length}</span>
                             <span className="flex items-center space-x-1">
                               <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></span>
-                              <span>Processing</span>
+                              <span>{t('chatConversation.processing')}</span>
                             </span>
                           </div>
                         </div>
@@ -730,7 +732,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                         <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
                         <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
-                      <span className="text-sm">AI is thinking...</span>
+                      <span className="text-sm">{t('chatConversation.aiThinking')}</span>
                     </div>
                   )}
                 </div>
@@ -759,8 +761,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
             </svg>
           </button>
           <div>
-            <h2 className="text-lg font-semibold text-white">Chat Conversation</h2>
-            <p className="text-sm text-zinc-400">Chat ID: {chatId}</p>
+            <h2 className="text-lg font-semibold text-white">{t('chatConversation.chatConversation')}</h2>
+            <p className="text-sm text-zinc-400">{t('chatConversation.chatId')}: {chatId}</p>
           </div>
         </div>
       </div>
@@ -770,15 +772,15 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full"></div>
-            <span className="ml-3 text-zinc-400">Loading conversation...</span>
+            <span className="ml-3 text-zinc-400">{t('chatConversation.loadingConversation')}</span>
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-zinc-500 mt-8">
             <svg className="w-12 h-12 mx-auto mb-4 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p className="text-sm">No messages yet</p>
-            <p className="text-xs text-zinc-600 mt-1">Start the conversation by sending a message</p>
+            <p className="text-sm">{t('chatConversation.noMessagesYet')}</p>
+            <p className="text-xs text-zinc-600 mt-1">{t('chatConversation.startConversation')}</p>
           </div>
         ) : (
           messages.map((message) => {
@@ -809,7 +811,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                   >
                     <p className="text-sm">{message.content}</p>
                     <p className="text-xs mt-1 opacity-70">
-                      {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
+                      {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : t('chatConversation.now')}
                     </p>
                   </div>
                 </div>
@@ -828,7 +830,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Type your message..."
+            placeholder={t('chatConversation.typeYourMessage')}
             disabled={sending}
             className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
           />

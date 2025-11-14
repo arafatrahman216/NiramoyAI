@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Share2, QrCode } from 'lucide-react';
 
 const QRModal = ({ isOpen, onClose, qrData }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = async () => {
@@ -55,7 +57,7 @@ const QRModal = ({ isOpen, onClose, qrData }) => {
                 <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
                   <QrCode className="w-4 h-4 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-white">Shareable Profile</h2>
+                <h2 className="text-xl font-bold text-white">{t('qrModal.shareableProfile')}</h2>
               </div>
               <button
                 onClick={onClose}
@@ -75,14 +77,14 @@ const QRModal = ({ isOpen, onClose, qrData }) => {
                 />
               </div>
               <p className="text-gray-400 text-sm mt-3">
-                Scan this QR code to access your health profile
+                {t('qrModal.scanQrCode')}
               </p>
             </div>
 
             {/* Shareable Link */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Shareable Link
+                {t('qrModal.shareableLink')}
               </label>
               <div className="flex items-start space-x-2">
                 <div className="flex-1 bg-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 font-mono border border-gray-600 break-all leading-relaxed">
@@ -109,7 +111,7 @@ const QRModal = ({ isOpen, onClose, qrData }) => {
                   animate={{ opacity: 1, y: 0 }}
                   className="text-green-400 text-xs mt-1"
                 >
-                  Link copied to clipboard!
+                  {t('qrModal.linkCopied')}
                 </motion.p>
               )}
             </div>
@@ -122,22 +124,21 @@ const QRModal = ({ isOpen, onClose, qrData }) => {
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
                 >
                   <Share2 className="w-4 h-4" />
-                  <span>Share</span>
+                  <span>{t('qrModal.share')}</span>
                 </button>
               )}
               <button
                 onClick={onClose}
                 className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors"
               >
-                Close
+                {t('qrModal.close')}
               </button>
             </div>
 
             {/* Info Text */}
             <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
               <p className="text-xs text-gray-400 text-center">
-                This link allows others to view your basic health profile and contact information.
-                Sensitive medical data is not included.
+                {t('qrModal.infoText')}
               </p>
             </div>
           </motion.div>
