@@ -137,7 +137,7 @@ public class DoctorController {
 
     }
 
-    @Cacheable(value = "dr_qr", key = "#doctor.id")
+//    @Cacheable(value = "dr_qr", key = "#doctor.id")
     @GetMapping("/qr")
     public ResponseEntity<Map<String, Object>> getQRLink(){
         Map<String, Object> response = new HashMap<>();
@@ -236,7 +236,7 @@ public class DoctorController {
         
     }
 
-    @CachePut(value = "dr_qr", key = "#doctor.id")
+//    @CachePut(value = "dr_qr", key = "#doctor.id")
     @PutMapping("/qr")
     public ResponseEntity<Map<String, Object>> getNewQrLink(){
         Map<String, Object> response = new HashMap<>();
