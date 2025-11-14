@@ -16,6 +16,7 @@ const PrescribeModal = ({ isOpen, onClose, doctorProfile }) => {
   const [vitals, setVitals] = useState([]);
 
   // Prescription form states
+  const [manualPatientName, setManualPatientName] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [advice, setAdvice] = useState('');
   const [medications, setMedications] = useState([
@@ -124,8 +125,8 @@ const PrescribeModal = ({ isOpen, onClose, doctorProfile }) => {
   };
 
   const validateForm = () => {
-    if (!selectedPatient) {
-      alert('Please select a patient');
+    if (!selectedPatient && !manualPatientName.trim()) {
+      alert('Please select a patient or enter patient name');
       return false;
     }
     if (!diagnosis.trim()) {
@@ -157,7 +158,7 @@ const PrescribeModal = ({ isOpen, onClose, doctorProfile }) => {
       const formData = new FormData();
       formData.append('appointmentDate', new Date().toLocaleDateString('en-CA'));
       formData.append('doctorName', doctorProfile?.name || 'Doctor');
-      formData.append('doctorId', selectedPatient.id);
+      formData.append('doctorId', selectedPatient?.id || manualPatientName);
       formData.append('symptoms', diagnosis);
 
       const prescriptionText = `
@@ -199,6 +200,344 @@ ${notes ? `Notes:\n${notes}` : ''}
     setSelectedPatient(null);
     setPatientData(null);
     setVitals([]);
+    setManualPatientName('');
+  };
+
+  const generatePrescriptionHTML = () => {
+    const currentDate = new Date().toLocaleString('en-US', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+
+    const patientName = selectedPatient?.name || manualPatientName;
+    const patientId = selectedPatient?.id || 'N/A';
+    const patientGender = selectedPatient?.gender || 'Not specified';
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Prescription - ${patientName}</title>
+        <style>
+          @page { size: A4; margin: 0; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: Arial, sans-serif;
+            background: white;
+            color: #000;
+            font-size: 12px;
+            line-height: 1.4;
+          }
+          .prescription-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            margin: 0 auto;
+            background: white;
+            position: relative;
+          }
+          
+          /* Header Section */
+          .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2563eb;
+            margin-bottom: 15px;
+          }
+          .doctor-info-left {
+            flex: 1;
+          }
+          .doctor-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 3px;
+          }
+          .doctor-degrees {
+            font-size: 11px;
+            color: #555;
+            margin-bottom: 2px;
+          }
+          .doctor-specialty {
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+          }
+          .doctor-institution {
+            font-size: 10px;
+            color: #666;
+            font-style: italic;
+          }
+          .doctor-info-right {
+            text-align: right;
+            font-size: 10px;
+            color: #666;
+          }
+          
+          /* Patient Info Bar */
+          .patient-info-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #f3f4f6;
+            border-left: 4px solid #2563eb;
+            margin-bottom: 15px;
+            font-size: 11px;
+          }
+          .patient-info-item {
+            display: flex;
+            gap: 5px;
+          }
+          .patient-info-item .label {
+            font-weight: 600;
+            color: #374151;
+          }
+          .patient-info-item .value {
+            color: #6b7280;
+          }
+          
+          /* Main Content Layout */
+          .content-section {
+            margin-bottom: 15px;
+          }
+          
+          /* Rx Symbol */
+          .rx-symbol {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2563eb;
+            font-family: 'Brush Script MT', cursive;
+            margin-bottom: 10px;
+          }
+          
+          /* Diagnosis Box */
+          .diagnosis-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+          }
+          .diagnosis-box .title {
+            font-weight: bold;
+            font-size: 11px;
+            color: #1e40af;
+            margin-bottom: 4px;
+          }
+          .diagnosis-box .content {
+            font-size: 11px;
+            color: #1e3a8a;
+          }
+          
+          /* Medications List */
+          .medications-list {
+            margin-bottom: 12px;
+          }
+          .medication-item {
+            display: flex;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 11px;
+          }
+          .medication-item:last-child {
+            border-bottom: none;
+          }
+          .med-number {
+            min-width: 20px;
+            font-weight: bold;
+            color: #6b7280;
+          }
+          .med-details {
+            flex: 1;
+          }
+          .med-name {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 2px;
+          }
+          .med-dosage {
+            font-size: 10px;
+            color: #6b7280;
+          }
+          
+          /* Info Box */
+          .info-box {
+            background: #fefce8;
+            border: 1px solid #fde68a;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+          }
+          .info-box .title {
+            font-weight: bold;
+            font-size: 10px;
+            color: #92400e;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+          }
+          .info-box .content {
+            font-size: 10px;
+            color: #78350f;
+            line-height: 1.5;
+          }
+          
+          /* Signature Section */
+          .signature-section {
+            margin-top: 30px;
+            text-align: right;
+            padding-right: 40px;
+          }
+          .signature-line {
+            border-top: 1px solid #000;
+            width: 180px;
+            display: inline-block;
+            margin-bottom: 5px;
+          }
+          .signature-name {
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 2px;
+            font-size: 11px;
+          }
+          
+          /* Footer */
+          .footer-section {
+            position: absolute;
+            bottom: 15mm;
+            left: 15mm;
+            right: 15mm;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 9px;
+            color: #9ca3af;
+            text-align: center;
+          }
+          
+          @media print {
+            body { margin: 0; padding: 0; }
+            .prescription-page { margin: 0; padding: 15mm; }
+            @page { margin: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="prescription-page">
+          <!-- Header Section -->
+          <div class="header-section">
+            <div class="doctor-info-left">
+              <div class="doctor-name">Dr. ${doctorProfile?.name || 'Doctor Name'}</div>
+              <div class="doctor-degrees">${doctorProfile?.degree || 'MBBS'}</div>
+              <div class="doctor-specialty">${doctorProfile?.specialization || 'General Physician'}</div>
+              <div class="doctor-institution">${doctorProfile?.hospitalName || 'Medical Center'}</div>
+            </div>
+            <div class="doctor-info-right">
+              <div style="margin-top: 5px; font-weight: 600; color: #333;">Date: ${currentDate}</div>
+            </div>
+          </div>
+          
+          <!-- Patient Info Bar -->
+          <div class="patient-info-bar">
+            <div class="patient-info-item">
+              <span class="label">Name:</span>
+              <span class="value">${patientName}</span>
+            </div>
+            <div class="patient-info-item">
+              <span class="label">Gender:</span>
+              <span class="value">${patientGender}</span>
+            </div>
+            <div class="patient-info-item">
+              <span class="label">ID:</span>
+              <span class="value">#${patientId}</span>
+            </div>
+          </div>
+          
+          <!-- Prescription Section -->
+          <div class="content-section">
+            <div class="rx-symbol">℞</div>
+            
+            <!-- Diagnosis -->
+            <div class="diagnosis-box">
+              <div class="title">Diagnosis</div>
+              <div class="content">${diagnosis}</div>
+            </div>
+            
+            <!-- Medications -->
+            ${medications.length > 0 && medications[0].name ? `
+            <div class="medications-list">
+              <div style="font-weight: bold; font-size: 11px; margin-bottom: 8px; color: #1f2937;">Medications:</div>
+              ${medications.map((med, index) => `
+                <div class="medication-item">
+                  <div class="med-number">${index + 1}.</div>
+                  <div class="med-details">
+                    <div class="med-name">${med.name}</div>
+                    <div class="med-dosage">${med.frequency} - For ${med.duration}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            ` : ''}
+            
+            <!-- Advice -->
+            ${advice ? `
+            <div class="info-box">
+              <div class="title">Advice</div>
+              <div class="content">${advice.replace(/\n/g, '<br>')}</div>
+            </div>
+            ` : ''}
+            
+            <!-- Tests -->
+            ${tests ? `
+            <div class="info-box">
+              <div class="title">Recommended Tests</div>
+              <div class="content">${tests.replace(/\n/g, '<br>')}</div>
+            </div>
+            ` : ''}
+            
+            <!-- Notes -->
+            ${notes ? `
+            <div class="info-box" style="background: #f0fdf4; border-color: #bbf7d0;">
+              <div class="title" style="color: #166534;">Additional Notes</div>
+              <div class="content" style="color: #14532d;">${notes.replace(/\n/g, '<br>')}</div>
+            </div>
+            ` : ''}
+          </div>
+          
+          <!-- Signature -->
+          <div class="signature-section">
+            <div class="signature-line"></div>
+            <div class="signature-name">Dr. ${doctorProfile?.name || 'Doctor Name'}</div>
+            <div style="font-size: 10px; color: #6b7280;">${doctorProfile?.degree || 'MBBS'}</div>
+          </div>
+          
+          <!-- Footer -->
+          <div class="footer-section">
+            <div>This is a computer-generated prescription | NiramoyAI Healthcare Platform</div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const handlePrintPrescription = () => {
+    if (!validateForm()) return;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(generatePrescriptionHTML());
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   if (!isOpen) return null;
@@ -220,7 +559,7 @@ ${notes ? `Notes:\n${notes}` : ''}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+z              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="pm-modal pm-modal-split"
               onClick={(e) => e.stopPropagation()}
             >
@@ -425,6 +764,7 @@ ${notes ? `Notes:\n${notes}` : ''}
                 {/* RIGHT PANEL - Prescription Form */}
                 <div className="pm-right-panel">
                   <form onSubmit={handleSubmit} className="pm-form">
+                    {/* Patient Header - Always Show When Available */}
                     {selectedPatient && (
                       <div className="pm-patient-header">
                         <div className="pm-patient-avatar-large">
@@ -444,143 +784,181 @@ ${notes ? `Notes:\n${notes}` : ''}
                       </div>
                     )}
 
-                    {selectedPatient && (
-                      <>
-                        {/* Diagnosis */}
-                        <div className="pm-form-group">
-                          <label className="pm-label">
-                            <span>Diagnosis *</span>
-                          </label>
-                          <textarea
-                            value={diagnosis}
-                            onChange={(e) => setDiagnosis(e.target.value)}
-                            placeholder="Enter patient's diagnosis..."
-                            className="pm-textarea"
-                            rows="2"
-                          />
-                        </div>
+                    {/* Patient Name Field - Only show when patient not selected */}
+                    {!selectedPatient && (
+                      <div className="pm-form-group">
+                        <label className="pm-label">
+                          <span>Patient Name</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={manualPatientName}
+                          onChange={(e) => setManualPatientName(e.target.value)}
+                          placeholder="Enter patient name manually..."
+                          className="pm-textarea"
+                          style={{ padding: '8px 12px', fontFamily: 'inherit', minHeight: '40px' }}
+                        />
+                        <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+                          Optional: Use this if you want to enter a prescription without selecting from the patient list
+                        </p>
+                      </div>
+                    )}
 
-                        {/* Medications */}
-                        <div className="pm-form-group">
-                          <div className="pm-form-header">
-                            <label className="pm-label">Medications *</label>
-                            <button
-                              type="button"
-                              onClick={handleAddMedication}
-                              className="pm-add-btn"
-                            >
-                              <Plus size={16} />
-                              Add
-                            </button>
-                          </div>
+                    {/* Prescription Form - Always Show as Skeleton */}
+                    <>
+                      {/* Diagnosis */}
+                      <div className="pm-form-group">
+                        <label className="pm-label">
+                          <span>Diagnosis *</span>
+                        </label>
+                        <textarea
+                          value={diagnosis}
+                          onChange={(e) => setDiagnosis(e.target.value)}
+                          placeholder="Enter patient's diagnosis..."
+                          className="pm-textarea"
+                          rows="2"
+                          disabled={!selectedPatient}
+                        />
+                      </div>
 
-                          <div className="pm-med-medications-list">
-                            {medications.map((medication, index) => (
-                              <div key={medication.id} className="pm-med-item">
-                                <div className="pm-med-number">#{index + 1}</div>
-                                <input
-                                  type="text"
-                                  value={medication.name}
-                                  onChange={(e) => handleMedicationChange(medication.id, 'name', e.target.value)}
-                                  placeholder="Medicine name"
-                                  className="pm-med-input"
-                                />
-                                <select
-                                  value={medication.frequency}
-                                  onChange={(e) => handleMedicationChange(medication.id, 'frequency', e.target.value)}
-                                  className="pm-med-select"
-                                >
-                                  {frequencyOptions.map(option => (
-                                    <option key={option} value={option}>{option}</option>
-                                  ))}
-                                </select>
-                                <input
-                                  type="text"
-                                  value={medication.duration}
-                                  onChange={(e) => handleMedicationChange(medication.id, 'duration', e.target.value)}
-                                  placeholder="e.g., 5 days, 1 week"
-                                  className="pm-med-input pm-med-duration"
-                                />
-                                {medications.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveMedication(medication.id)}
-                                    className="pm-remove-btn"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Advice */}
-                        <div className="pm-form-group">
-                          <label className="pm-label">Advice</label>
-                          <textarea
-                            value={advice}
-                            onChange={(e) => setAdvice(e.target.value)}
-                            placeholder="Medical advice (e.g., rest, diet, lifestyle changes)..."
-                            className="pm-textarea"
-                            rows="2"
-                          />
-                        </div>
-
-                        {/* Tests */}
-                        <div className="pm-form-group">
-                          <label className="pm-label">Recommended Tests</label>
-                          <textarea
-                            value={tests}
-                            onChange={(e) => setTests(e.target.value)}
-                            placeholder="Lab tests or diagnostic procedures..."
-                            className="pm-textarea"
-                            rows="2"
-                          />
-                        </div>
-
-                        {/* Notes */}
-                        <div className="pm-form-group">
-                          <label className="pm-label">Additional Notes</label>
-                          <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Any additional notes or warnings..."
-                            className="pm-textarea"
-                            rows="2"
-                          />
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="pm-actions">
+                      {/* Medications */}
+                      <div className="pm-form-group">
+                        <div className="pm-form-header">
+                          <label className="pm-label">Medications *</label>
                           <button
                             type="button"
-                            onClick={onClose}
-                            className="pm-cancel-btn"
-                            disabled={submitting}
+                            onClick={handleAddMedication}
+                            className="pm-add-btn"
+                            disabled={!selectedPatient}
                           >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            className="pm-submit-btn"
-                            disabled={submitting || !selectedPatient}
-                          >
-                            {submitting ? (
-                              <>
-                                <div className="pm-spinner-small" />
-                                Creating...
-                              </>
-                            ) : (
-                              <>
-                                <Send size={16} />
-                                Create Prescription
-                              </>
-                            )}
+                            <Plus size={16} />
+                            Add
                           </button>
                         </div>
-                      </>
-                    )}
+
+                        <div className="pm-med-medications-list">
+                          {medications.map((medication, index) => (
+                            <div key={medication.id} className="pm-med-item">
+                              <div className="pm-med-number">#{index + 1}</div>
+                              <input
+                                type="text"
+                                value={medication.name}
+                                onChange={(e) => handleMedicationChange(medication.id, 'name', e.target.value)}
+                                placeholder="Medicine name"
+                                className="pm-med-input"
+                                disabled={!selectedPatient}
+                              />
+                              <select
+                                value={medication.frequency}
+                                onChange={(e) => handleMedicationChange(medication.id, 'frequency', e.target.value)}
+                                className="pm-med-select"
+                                disabled={!selectedPatient}
+                              >
+                                {frequencyOptions.map(option => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                              <input
+                                type="text"
+                                value={medication.duration}
+                                onChange={(e) => handleMedicationChange(medication.id, 'duration', e.target.value)}
+                                placeholder="e.g., 5 days, 1 week"
+                                className="pm-med-input pm-med-duration"
+                                disabled={!selectedPatient}
+                              />
+                              {medications.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMedication(medication.id)}
+                                  className="pm-remove-btn"
+                                  disabled={!selectedPatient}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Advice */}
+                      <div className="pm-form-group">
+                        <label className="pm-label">Advice</label>
+                        <textarea
+                          value={advice}
+                          onChange={(e) => setAdvice(e.target.value)}
+                          placeholder="Medical advice (e.g., rest, diet, lifestyle changes)..."
+                          className="pm-textarea"
+                          rows="2"
+                          disabled={!selectedPatient}
+                        />
+                      </div>
+
+                      {/* Tests */}
+                      <div className="pm-form-group">
+                        <label className="pm-label">Recommended Tests</label>
+                        <textarea
+                          value={tests}
+                          onChange={(e) => setTests(e.target.value)}
+                          placeholder="Lab tests or diagnostic procedures..."
+                          className="pm-textarea"
+                          rows="2"
+                          disabled={!selectedPatient}
+                        />
+                      </div>
+
+                      {/* Notes */}
+                      <div className="pm-form-group">
+                        <label className="pm-label">Additional Notes</label>
+                        <textarea
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          placeholder="Any additional notes or warnings..."
+                          className="pm-textarea"
+                          rows="2"
+                          disabled={!selectedPatient}
+                        />
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="pm-actions">
+                        <button
+                          type="button"
+                          onClick={onClose}
+                          className="pm-cancel-btn"
+                          disabled={submitting}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePrintPrescription}
+                          className="pm-print-btn"
+                          disabled={submitting || (!selectedPatient && !manualPatientName.trim()) || !diagnosis.trim()}
+                          title="Print prescription"
+                        >
+                          <Printer size={16} />
+                          Print
+                        </button>
+                        <button
+                          type="submit"
+                          className="pm-submit-btn"
+                          disabled={submitting || (!selectedPatient && !manualPatientName.trim())}
+                        >
+                          {submitting ? (
+                            <>
+                              <div className="pm-spinner-small" />
+                              Creating...
+                            </>
+                          ) : (
+                            <>
+                              <Send size={16} />
+                              Create Prescription
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </>
                   </form>
                 </div>
               </div>

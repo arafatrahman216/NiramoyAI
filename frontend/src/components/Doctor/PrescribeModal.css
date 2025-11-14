@@ -581,6 +581,33 @@
   background: rgba(55, 65, 81, 0.7);
 }
 
+.pm-print-btn {
+  padding: 10px 16px;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+}
+
+.pm-print-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.8);
+  transform: translateY(-2px);
+}
+
+.pm-print-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .pm-submit-btn {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
