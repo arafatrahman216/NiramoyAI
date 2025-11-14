@@ -443,7 +443,7 @@ public class UserController {
 
             User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();   
             UserDTO userDTO = userService.convertToUserDTO(user);
-        
+
             String appointmentDate = visitDTO.getAppointmentDate();
             String doctorName = visitDTO.getDoctorName();
             String symptoms = visitDTO.getSymptoms();

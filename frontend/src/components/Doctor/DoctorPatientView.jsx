@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   ArrowLeft, 
   User, 
@@ -18,13 +19,15 @@ import {
   Droplets, 
   Lock,
   AlertCircle,
-  Loader
+  Loader,
+  PlusCircle
 } from 'lucide-react';
 import { API_BASE_URL, doctorAPI } from '../../services/api';
 import VitalsChart from '../PatientProfile/VitalsChart';
 import HealthLogs from '../PatientProfile/HealthLogs';
 import VisitTimeline from '../PatientProfile/VisitTimeline';
 import TestReports from '../PatientProfile/TestReports';
+import CreatePrescriptionModal from './CreatePrescriptionModal';
 import './DoctorPatientView.css';
 import { PhoneAndroid } from '@mui/icons-material';
 
@@ -41,6 +44,8 @@ const DoctorPatientView = () => {
   const [activeTab, setActiveTab] = useState('vitals');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [doctorProfile, setDoctorProfile] = useState(null);
 
   useEffect(() => {
     if (patientId) {
@@ -49,7 +54,19 @@ const DoctorPatientView = () => {
       setError('Patient ID is required');
       setLoading(false);
     }
+    fetchDoctorProfile();
   }, [patientId]);
+
+  const fetchDoctorProfile = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/doctor/profile`);
+      if (response.data.success) {
+        setDoctorProfile(response.data.doctor);
+      }
+    } catch (err) {
+      console.error('Error fetching doctor profile:', err);
+    }
+  };
 
   const fetchPatientData = async (id) => {
     try {
@@ -70,6 +87,27 @@ const DoctorPatientView = () => {
       setError(err.response?.data?.message || 'Error fetching patient data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreatePrescription = async (prescriptionData) => {
+    try {
+      // TODO: Replace with actual API endpoint
+      const response = await doctorAPI.createPrescription({
+        ...prescriptionData,
+        patientId
+      });
+
+      if (response.data.success) {
+        alert('Prescription created successfully!');
+        setShowPrescriptionModal(false);
+      } else {
+        throw new Error(response.data.message || 'Failed to create prescription');
+      }
+    } catch (err) {
+      console.error('Error creating prescription:', err);
+      alert(err.message || 'Error creating prescription');
+      throw err;
     }
   };
 
@@ -138,7 +176,17 @@ const DoctorPatientView = () => {
                 {patient.name?.charAt(0).toUpperCase()}
               </div>
               <div className="dpv-patient-basic-info">
-                <h2>{patient.name}</h2>
+                <div className="dpv-name-header">
+                  <h2>{patient.name}</h2>
+                  <button
+                    onClick={() => setShowPrescriptionModal(true)}
+                    className="dpv-create-prescription-btn-inline"
+                    title="Create a new prescription for this patient"
+                  >
+                    <PlusCircle size={18} />
+                    Create Prescription
+                  </button>
+                </div>
                 <p className="dpv-patient-id">ID: #{patientId}</p>
                 <div className="dpv-patient-meta">
                   <span className="dpv-meta-item">
@@ -295,6 +343,20 @@ const DoctorPatientView = () => {
               </div>
             )}
           </div>
+
+          <CreatePrescriptionModal
+            isOpen={showPrescriptionModal}
+            onClose={() => setShowPrescriptionModal(false)}
+            patientName={patient?.firstName && patient?.lastName ? `${patient.firstName} ${patient.lastName}` : patient?.name || 'Patient'}
+            patientId={patientId} 
+            vitals={vitals}
+            patientData={{
+              ...patient,
+              vitals: vitals
+            }}
+            doctorData={doctorProfile}
+            onSubmit={handleCreatePrescription}
+          />
         </>
       )}
     </div>

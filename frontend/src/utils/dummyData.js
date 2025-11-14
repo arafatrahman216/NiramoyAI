@@ -361,8 +361,7 @@ export const fallbackTestReports = [
     summary: 'All blood cell counts within normal limits. No signs of infection, anemia, or bleeding disorders. White blood cells: 7.2 K/uL, Red blood cells: 4.5 M/uL, Hemoglobin: 14.2 g/dL.',
     urgency: 'normal',
     imageLinks: [
-      'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop'
+      'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=400&fit=crop'
     ]
   },
   {
@@ -414,7 +413,6 @@ export const fallbackTestReports = [
     summary: 'Fasting glucose elevated at 118 mg/dL (normal <100), consistent with diabetes diagnosis. Kidney function normal with creatinine 1.0 mg/dL and eGFR >60. Electrolytes balanced.',
     urgency: 'moderate',
     imageLinks: [
-      'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop',
       'https://images.unsplash.com/photo-1584362917165-526a968579e8?w=400&h=400&fit=crop',
       'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=400&fit=crop'
     ]

@@ -74,6 +74,9 @@ export const doctorAPI = {
   // Get list of patients who have given access to doctor
   getPatients: () => api.get('/doctor/patients'),
   
+  // Create prescription for a patient
+  createPrescription: (prescriptionData) => api.post('/doctor/prescription/create', prescriptionData),
+  
 };
 
 

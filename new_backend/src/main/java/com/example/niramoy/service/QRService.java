@@ -1,79 +1,86 @@
 package com.example.niramoy.service;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
-import org.springframework.stereotype.Service;
-
 import java.util.Base64;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
 
-import io.jsonwebtoken.io.IOException;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 public class QRService {
 
-    private static final String enKey = "AES";
     private static final String URL = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=";
-    private static SecretKey secretKey = null;
 
-    public QRService() {
-        try{
-            KeyGenerator keyGen = KeyGenerator.getInstance(enKey);
-            keyGen.init(256); // for example, 256 bits
-            secretKey = keyGen.generateKey();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to generate secret key: " + e.getMessage(), e);
+    // AES default = AES/ECB/PKCS5Padding (works but not the most secure)
+    private static final String CIPHER = "AES";
+
+    @Value("${app.aes.key}")
+    private String keyBase64;
+
+    private SecretKey secretKey;
+
+
+    // -------------------------------------------------------------------------
+    // Initialize Secret Key after Spring injects `@Value`
+    // -------------------------------------------------------------------------
+    @PostConstruct
+    public void initKey() {
+        try {
+            byte[] decoded = Base64.getDecoder().decode(keyBase64);
+            secretKey = new SecretKeySpec(decoded, "AES");
+
+            System.out.println("AES key loaded. Key length = " + decoded.length);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load AES key", e);
         }
     }
 
+
+    // -------------------------------------------------------------------------
+    // Encrypt text
+    // -------------------------------------------------------------------------
     public String encrypt(String data) {
-        try{
-            Cipher cipher = Cipher.getInstance(enKey);
+        try {
+            Cipher cipher = Cipher.getInstance(CIPHER);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            byte[] encryptedBytes = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            return Base64.getUrlEncoder().encodeToString(encryptedBytes); // URL-safe
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to encrypt data: " + e.getMessage(), e);
+
+            byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().encodeToString(encrypted);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Encryption failed", e);
         }
     }
 
-    public String decrypt(String encryptedData) {
-        try
-        {   
-            Cipher cipher = Cipher.getInstance(enKey);
+
+    // -------------------------------------------------------------------------
+    // Decrypt text
+    // -------------------------------------------------------------------------
+    public String decrypt(String encrypted) {
+        try {
+            Cipher cipher = Cipher.getInstance(CIPHER);
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            byte[] decodedBytes = Base64.getUrlDecoder().decode(encryptedData);
-            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
-            return new String(decryptedBytes, StandardCharsets.UTF_8);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to decrypt data: " + e.getMessage(), e);
+
+            byte[] decoded = Base64.getUrlDecoder().decode(encrypted);
+            byte[] decrypted = cipher.doFinal(decoded);
+
+            return new String(decrypted, StandardCharsets.UTF_8);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Decryption failed", e);
         }
     }
 
 
-    public String generateQrCode(String text) {
-
-        String qrLink = URL + text;
-        return qrLink;
+    // -------------------------------------------------------------------------
+    // Generate QR Code URL
+    // -------------------------------------------------------------------------
+    public String generateQrCode(String encryptedText) {
+        return URL + encryptedText;
     }
-
 }

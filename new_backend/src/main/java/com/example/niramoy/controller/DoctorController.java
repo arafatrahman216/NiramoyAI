@@ -2,14 +2,13 @@ package com.example.niramoy.controller;
 
 import com.example.niramoy.dto.DoctorProfileDTO;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
+import com.example.niramoy.dto.UserDTO;
 import com.example.niramoy.dto.VisitDTO;
 import com.example.niramoy.entity.Doctor;
 import com.example.niramoy.entity.DoctorProfile;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Visits;
-import com.example.niramoy.service.DoctorProfileService;
-import com.example.niramoy.service.QRService;
-import com.example.niramoy.service.VisitService;
+import com.example.niramoy.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +17,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -32,6 +33,8 @@ public class DoctorController {
     private final DoctorProfileService doctorProfileService;
     private final VisitService visitService;
     private final QRService qrService;
+    private final UserService userService;
+    private final ImageService imageService;
 
     private final String baseUrl = "http://localhost:3000/link/";
 
@@ -163,6 +166,24 @@ public class DoctorController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/appointments")
+    public ResponseEntity<Map<String, Object>> getAppointments(){
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Appointments retrieved successfully");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null");
+            return ResponseEntity.ok(response);
+        }
+
+        User doctor = (User) authentication.getPrincipal();
+        List<Map<String, Object>> appointments = doctorProfileService.getDoctorAppointments(doctor);
+        response.put("appointments", appointments);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/patient/data")
     public ResponseEntity<Map<String, Object>> getPatientsInfo(@RequestBody Map<String, Object> patient){
         Map<String, Object> response = new HashMap<>();
@@ -178,10 +199,15 @@ public class DoctorController {
         Long patientId = Long.parseLong(patient.get("id").toString());
 
         Map<String, Object> patientsData = doctorProfileService.getPatientData(doctor, patientId);
-        response.put("vitals", patientsData.get("healthProfile")); 
+        boolean hasPermission = (boolean) patientsData.get("hasPermission");
+        if (hasPermission){
+            response.put("visits", doctorProfileService.getPatientVisits(patientId));
+        }else {
+            response.put("visits", patientsData.get("visits"));
+        }
+        response.put("vitals", patientsData.get("healthProfile"));
         response.put("user", patientsData.get("user"));
         response.put("healthLogs", patientsData.get("healthLogs"));
-        response.put("visits", doctorProfileService.getPatientVisits(patientId));
         response.put("charts", patientsData.get("charts"));
         return ResponseEntity.ok(response);
     }
@@ -204,6 +230,92 @@ public class DoctorController {
         response.put("patients", patients);
         return ResponseEntity.ok(response);
         
+    }
+
+    @PutMapping("/qr")
+    public ResponseEntity<Map<String, Object>> getNewQrLink(){
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "QR link updated successfully");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null");
+        }
+        User doctor = (User) authentication.getPrincipal();
+        String qrUrl, profileLink ;
+
+        String data = doctor.getUsername() +"###"+ System.currentTimeMillis();
+        String encryptedData = qrService.encrypt(data);
+        profileLink = baseUrl+ (doctor.getUsername()!= null ? encryptedData : "none");
+        doctorProfileService.updateProfile(doctor, Map.of("qrUrl", profileLink));
+        System.out.println("profile link : " + profileLink);
+
+        qrUrl = qrService.generateQrCode(profileLink);
+        response.put("success", true);
+        response.put("link", profileLink);
+        response.put("qrImage", qrUrl);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/prescription/create")
+    public ResponseEntity<String> createPrescription(@ModelAttribute UploadVisitReqDTO visitDTO){
+
+        log.info("=== UPLOAD VISIT DATA ===");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User doctor = (User) authentication.getPrincipal();
+        // here treat doctorId of DTO as userId, so that we dont need to change our existing DTO
+        DoctorProfile doctorProfile = doctorProfileService.getDoctorProfileByUserId(doctor.getId());
+        Long doctorId = doctorProfile.getDoctorId();
+        String appointmentDate = visitDTO.getAppointmentDate();
+        String doctorName = visitDTO.getDoctorName();
+        String symptoms = visitDTO.getSymptoms();
+        String prescription = visitDTO.getPrescription();
+        String patientId = visitDTO.getDoctorId();
+        System.out.println("patient id : " + patientId);
+
+        User user = userService.findByUserId(Long.parseLong(patientId));
+        UserDTO userDTO = userService.convertToUserDTO(user);
+
+        String prescriptionFileUrl = null;
+        // Check if prescription file is present and upload it
+        if (visitDTO.getPrescriptionFile() != null && !visitDTO.getPrescriptionFile().isEmpty()) {
+            log.info("Prescription file found: {}", visitDTO.getPrescriptionFile().getOriginalFilename());
+            try {
+                prescriptionFileUrl = imageService.uploadImage(visitDTO.getPrescriptionFile());
+                log.info("Prescription file uploaded successfully. URL: {}", prescriptionFileUrl);
+            } catch (Exception e) {
+                log.error("Error uploading prescription file: {}", e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error uploading prescription file: " + e.getMessage());
+            }
+        } else {
+            log.warn("No prescription file provided");
+        }
+
+        log.info("=== UPLOAD SUMMARY ===");
+        log.info("Prescription File URL: {}", prescriptionFileUrl != null ? prescriptionFileUrl : "Not uploaded");
+        log.info("Visit data processed successfully");
+
+
+        UploadVisitReqDTO uploadedData = visitService.saveVisitData(
+                userDTO.getId(),
+                appointmentDate,
+                doctorName,
+                String.valueOf(doctorId),
+                symptoms,
+                prescription,
+                prescriptionFileUrl,
+                List.of()
+        );
+
+        log.info("Visit data saved successfully for user: {}", userDTO.getId());
+
+        return ResponseEntity.ok("Visit data received, files uploaded, and saved successfully. Prescription URL: " + prescriptionFileUrl);
+
     }
 
     
