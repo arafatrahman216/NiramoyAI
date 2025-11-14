@@ -303,7 +303,7 @@ public class DoctorController {
 
         UploadVisitReqDTO uploadedData = visitService.saveVisitData(
                 userDTO.getId(),
-                appointmentDate,
+//                appointmentDate,
                 doctorName,
                 String.valueOf(doctorId),
                 symptoms,
