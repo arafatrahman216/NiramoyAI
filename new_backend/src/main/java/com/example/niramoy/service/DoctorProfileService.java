@@ -238,6 +238,8 @@ public class DoctorProfileService {
             patientData.put("id", patient.getId());
             patientData.put("name", patient.getName());
             patientData.put("email", patient.getEmail());
+            patientData.put("gender", patient.getGender());
+            patientData.put("dateOfBirth", patient.getDateOfBirth().toString());
             patientData.put("phoneNumber", patient.getPhoneNumber());
             log.info("Accessed patient: {}", patientData);
             result.add(patientData);

@@ -382,10 +382,10 @@ const DoctorDashboard = () => {
                             {patient.phone}
                           </p>
                           <p className="text-gray-400">
-                            <span className="font-semibold">Blood:</span> {patient.bloodType}
+                            <span className="font-semibold">Gender:</span> {patient.gender}
                           </p>
                           <p className="text-gray-400">
-                            <span className="font-semibold">Last Visit:</span> {patient.lastVisit}
+                            <span className="font-semibold">Phone :</span> {patient.phoneNumber}
                           </p>
                         </div>
                       </div>

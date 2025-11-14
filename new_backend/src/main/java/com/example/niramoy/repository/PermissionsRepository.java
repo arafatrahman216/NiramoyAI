@@ -4,6 +4,7 @@ import com.example.niramoy.entity.Permissions;
 import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Doctor;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,5 +22,8 @@ public interface PermissionsRepository extends JpaRepository<Permissions, Long> 
     // Find a specific permission record by user and doctor
     Optional<Permissions> findByUserAndDoctor(User user, Doctor doctor);
 
+    @Query("SELECT DISTINCT p.user FROM Permissions p WHERE p.doctor = :doc and p.permission = true "+
+    "union "+
+    "SELECT DISTINCT v.user FROM Visits v WHERE v.doctor = :doc")
     List<User> findDistinctUserByDoctor(Doctor doc);
 }

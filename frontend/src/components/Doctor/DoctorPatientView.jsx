@@ -26,6 +26,7 @@ import HealthLogs from '../PatientProfile/HealthLogs';
 import VisitTimeline from '../PatientProfile/VisitTimeline';
 import TestReports from '../PatientProfile/TestReports';
 import './DoctorPatientView.css';
+import { PhoneAndroid } from '@mui/icons-material';
 
 const DoctorPatientView = () => {
   const [searchParams] = useSearchParams();
@@ -145,8 +146,8 @@ const DoctorPatientView = () => {
                     {patient.gender || 'N/A'}
                   </span>
                   <span className="dpv-meta-item">
-                    <Calendar size={14} />
-                    {patient.dateOfBirth || 'N/A'}
+                    <PhoneAndroid size={14} />
+                    {patient.phoneNumber || 'N/A'}
                   </span>
                   {patient.bloodType && (
                     <span className="dpv-meta-item dpv-blood-type">
@@ -189,28 +190,47 @@ const DoctorPatientView = () => {
             </div>
 
             {/* Medical Info */}
-            {(patient.allergies || patient.currentVitals) && (
-              <div className="dpv-medical-info">
-                {patient.allergies && (
-                  <div className="dpv-medical-item dpv-allergies">
-                    <AlertTriangle size={16} />
-                    <div>
-                      <p className="dpv-medical-label">Allergies</p>
-                      <p className="dpv-medical-value">{patient.allergies}</p>
+            {( vitals|| vitals.allergies || vitals.height || vitals.lifestyle || vitals.chronicDiseases) && (
+              <div className="dpv-medical-grid">
+                {vitals && (
+                  <>
+                    <div className="dpv-medical-stat">
+                      <p className="dpv-stat-label">BP</p>
+                      <p className="dpv-stat-value">{vitals.bloodPressure || 'N/A'}</p>
                     </div>
+                    <div className="dpv-medical-stat">
+                      <p className="dpv-stat-label">HR</p>
+                      <p className="dpv-stat-value">{vitals.heartRate ? `${vitals.heartRate} bpm` : 'N/A'}</p>
+                    </div>
+                    <div className="dpv-medical-stat">
+                      <p className="dpv-stat-label">Temp</p>
+                      <p className="dpv-stat-value">{vitals.temperature ? `${vitals.temperature}°F` : 'N/A'}</p>
+                    </div>
+                    <div className="dpv-medical-stat">
+                      <p className="dpv-stat-label">Height</p>
+                      <p className="dpv-stat-value">{vitals.height ? `${vitals.height} cm` : 'N/A'}</p>
+                    </div>
+                  </>
+                )}
+                
+                {vitals.allergies && (
+                  <div className="dpv-medical-alert">
+                    <AlertTriangle size={14} />
+                    <span>{vitals.allergies}</span>
                   </div>
                 )}
-                {patient.currentVitals && (
-                  <div className="dpv-medical-item">
-                    <Heart size={16} />
-                    <div>
-                      <p className="dpv-medical-label">Current Vitals</p>
-                      <p className="dpv-medical-value">
-                        BP: {patient.currentVitals.bloodPressure} | 
-                        HR: {patient.currentVitals.heartRate} bpm | 
-                        Temp: {patient.currentVitals.temperature}°F
-                      </p>
-                    </div>
+
+                {vitals.chronicDiseases && (
+                  <div className="dpv-medical-alert">
+                    <AlertTriangle size={14} />
+                    <span>{vitals.chronicDiseases}</span>
+                  </div>
+                )}
+
+                {vitals.lifestyle && (
+                  <div className="dpv-medical-badge">
+                    <Activity size={14} />
+                    <span>{vitals.lifestyle}</span>
                   </div>
                 )}
               </div>

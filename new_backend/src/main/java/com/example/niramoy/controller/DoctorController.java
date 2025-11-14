@@ -163,7 +163,7 @@ public class DoctorController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/data")
+    @PostMapping("/patient/data")
     public ResponseEntity<Map<String, Object>> getPatientsInfo(@RequestBody Map<String, Object> patient){
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
