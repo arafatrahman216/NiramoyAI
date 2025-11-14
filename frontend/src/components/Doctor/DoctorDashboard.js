@@ -14,7 +14,8 @@ import {
   Activity,
   FileText,
   Search,
-  QrCode
+  QrCode,
+  Pill
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +23,7 @@ import axios from 'axios';
 import { API_BASE_URL, doctorAPI } from '../../services/api';
 import RecentVisits from '../RecentVisits';
 import DoctorQRModal from './DoctorQRModal';
+import PrescribeModal from './PrescribeModal';
 import { 
   fallbackDoctorAppointments,
   fallbackDoctorRecentVisits,
@@ -44,6 +46,7 @@ const DoctorDashboard = () => {
   const [error, setError] = useState('');
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrData, setQrData] = useState(null);
+  const [showPrescribeModal, setShowPrescribeModal] = useState(false);
 
   useEffect(() => {
     fetchDoctorData();
@@ -232,6 +235,14 @@ const DoctorDashboard = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowPrescribeModal(true)}
+                className="flex items-center px-3 py-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                title="Create a new prescription"
+              >
+                <Pill className="w-4 h-4 mr-2" />
+                Prescribe
+              </button>
               <button
                 onClick={handleProfileClick}
                 className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
@@ -431,19 +442,16 @@ const DoctorDashboard = () => {
                       <div className="flex-1">
                         <h4 className="font-semibold text-white mb-1">{patient.name}</h4>
                         <div className="grid grid-cols-2 gap-2 text-sm">
-                          <p className="text-gray-400">
+                          {/* <p className="text-gray-400">
                             <Mail className="w-3 h-3 inline mr-1" />
                             {patient.email}
                           </p>
                           <p className="text-gray-400">
                             <Phone className="w-3 h-3 inline mr-1" />
                             {patient.phone}
-                          </p>
+                          </p> */}
                           <p className="text-gray-400">
                             <span className="font-semibold">Gender:</span> {patient.gender}
-                          </p>
-                          <p className="text-gray-400">
-                            <span className="font-semibold">Phone :</span> {patient.phoneNumber}
                           </p>
                         </div>
                       </div>
@@ -541,6 +549,12 @@ const DoctorDashboard = () => {
         isOpen={showQRModal} 
         onClose={() => setShowQRModal(false)} 
         doctorData={qrData}
+      />
+
+      <PrescribeModal
+        isOpen={showPrescribeModal}
+        onClose={() => setShowPrescribeModal(false)}
+        doctorProfile={doctorProfile}
       />
     </div>
   );

@@ -241,7 +241,7 @@ const CarePlanTimeline = ({ careData }) => {
                     {step.cost && (
                       <div className="flex items-center text-zinc-400">
                         <DollarSign className="w-4 h-4 mr-2 text-emerald-400" />
-                        <span>${step.cost}</span>
+                        <span>{step.cost}</span>
                       </div>
                     )}
                     

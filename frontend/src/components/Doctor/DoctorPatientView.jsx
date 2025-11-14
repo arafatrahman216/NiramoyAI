@@ -208,7 +208,7 @@ const DoctorPatientView = () => {
 
             {/* Contact Info */}
             <div className="dpv-contact-grid">
-              {patient.email && (
+              {/* {patient.email && (
                 <div className="dpv-contact-item">
                   <Mail size={16} />
                   <div>
@@ -225,7 +225,7 @@ const DoctorPatientView = () => {
                     <p className="dpv-contact-value">{patient.phone}</p>
                   </div>
                 </div>
-              )}
+              )} */}
               {patient.address && (
                 <div className="dpv-contact-item">
                   <MapPin size={16} />
