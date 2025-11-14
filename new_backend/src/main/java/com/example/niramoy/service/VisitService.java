@@ -178,7 +178,9 @@ public class VisitService {
                     .user(user)
                     .build();
 
-        
+
+
+
             Visits savedVisit = visitsRepository.save(visit);
 
 
@@ -201,7 +203,13 @@ public class VisitService {
 
         } catch (Exception e) {
             log.error("Error saving visit data: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save visit data: " + e.getMessage());
+
+            return UploadVisitReqDTO.builder()
+                    .appointmentDate(appointmentDate)
+                    .doctorName(doctorName)
+                    .symptoms(symptoms)
+                    .prescription(prescription)
+                    .build();
         }
     }
 

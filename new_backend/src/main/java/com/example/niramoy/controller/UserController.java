@@ -8,6 +8,8 @@ import com.example.niramoy.service.*;
 import com.example.niramoy.service.AIServices.AIService;
 import com.example.niramoy.repository.ChatSessionRepository;
 import com.example.niramoy.repository.MessageRepository;
+import com.example.niramoy.repository.PermissionsRepository;
+import com.example.niramoy.repository.DoctorRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -48,10 +50,15 @@ public class UserController {
     private final ElevenLabService elevenLabService;
     private final QRService qrService;
     private final UserKGService userKGService;
+    private final DoctorProfileService doctorProfileService;
+    private final PermissionsRepository permissionsRepository;
+    private final DoctorRepository doctorRepository;
 
     //FIXME : Has to refactor these into a service 
     private final ChatSessionRepository chatSessionRepository;
     private final MessageRepository messageRepository;
+    private final String baseQrUrl = "http://localhost:3000/link/";
+
 
 
 
@@ -514,8 +521,8 @@ public class UserController {
 
             User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();   
             UserDTO userDTO = userService.convertToUserDTO(user);
-        
-            // String appointmentDate = visitDTO.getAppointmentDate();
+
+            String appointmentDate = visitDTO.getAppointmentDate();
             String doctorName = visitDTO.getDoctorName();
             String symptoms = visitDTO.getSymptoms();
             String prescription = visitDTO.getPrescription();
@@ -740,8 +747,9 @@ public class UserController {
         String data = profile.getUsername() + "###" + (System.currentTimeMillis() + 24*60*60*1000); // 1 day expiry
         
         //FIXME : Fix hardcoded url
-        String profileLink = "https://niramoyai.netlify.app/shared/profile/" + (profile.getUsername() != null ? qrService.encrypt(data): "user123");
+        String profileLink = "http://localhost:3000/shared/profile/" + (profile.getUsername() != null ? qrService.encrypt(data): "user123");
         response.put("link", profileLink);
+        String excryptedData = qrService.encrypt(data);
         response.put("user", qrService.decrypt(qrService.encrypt(data)));
         response.put("expire", qrService.decrypt(qrService.encrypt(data)).split("###")[1]);
         response.put("qrImage",  qrService.generateQrCode(profileLink));
@@ -907,8 +915,109 @@ public class UserController {
         response.put("medicalSummary", medicalSummary.toMap());
         return ResponseEntity.ok(response);
     }
+
+
+    @GetMapping("/link/{data}")
+    public ResponseEntity<Map<String,Object>> getDoctorLink ( @PathVariable String data){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        response.put("success", true);
+        log.info("Encrypted data: {}", data);   
+         String decryptedData = qrService.decrypt(data);
+         log.info("Decrypted data: {}", decryptedData);
+         DoctorProfile doctorProfile= doctorProfileService.verifyQr(baseQrUrl+data);
+        if (doctorProfile==null){
+            response.put("success", false);
+            response.put("message", "Invalid QR code");
+            return ResponseEntity.badRequest().body(response);
+        }
+        log.info("Doctor profile: {}", doctorProfile);
+        Map<String, Object> linkData = new HashMap<>();
+        linkData.put("doctorId", doctorProfile.getDoctorId());
+        linkData.put("name", doctorProfile.getDoctor().getName());
+        linkData.put("degree", doctorProfile.getDoctor().getDegree());
+        linkData.put("hospital", doctorProfile.getDoctor().getHospitalName());
+        linkData.put("specialization", doctorProfile.getDoctor().getSpecialization());
+        linkData.put("experience", doctorProfile.getDoctor().getExperience());        
+        response.put("doctorData", linkData);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/permission")
+    public ResponseEntity<HashMap<String, Object>> grantDoctorAccess(@RequestBody HashMap<String, Object> request) {
+        HashMap<String, Object> response = new HashMap<>();
+        
+        try {
+            // Get authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                response.put("success", false);
+                response.put("message", "User not authenticated");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            User user = (User) authentication.getPrincipal();
+            
+            
+            // Extract doctorId from request
+            Object doctorIdObj = request.get("doctorId");
+            if (doctorIdObj == null) {
+                response.put("success", false);
+                response.put("message", "doctorId is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Long doctorId = Long.valueOf(doctorIdObj.toString());
+            Doctor doctor = doctorRepository.findById(doctorId).orElse(null);
+            if (doctor == null) {
+                response.put("success", false);
+                response.put("message", "Doctor not found");
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            boolean permissionAccess = Boolean.parseBoolean(request.getOrDefault("permission", "false").toString());
+            
+            // Check if permission already exists
+            Permissions existingPermission = permissionsRepository.findByUserAndDoctor(user, doctor).orElse(null);
+            if (existingPermission != null) {
+                // Update existing permission
+                existingPermission.setPermission(permissionAccess);
+            } else {
+                // Create new permission
+                Permissions permission = Permissions.builder()
+                    .user(user)
+                    .doctor(doctor)
+                    .permission(permissionAccess)
+                    .build();
+                permissionsRepository.save(permission);
+            }
+            
+            response.put("success", true);
+            response.put("message", "Permission granted successfully");
+            response.put("doctorId", doctorId);
+            response.put("doctorName", doctor.getName());
+            response.put("permissions", request);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to grant permission: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    
     
 
+//    @GetMapping("")
 
     // @GetMapping("/visit-context")
 }
