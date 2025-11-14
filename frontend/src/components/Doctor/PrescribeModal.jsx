@@ -214,9 +214,27 @@ ${notes ? `Notes:\n${notes}` : ''}
       hour12: true
     });
 
+    // Calculate age from date of birth
+    const calculateAge = (dob) => {
+      if (!dob) return 'N/A';
+      try {
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        return age + ' years';
+      } catch (e) {
+        return 'N/A';
+      }
+    };
+
     const patientName = selectedPatient?.name || manualPatientName;
     const patientId = selectedPatient?.id || 'N/A';
     const patientGender = selectedPatient?.gender || 'Not specified';
+    const patientAge = calculateAge(vitals?.dateOfBirth);
 
     return `
       <!DOCTYPE html>
@@ -451,6 +469,10 @@ ${notes ? `Notes:\n${notes}` : ''}
               <span class="value">${patientName}</span>
             </div>
             <div class="patient-info-item">
+              <span class="label">Age:</span>
+              <span class="value">${patientAge}</span>
+            </div>
+            <div class="patient-info-item">
               <span class="label">Gender:</span>
               <span class="value">${patientGender}</span>
             </div>
@@ -469,6 +491,28 @@ ${notes ? `Notes:\n${notes}` : ''}
               <div class="title">Diagnosis</div>
               <div class="content">${diagnosis}</div>
             </div>
+            
+            <!-- Medical Alerts -->
+            ${vitals?.chronicDiseases || vitals?.allergies || vitals?.majorHealthIncidents ? `
+            <div style="background: #fef2f2; border: 1px solid #fca5a5; padding: 8px 10px; border-radius: 4px; margin-bottom: 12px;">
+              <div style="font-weight: bold; font-size: 11px; color: #991b1b; margin-bottom: 6px;">⚠ Medical History & Alerts:</div>
+              ${vitals?.chronicDiseases ? `
+              <div style="font-size: 10px; color: #7f1d1d; margin-bottom: 4px;">
+                <strong>Chronic Diseases:</strong> ${vitals.chronicDiseases}
+              </div>
+              ` : ''}
+              ${vitals?.allergies ? `
+              <div style="font-size: 10px; color: #7f1d1d; margin-bottom: 4px;">
+                <strong>Allergies:</strong> ${vitals.allergies}
+              </div>
+              ` : ''}
+              ${vitals?.majorHealthIncidents ? `
+              <div style="font-size: 10px; color: #7f1d1d;">
+                <strong>Major Health Incidents:</strong> ${vitals.majorHealthIncidents}
+              </div>
+              ` : ''}
+            </div>
+            ` : ''}
             
             <!-- Medications -->
             ${medications.length > 0 && medications[0].name ? `
