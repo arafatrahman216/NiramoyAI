@@ -431,19 +431,16 @@ const DoctorDashboard = () => {
                       <div className="flex-1">
                         <h4 className="font-semibold text-white mb-1">{patient.name}</h4>
                         <div className="grid grid-cols-2 gap-2 text-sm">
-                          <p className="text-gray-400">
+                          {/* <p className="text-gray-400">
                             <Mail className="w-3 h-3 inline mr-1" />
                             {patient.email}
                           </p>
                           <p className="text-gray-400">
                             <Phone className="w-3 h-3 inline mr-1" />
                             {patient.phone}
-                          </p>
+                          </p> */}
                           <p className="text-gray-400">
                             <span className="font-semibold">Gender:</span> {patient.gender}
-                          </p>
-                          <p className="text-gray-400">
-                            <span className="font-semibold">Phone :</span> {patient.phoneNumber}
                           </p>
                         </div>
                       </div>
