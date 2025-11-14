@@ -10,6 +10,8 @@ import com.example.niramoy.entity.User;
 import com.example.niramoy.entity.Visits;
 import com.example.niramoy.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -79,6 +81,7 @@ public class DoctorController {
         return ResponseEntity.ok(response);
     }
 
+
     @PostMapping("/patient")
     public ResponseEntity<Map<String, Object>> getPatientsData(@RequestBody Map<String, Object> patient){
         Map<String, Object> response = new HashMap<>();
@@ -134,6 +137,7 @@ public class DoctorController {
 
     }
 
+    @Cacheable(value = "dr_qr", key = "#doctor.id")
     @GetMapping("/qr")
     public ResponseEntity<Map<String, Object>> getQRLink(){
         Map<String, Object> response = new HashMap<>();
@@ -184,6 +188,7 @@ public class DoctorController {
         return ResponseEntity.ok(response);
     }
 
+//    @Cacheable(value = "patient_data", key = "#patient")
     @PostMapping("/patient/data")
     public ResponseEntity<Map<String, Object>> getPatientsInfo(@RequestBody Map<String, Object> patient){
         Map<String, Object> response = new HashMap<>();
@@ -212,7 +217,6 @@ public class DoctorController {
         return ResponseEntity.ok(response);
     }
 
-
     @GetMapping("/patients")
     public ResponseEntity<Map<String, Object>> getaccessedPatients(){
         Map<String, Object> response = new HashMap<>();
@@ -232,6 +236,7 @@ public class DoctorController {
         
     }
 
+    @CachePut(value = "dr_qr", key = "#doctor.id")
     @PutMapping("/qr")
     public ResponseEntity<Map<String, Object>> getNewQrLink(){
         Map<String, Object> response = new HashMap<>();
@@ -303,6 +308,7 @@ public class DoctorController {
 
         UploadVisitReqDTO uploadedData = visitService.saveVisitData(
                 userDTO.getId(),
+//                appointmentDate,
                 doctorName,
                 String.valueOf(doctorId),
                 symptoms,

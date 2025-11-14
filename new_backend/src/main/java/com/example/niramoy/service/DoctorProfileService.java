@@ -234,6 +234,7 @@ public class DoctorProfileService {
         return visitsRepository.findByUserIdOrderByAppointmentDateDesc( patientId);
     }
 
+//    @Cacheable(value = "accessedPatient", key = "#doctor.id")
     public List<Map<String, Object>> getAccessedPatients(User doctor) {
 
         DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
