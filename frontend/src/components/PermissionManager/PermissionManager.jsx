@@ -86,9 +86,13 @@ const PermissionManager = () => {
   if (loading) {
     return (
       <div className="pm-container pm-loading">
-        <div className="pm-spinner">
-          <Loader size={48} className="pm-spinner-icon" />
-          <p>Loading doctor information...</p>
+        <div className="pm-spinner" style={{ animation: 'none', transform: 'none' }}>
+          <div className="pm-spinner-icon-wrapper">
+            <Loader size={48} className="pm-spinner-icon" />
+          </div>
+          <p className="pm-spinner-text" style={{ animation: 'none', transform: 'none' }}>
+            Loading doctor information...
+          </p>
         </div>
       </div>
     );

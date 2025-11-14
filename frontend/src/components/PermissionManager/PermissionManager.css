@@ -25,9 +25,24 @@
   gap: 1rem;
 }
 
+.pm-spinner-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .pm-spinner-icon {
   animation: spin 1s linear infinite;
   color: #10b981;
+  display: block;
+}
+
+.pm-spinner-text {
+  margin: 0;
+  font-size: 1rem;
+  color: #e2e8f0;
+  animation: none !important;
+  transform: none !important;
 }
 
 @keyframes spin {
