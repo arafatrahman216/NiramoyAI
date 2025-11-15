@@ -1,6 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true, isInChatMode = false, isLoading = false }) => {
+  const { t } = useTranslation();
+  
   // Show loading banner if loading
   if (isLoading) {
     return (
@@ -8,7 +11,7 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
         <div className="bg-gradient-to-r from-purple-900/30 to-emerald-900/30 border border-purple-500/30 rounded-2xl p-4 transition-all animate-pulse">
           <div className="flex items-center space-x-3">
             <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-medium text-purple-300">Loading visit context...</span>
+            <span className="text-sm font-medium text-purple-300">{t('visitContext.loading') || 'Loading visit context...'}</span>
           </div>
         </div>
       </div>
@@ -27,9 +30,9 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
           <div className="flex-1">
             <div className="space-y-2 text-sm">
               {/* CONTEXT: Visit header info */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap">
                 <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                <span className="text-sm font-medium text-purple-400">Visit #{visitContext.visitId}</span>
+                <span className="text-sm font-medium text-purple-400">{t('visitContext.visit') || 'Visit'} #{visitContext.visitId}</span>
                 <span className="text-zinc-500">•</span>
                 <span className="text-sm font-medium text-purple-400">Dr. {visitContext.doctorName}</span>
                 {visitContext.appointmentDate && (
@@ -43,7 +46,7 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
               {/* CONTEXT: Diagnosis (new field from backend) */}
               {visitContext.diagnosis && (
                 <div className="text-zinc-300">
-                  <span className="text-zinc-500 font-medium">Diagnosis: </span>
+                  <span className="text-zinc-500 font-medium">{t('visitContext.diagnosis') || 'Diagnosis'}: </span>
                   {visitContext.diagnosis}
                 </div>
               )}
@@ -51,7 +54,7 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
               {/* CONTEXT: Symptoms */}
               {visitContext.symptoms && (
                 <div className="text-zinc-300">
-                  <span className="text-zinc-500 font-medium">Symptoms: </span>
+                  <span className="text-zinc-500 font-medium">{t('visitContext.symptoms') || 'Symptoms'}: </span>
                   {Array.isArray(visitContext.symptoms) ? visitContext.symptoms.join(', ') : visitContext.symptoms}
                 </div>
               )}
@@ -59,7 +62,7 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
               {/* CONTEXT: Prescription */}
               {/* {visitContext.prescription && (
                 <div className="text-zinc-300">
-                  <span className="text-zinc-500 font-medium">Prescription: </span>
+                  <span className="text-zinc-500 font-medium">{t('visitContext.prescription') || 'Prescription'}: </span>
                   {Array.isArray(visitContext.prescription) ? visitContext.prescription.join(', ') : visitContext.prescription}
                 </div>
               )} */}
@@ -67,7 +70,7 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
               {/* CONTEXT: Summary from backend */}
               {visitContext.summary && (
                 <div className="text-zinc-400 text-xs mt-2 p-2 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
-                  <span className="text-zinc-500 font-medium">Summary: </span>
+                  <span className="text-zinc-500 font-medium">{t('visitContext.summary') || 'Summary'}: </span>
                   {visitContext.summary}
                 </div>
               )}
@@ -78,7 +81,7 @@ const VisitContext = ({ visitContext, onClearVisitContext, showInChatOnly = true
           <button
             onClick={onClearVisitContext}
             className="p-1 hover:bg-zinc-700 rounded transition-colors"
-            title="Remove visit context"
+            title={t('visitContext.removeContext') || 'Remove visit context'}
           >
             <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -529,7 +529,7 @@ public class UserController {
             String appointmentDate = visitDTO.getAppointmentDate();
             String doctorName = visitDTO.getDoctorName();
             String symptoms = visitDTO.getSymptoms();
-            String prescription = visitDTO.getPrescription();
+            String prescription = "Take Medication as prescribed and rest well."; // Placeholder prescription //FIXME
             String doctorId = visitDTO.getDoctorId();
             // System.out.println("doctor id : " + doctorId);
 

@@ -55,6 +55,8 @@ public class ConsultAgent implements Agent {
             Worsening symptoms despite treatment
             Any concerning changes in condition
 
+            4.5. Answer in current user query language.
+
             5.Response Constraints
 
             Length: Maximum 1500 characters

@@ -454,5 +454,13 @@
     "fahrenheit": "°F",
     "kgs": "কেজি",
     "cms": "সেমি"
+  },
+  "visitContext": {
+    "loading": "পরিদর্শন প্রসঙ্গ লোড করা হচ্ছে...",
+    "visit": "পরিদর্শন",
+    "diagnosis": "রোগ নির্ণয়",
+    "symptoms": "লক্ষণ",
+    "summary": "সারসংক্ষেপ",
+    "removeContext": "পরিদর্শন প্রসঙ্গ সরান"
   }
 }

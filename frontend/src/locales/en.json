@@ -430,6 +430,14 @@
     "noConversationsYet": "No conversations yet",
     "startMedicalConsultation": "Start a new chat to begin your medical consultation"
   },
+  "visitContext": {
+    "loading": "Loading visit context...",
+    "visit": "Visit",
+    "diagnosis": "Diagnosis",
+    "symptoms": "Symptoms",
+    "summary": "Summary",
+    "removeContext": "Remove visit context"
+  },
   "sharedProfile": {
     "title": "Shared Health Profile",
     "loading": "Loading shared profile...",
