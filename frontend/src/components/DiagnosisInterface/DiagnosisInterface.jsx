@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import Sidebar from './Sidebar';
 import SearchInput from './SearchInput';
 import MainLogo from './MainLogo';
@@ -58,7 +59,7 @@ const DiagnosisInterface = () => {
   const [showPlanningProgress, setShowPlanningProgress] = useState(false);
 
   // Define planning steps - dynamically based on language
-  const PLANNING_STEPS = t('i18nextLanguage') === 'bn' ? [
+  const PLANNING_STEPS = i18n.language === 'bn' ? [
     { id: 1, text: "চিকিৎসা ইতিহাস বিশ্লেষণ করা হচ্ছে...", duration: 3000 },
     { id: 2, text: "ওয়েবে অনুসন্ধান করা হচ্ছে...", duration: 4000 },
     { id: 3, text: "নিয়মাবলী পরামর্শ নেওয়া হচ্ছে...", duration: 3000 },
