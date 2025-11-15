@@ -27,6 +27,7 @@ public class ExplainAgent implements Agent {
         "6. Make points or segments as needed, but when explaining keep it fluent and easy, dont use jargon.\n" +
         "7. IMPORTANT: Keep your response under 1500 characters. Be concise but helpful.\n" +
         "MUST strictly return JSON like this: {\"Explanation\": \"...\"}.\n\n" +
+        "8. Answer in current user query language.\n" +
         "Visit Summary: {{visit_summary}}\n" +
         "Doctor's Advice: {{doctor_advice}}\n" +
         "Patient Summary: {{patient_summary}}\n" +

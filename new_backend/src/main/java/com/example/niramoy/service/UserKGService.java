@@ -101,12 +101,22 @@ public class UserKGService {
 
         String extractedSymptoms = JsonParser.parseJsonField(response, "Symptoms");
 
+        log.info("Extracted Symptoms: " + extractedSymptoms);
+        log.info("=== PROCESSING VISIT DETAILS ===");
+        log.info("visit : " + visit.toString());
+        log.info("Visit appointment date (visit.getAppointmentDate()): {}",
+                 visit.getAppointmentDate() != null ? visit.getAppointmentDate().toString() : "null");
+        log.info("Doctor name (visit.getDoctorName()): {}", visit.getDoctorName());
+        log.info("Prescription text (visit.getPrescription()): {}", visit.getPrescription());
+
         Map<String, Object> visitData = Map.of(
             "symptoms", extractedSymptoms,
             "date", visit.getAppointmentDate().toString(),
             "doctor_name", visit.getDoctorName(),
             "what_doctor_said_to_patient", visit.getPrescription()
         );
+
+        log.info("=== PROCESSING Extraction DETAILS ===");
 
 
         final PromptTemplate VISIT_DETAILS_EXTRACTION_PROMPT = PromptTemplate.from(

@@ -36,10 +36,8 @@ public class AuthService {
             );
             User user = (User) authentication.getPrincipal();
             String token = authUtil.generateToken(user);
-            System.out.println("123");
             UserDTO userDTO = userService.convertToUserDTO(user);
             userDTO.setCreatedAt(user.getCreatedAt().toLocalDate().toString());
-            System.out.println("456");
             return LoginResponseDTO.builder().success(true)
                     .jwt(token).userId(user.getId()).role(user.getRole()).user(userDTO)
                     .build();

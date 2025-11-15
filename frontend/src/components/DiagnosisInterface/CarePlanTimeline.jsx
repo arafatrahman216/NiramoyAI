@@ -1,8 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock, MapPin, DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
 
 const CarePlanTimeline = ({ careData }) => {
-  // Debug logging
+  const { t } = useTranslation();
   // console.log('=== CARE PLAN TIMELINE COMPONENT ===');
   // console.log('careData type:', typeof careData);
   // console.log('careData value:', careData);
@@ -283,7 +284,7 @@ const CarePlanTimeline = ({ careData }) => {
                   {/* Importance indicator */}
                   <div className="mt-3">
                     <span className={`inline-block px-2 py-1 rounded-full text-white text-xs font-medium ${colors.bg} opacity-90`}>
-                      {step.this_step_importance?.toUpperCase()} PRIORITY
+                      {t(`carePlan.${step.this_step_importance?.toLowerCase() || 'moderate'}`).toUpperCase()} {t('carePlan.priority')}
                     </span>
                   </div>
                 </div>

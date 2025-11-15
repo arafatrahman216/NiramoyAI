@@ -427,5 +427,48 @@
     "unexpectedError": "অপ্রত্যাশিত ত্রুটি। আবার চেষ্টা করুন।",
     "noConversationsYet": "কোনো কথোপকথন নেই",
     "startMedicalConsultation": "চিকিৎসা পরামর্শের জন্য নতুন চ্যাট শুরু করুন"
+  },
+  "sharedProfile": {
+    "title": "শেয়ারকৃত স্বাস্থ্য প্রোফাইল",
+    "loading": "প্রোফাইল লোড হচ্ছে...",
+    "accessDenied": "অ্যাক্সেস নিষেধ",
+    "invalidLink": "প্রোফাইল লোড করতে ব্যর্থ। লিংক অবৈধ বা মেয়াদ শেষ হতে পারে।",
+    "returnHome": "হোমে ফিরুন",
+    "printProfile": "প্রোফাইল প্রিন্ট করুন",
+    "privacyNotice": "এটি মৌলিক স্বাস্থ্য তথ্যের একটি শেয়ার করা ভিউ। সংবেদনশীল চিকিৎসা ডেটা সুরক্ষিত এবং প্রদর্শিত হয় না।",
+    "currentVitals": "বর্তমান ভাইটাল",
+    "bloodPressure": "রক্তচাপ",
+    "heartRate": "হৃদস্পন্দন",
+    "temperature": "তাপমাত্রা",
+    "weight": "ওজন",
+    "height": "উচ্চতা",
+    "bloodType": "রক্তের গ্রুপ",
+    "dateOfBirth": "জন্ম তারিখ",
+    "gender": "লিঙ্গ",
+    "email": "ইমেইল",
+    "vitalsChart": "ভাইটাল চার্ট",
+    "healthLogs": "স্বাস্থ্য লগ",
+    "poweredBy": "নিরাময়AI দ্বারা চালিত • নিরাপদ স্বাস্থ্য শেয়ারিং",
+    "mmHg": "mmHg",
+    "bpm": "bpm",
+    "fahrenheit": "°F",
+    "kgs": "কেজি",
+    "cms": "সেমি"
+  },
+  "carePlan": {
+    "priority": "অগ্রাধিকার",
+    "low": "কম",
+    "moderate": "মাঝারি",
+    "high": "উচ্চ",
+    "urgent": "জরুরি",
+    "warningSigns": "সতর্কতা চিহ্ন"
+  },
+  "visitContext": {
+    "loading": "পরিদর্শন প্রসঙ্গ লোড করা হচ্ছে...",
+    "visit": "পরিদর্শন",
+    "diagnosis": "রোগ নির্ণয়",
+    "symptoms": "লক্ষণ",
+    "summary": "সারসংক্ষেপ",
+    "removeContext": "পরিদর্শন প্রসঙ্গ সরান"
   }
 }

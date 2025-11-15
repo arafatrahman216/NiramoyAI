@@ -14,6 +14,7 @@ import com.example.niramoy.repository.DoctorRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.json.JSONObject;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -137,6 +138,7 @@ public class UserController {
         }
 
     }
+
 
     @GetMapping("chat-sessions")
     public ResponseEntity<HashMap<String, Object>> getChatSessions(){
@@ -345,6 +347,7 @@ public class UserController {
 
     
 
+
     @GetMapping("/username")
     public ResponseEntity<UserDTO> findByUsername(@RequestParam("q") String email){
         return ResponseEntity.ok(userService.findByEmail(email));
@@ -388,6 +391,7 @@ public class UserController {
         response.put("success", true);
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/health-log")
     public ResponseEntity<Map<String, Object>> getHealthLogs() {
@@ -525,7 +529,7 @@ public class UserController {
             String appointmentDate = visitDTO.getAppointmentDate();
             String doctorName = visitDTO.getDoctorName();
             String symptoms = visitDTO.getSymptoms();
-            String prescription = visitDTO.getPrescription();
+            String prescription = "Take Medication as prescribed and rest well."; // Placeholder prescription //FIXME
             String doctorId = visitDTO.getDoctorId();
             // System.out.println("doctor id : " + doctorId);
 
@@ -603,8 +607,10 @@ public class UserController {
             response.put("success", true);
             response.put("text", transcription);
             System.out.println(transcription);
+
             HealthLogRecord healthLogRecord = healthService.getLogFromTranscription(transcription);
             response.put("healthLogRecord", healthLogRecord);
+            response.put("transcription", transcription);
 
             return ResponseEntity.ok(response);
 
@@ -613,6 +619,23 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @PostMapping("/text-log")
+    public ResponseEntity<Map<String, Object>> textLog(@RequestBody String logs) {
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        HealthLogRecord healthLogRecord = healthService.getLogFromTranscription(logs);
+        response.put("healthLogRecord", healthLogRecord);
+        return ResponseEntity.ok(response);
+
+    }
+
 
     @PostMapping("/audio")
     public ResponseEntity<Map<String, Object>> uploadAudioAndSaveLog(@ModelAttribute MultipartFile audio) {
@@ -755,6 +778,7 @@ public class UserController {
         response.put("qrImage",  qrService.generateQrCode(profileLink));
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/medicines")
     public ResponseEntity<Map<String,Object>> getMedicines (){
