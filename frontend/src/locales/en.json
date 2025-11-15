@@ -464,5 +464,13 @@
     "fahrenheit": "°F",
     "kgs": "kgs",
     "cms": "cms"
+  },
+  "carePlan": {
+    "priority": "Priority",
+    "low": "Low",
+    "moderate": "Moderate",
+    "high": "High",
+    "urgent": "Urgent",
+    "warningSigns": "Warning Signs"
   }
 }

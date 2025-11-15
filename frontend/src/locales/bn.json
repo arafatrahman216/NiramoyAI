@@ -455,6 +455,14 @@
     "kgs": "কেজি",
     "cms": "সেমি"
   },
+  "carePlan": {
+    "priority": "অগ্রাধিকার",
+    "low": "কম",
+    "moderate": "মাঝারি",
+    "high": "উচ্চ",
+    "urgent": "জরুরি",
+    "warningSigns": "সতর্কতা চিহ্ন"
+  },
   "visitContext": {
     "loading": "পরিদর্শন প্রসঙ্গ লোড করা হচ্ছে...",
     "visit": "পরিদর্শন",
