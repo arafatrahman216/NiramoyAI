@@ -429,5 +429,32 @@
     "unexpectedError": "Unexpected error occurred. Please try again.",
     "noConversationsYet": "No conversations yet",
     "startMedicalConsultation": "Start a new chat to begin your medical consultation"
+  },
+  "sharedProfile": {
+    "title": "Shared Health Profile",
+    "loading": "Loading shared profile...",
+    "accessDenied": "Access Denied",
+    "invalidLink": "Failed to load profile. The link may be invalid or expired.",
+    "returnHome": "Return Home",
+    "printProfile": "Print Profile",
+    "privacyNotice": "This is a shared view of basic health information. Sensitive medical data is protected and not displayed.",
+    "currentVitals": "Current Vitals",
+    "bloodPressure": "Blood Pressure",
+    "heartRate": "Heart Rate",
+    "temperature": "Temperature",
+    "weight": "Weight",
+    "height": "Height",
+    "bloodType": "Blood Type",
+    "dateOfBirth": "Date of Birth",
+    "gender": "Gender",
+    "email": "Email",
+    "vitalsChart": "Vitals Chart",
+    "healthLogs": "Health Logs",
+    "poweredBy": "Powered by NiramoyAI • Secure Health Sharing",
+    "mmHg": "mmHg",
+    "bpm": "bpm",
+    "fahrenheit": "°F",
+    "kgs": "kgs",
+    "cms": "cms"
   }
 }

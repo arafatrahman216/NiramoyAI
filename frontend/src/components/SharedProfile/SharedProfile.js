@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
   User, 
@@ -29,6 +30,7 @@ const HealthLogs = React.lazy(() => import('../PatientProfile/HealthLogs'));
 const SharedProfile = () => {
   const { encryptedId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState(null);
   const [vitals, setVitals] = useState([]);
   const [healthLogs, setHealthLogs] = useState([]);
@@ -167,7 +169,7 @@ const SharedProfile = () => {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading shared profile...</p>
+          <p className="text-gray-400">{t('sharedProfile.loading')}</p>
         </div>
       </div>
     );
@@ -178,13 +180,13 @@ const SharedProfile = () => {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <Shield className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
+          <h2 className="text-xl font-semibold text-white mb-2">{t('sharedProfile.accessDenied')}</h2>
           <p className="text-gray-400 mb-6">{error}</p>
           <button
             onClick={() => navigate('/')}
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
-            Return Home
+            {t('sharedProfile.returnHome')}
           </button>
         </div>
       </div>
@@ -206,7 +208,7 @@ const SharedProfile = () => {
               </button>
               <div className="flex items-center space-x-2">
                 <Shield className="w-6 h-6 text-emerald-400" />
-                <h1 className="text-xl font-bold">Shared Health Profile</h1>
+                <h1 className="text-xl font-bold">{t('sharedProfile.title')}</h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -215,7 +217,7 @@ const SharedProfile = () => {
                 className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
               >
                 <Printer className="w-4 h-4" />
-                <span>Print Profile</span>
+                <span>{t('sharedProfile.printProfile')}</span>
               </button>
             </div>
           </div>
@@ -235,7 +237,7 @@ const SharedProfile = () => {
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4 text-emerald-400" />
                   <span className="text-gray-300">
-                    Email: {profile?.email}
+                    {t('sharedProfile.email')}: {profile?.email}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -244,11 +246,11 @@ const SharedProfile = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Heart className="w-4 h-4 text-emerald-400" />
-                  <span className="text-gray-300">Blood Type: {profile?.bloodType}</span>
+                  <span className="text-gray-300">{t('sharedProfile.bloodType')}: {profile?.bloodType}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <User className="w-4 h-4 text-emerald-400" />
-                  <span className="text-gray-300">Date of Birth: {profile?.dateOfBirth}</span>
+                  <span className="text-gray-300">{t('sharedProfile.dateOfBirth')}: {profile?.dateOfBirth}</span>
                 </div>
               </div>
             </div>
@@ -258,7 +260,7 @@ const SharedProfile = () => {
           <div className="mt-6 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
             <p className="text-sm text-gray-300 flex items-center">
               <Shield className="w-4 h-4 text-emerald-400 mr-2" />
-              This is a shared view of basic health information. Sensitive medical data is protected and not displayed.
+              {t('sharedProfile.privacyNotice')}
             </p>
           </div>
         </div>
@@ -267,32 +269,32 @@ const SharedProfile = () => {
         <div className="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
           <h3 className="text-xl font-semibold mb-6 flex items-center">
             <Activity className="w-6 h-6 text-emerald-400 mr-2" />
-            Current Vitals
+            {t('sharedProfile.currentVitals')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-gray-700/50 rounded-xl p-4 text-center">
               <Heart className="w-8 h-8 text-red-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">Blood Pressure</p>
+              <p className="text-sm text-gray-400">{t('sharedProfile.bloodPressure')}</p>
               <p className="text-lg font-semibold">{profile?.bloodPressure}</p>
-              <p className="text-xs text-gray-500">mmHg</p>
+              <p className="text-xs text-gray-500">{t('sharedProfile.mmHg')}</p>
             </div>
             <div className="bg-gray-700/50 rounded-xl p-4 text-center">
               <Activity className="w-8 h-8 text-green-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">Heart Rate</p>
+              <p className="text-sm text-gray-400">{t('sharedProfile.heartRate')}</p>
               <p className="text-lg font-semibold">{profile?.heartRate}</p>
-              <p className="text-xs text-gray-500">bpm</p>
+              <p className="text-xs text-gray-500">{t('sharedProfile.bpm')}</p>
             </div>
             <div className="bg-gray-700/50 rounded-xl p-4 text-center">
               <Height className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">Height</p>
+              <p className="text-sm text-gray-400">{t('sharedProfile.height')}</p>
               <p className="text-lg font-semibold">{profile?.height}</p>
-              <p className="text-xs text-gray-500">cms</p>
+              <p className="text-xs text-gray-500">{t('sharedProfile.cms')}</p>
             </div>
             <div className="bg-gray-700/50 rounded-xl p-4 text-center">
               <Weight className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">Weight</p>
+              <p className="text-sm text-gray-400">{t('sharedProfile.weight')}</p>
               <p className="text-lg font-semibold">{profile?.weight}</p>
-              <p className="text-xs text-gray-500">kgs</p>
+              <p className="text-xs text-gray-500">{t('sharedProfile.kgs')}</p>
             </div>
           </div>
         </div>
@@ -309,7 +311,7 @@ const SharedProfile = () => {
                     : 'text-gray-400 hover:text-white hover:bg-gray-700/30'
                 }`}
               >
-                Vitals Chart
+                {t('sharedProfile.vitalsChart')}
               </button>
               <button
                 onClick={() => setActiveTab('logs')}
@@ -319,7 +321,7 @@ const SharedProfile = () => {
                     : 'text-gray-400 hover:text-white hover:bg-gray-700/30'
                 }`}
               >
-                Health Logs
+                {t('sharedProfile.healthLogs')}
               </button>
             </nav>
           </div>
@@ -350,7 +352,7 @@ const SharedProfile = () => {
         <div className="mt-8 text-center">
           <div className="inline-flex items-center space-x-2 text-sm text-gray-500">
             <Shield className="w-4 h-4" />
-            <span>Powered by NiramoyAI • Secure Health Sharing</span>
+            <span>{t('sharedProfile.poweredBy')}</span>
           </div>
         </div>
       </div>
