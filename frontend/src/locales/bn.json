@@ -427,5 +427,13 @@
     "unexpectedError": "অপ্রত্যাশিত ত্রুটি। আবার চেষ্টা করুন।",
     "noConversationsYet": "কোনো কথোপকথন নেই",
     "startMedicalConsultation": "চিকিৎসা পরামর্শের জন্য নতুন চ্যাট শুরু করুন"
+  },
+  "visitContext": {
+    "loading": "পরিদর্শন প্রসঙ্গ লোড করা হচ্ছে...",
+    "visit": "পরিদর্শন",
+    "diagnosis": "রোগ নির্ণয়",
+    "symptoms": "লক্ষণ",
+    "summary": "সারসংক্ষেপ",
+    "removeContext": "পরিদর্শন প্রসঙ্গ সরান"
   }
 }

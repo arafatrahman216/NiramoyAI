@@ -26,6 +26,7 @@ public class QnAAgent implements Agent {
         "5. Keep the answer concise, fluent and easy to understand, avoid medical jargon.\n" +
         "6. IMPORTANT: Keep your response under 1500 characters. Be concise but helpful.\n" +
         "MUST strictly return JSON like this: {\"Answer\": \"...\"}.\n\n" +
+        "5. Answer in current user query language. \n" +
         "Visit Summary: {{visit_summary}}\n" +
         "Doctor's Advice: {{doctor_advice}}\n" +
         "Patient Summary: {{patient_summary}}\n" +

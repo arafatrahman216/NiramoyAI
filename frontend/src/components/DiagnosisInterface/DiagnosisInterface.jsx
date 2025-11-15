@@ -57,8 +57,13 @@ const DiagnosisInterface = () => {
   const [currentPlanningStep, setCurrentPlanningStep] = useState(0);
   const [showPlanningProgress, setShowPlanningProgress] = useState(false);
 
-  // Define planning steps
-  const PLANNING_STEPS = [
+  // Define planning steps - dynamically based on language
+  const PLANNING_STEPS = t('i18nextLanguage') === 'bn' ? [
+    { id: 1, text: "চিকিৎসা ইতিহাস বিশ্লেষণ করা হচ্ছে...", duration: 3000 },
+    { id: 2, text: "ওয়েবে অনুসন্ধান করা হচ্ছে...", duration: 4000 },
+    { id: 3, text: "নিয়মাবলী পরামর্শ নেওয়া হচ্ছে...", duration: 3000 },
+    { id: 4, text: "স্বাস্থ্য পরিকল্পনা তৈরি হচ্ছে...", duration: 10000 }
+  ] : [
     { id: 1, text: "Analyzing medical history...", duration: 3000 },
     { id: 2, text: "Searching Web...", duration: 4000 },
     { id: 3, text: "Consulting guidelines...", duration: 3000 },
