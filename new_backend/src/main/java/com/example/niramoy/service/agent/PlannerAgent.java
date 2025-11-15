@@ -594,7 +594,7 @@ public class PlannerAgent implements Agent {
         //   response = aiService.generateContent(prompt.text());
 
             response = CompletableFuture.supplyAsync(() -> aiService.generateContent(prompt.text()))
-                                        .get(20, TimeUnit.SECONDS);
+                                        .get(16, TimeUnit.SECONDS);
 
 
 
