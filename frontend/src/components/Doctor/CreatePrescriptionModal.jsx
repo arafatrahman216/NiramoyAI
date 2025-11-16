@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './CreatePrescriptionModal.css';
 import { doctorAPI } from '../../services/api';
 
-const CreatePrescriptionModal = ({ isOpen, onClose, patientName, patientId,vitals, patientData, doctorData, onSubmit }) => {
+const CreatePrescriptionModal = ({ isOpen, onClose, patientName, patientId, vitals, patientData, doctorData, onSubmit }) => {
   const [diagnosis, setDiagnosis] = useState('');
   const [advice, setAdvice] = useState('');
   const [medications, setMedications] = useState([
