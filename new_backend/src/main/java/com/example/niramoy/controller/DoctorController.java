@@ -278,7 +278,7 @@ public class DoctorController {
         String appointmentDate = visitDTO.getAppointmentDate();
         String doctorName = visitDTO.getDoctorName();
         String symptoms = visitDTO.getSymptoms();
-        String prescription = visitDTO.getPrescription();
+        String prescription = "Rest Well"; //visitDTO.getPrescription();
         String patientId = visitDTO.getDoctorId();
         System.out.println("patient id : " + patientId);
 
