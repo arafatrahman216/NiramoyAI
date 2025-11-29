@@ -631,6 +631,8 @@ public class UserController {
         }
         User user = (User) authentication.getPrincipal();
         HealthLogRecord healthLogRecord = healthService.getLogFromTranscription(logs);
+        
+        
         response.put("healthLogRecord", healthLogRecord);
         return ResponseEntity.ok(response);
 

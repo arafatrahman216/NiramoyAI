@@ -3,12 +3,14 @@
 // ==============================================
 // Minimalistic voice-based health logging interface
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Mic, MicOff, Edit3, Sparkles, Info, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
 const VoiceHealthLog = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
@@ -218,10 +220,10 @@ const VoiceHealthLog = () => {
               <Sparkles className="w-6 h-6 text-blue-400" />
             </div>
             <h1 className="text-2xl md:text-3xl font-light text-white mb-2">
-              Voice Health Log
+              {t('voiceHealthLog.title')}
             </h1>
             <p className="text-zinc-400">
-              Just speak naturally about your health today
+              {t('voiceHealthLog.subtitle')}
             </p>
           </div>
           
@@ -231,7 +233,7 @@ const VoiceHealthLog = () => {
             className="bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300 hover:text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 border border-zinc-700 hover:border-zinc-600 flex items-center space-x-2 text-sm"
           >
             <Edit3 className="w-4 h-4" />
-            <span>Fill Form Instead</span>
+            <span>{t('voiceHealthLog.fillFormInstead')}</span>
           </button>
         </div>
 
@@ -239,44 +241,44 @@ const VoiceHealthLog = () => {
         <div className="mb-8 bg-gradient-to-r from-zinc-900/40 to-zinc-800/40 border border-zinc-700/50 rounded-xl p-5">
           <h2 className="text-base font-medium text-zinc-200 mb-3 flex items-center">
             <Info className="w-4 h-4 mr-2 text-blue-400" />
-            Tips for Better Health Tracking
+            {t('voiceHealthLog.tipsTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-zinc-400">
             <div className="space-y-1.5">
               <p>
-                <strong className="text-zinc-300">Blood Pressure:</strong> Tell us your systolic and diastolic readings (e.g., "120 over 80").
+                <strong className="text-zinc-300">{t('voiceHealthLog.bloodPressureLabel')}</strong> {t('voiceHealthLog.bloodPressureDesc')}
               </p>
               <p>
-                <strong className="text-zinc-300">Heart Rate:</strong> Mention your heart rate in beats per minute.
+                <strong className="text-zinc-300">{t('voiceHealthLog.heartRateLabel')}</strong> {t('voiceHealthLog.heartRateDesc')}
               </p>
               <p>
-                <strong className="text-zinc-300">Temperature:</strong> Include your body temperature in Celsius or Fahrenheit.
+                <strong className="text-zinc-300">{t('voiceHealthLog.temperatureLabel')}</strong> {t('voiceHealthLog.temperatureDesc')}
               </p>
               <p>
-                <strong className="text-zinc-300">Blood Sugar:</strong> Share your glucose levels if measured.
+                <strong className="text-zinc-300">{t('voiceHealthLog.bloodSugarLabel')}</strong> {t('voiceHealthLog.bloodSugarDesc')}
               </p>
             </div>
             <div className="space-y-1.5">
               <p>
-                <strong className="text-zinc-300">Weight:</strong> Tell us your current weight.
+                <strong className="text-zinc-300">{t('voiceHealthLog.weightLabel')}</strong> {t('voiceHealthLog.weightDesc')}
               </p>
               <p>
-                <strong className="text-zinc-300">Symptoms:</strong> Describe any symptoms you're experiencing.
+                <strong className="text-zinc-300">{t('voiceHealthLog.symptomsLabel')}</strong> {t('voiceHealthLog.symptomsDesc')}
               </p>
               <p>
-                <strong className="text-zinc-300">Medications:</strong> Mention any medications taken today.
+                <strong className="text-zinc-300">{t('voiceHealthLog.medicationsLabel')}</strong> {t('voiceHealthLog.medicationsDesc')}
               </p>
               <p>
-                <strong className="text-zinc-300">Notes:</strong> Add any other important health observations.
+                <strong className="text-zinc-300">{t('voiceHealthLog.notesLabel')}</strong> {t('voiceHealthLog.notesDesc')}
               </p>
             </div>
           </div>
           
           {/* Example Note */}
           <div className="mt-4 pt-4 border-t border-zinc-700/50">
-            <h3 className="text-xs font-medium text-zinc-300 mb-2">Example Note:</h3>
+            <h3 className="text-xs font-medium text-zinc-300 mb-2">{t('voiceHealthLog.exampleNoteLabel')}</h3>
             <p className="text-xs text-zinc-500 italic leading-relaxed">
-              "My blood pressure today is 120 over 80. Heart rate is 72 beats per minute. Temperature is 98.6 Fahrenheit. Blood sugar is 95. Weight is 70 kilograms. I'm feeling good today with no major symptoms. Took my morning medication at 8 AM. Had a good night's sleep and feeling energetic."
+              {t('voiceHealthLog.exampleNote')}
             </p>
           </div>
         </div>
@@ -352,18 +354,18 @@ const VoiceHealthLog = () => {
               ${isRecording ? 'text-red-400' : isProcessing ? 'text-blue-400' : 'text-zinc-300'}
             `}>
               {isProcessing 
-                ? 'Processing your voice...' 
+                ? t('voiceHealthLog.processingMessage')
                 : isRecording 
-                  ? 'Recording... Tap to stop' 
-                  : 'Tap to start recording'
+                  ? t('voiceHealthLog.recordingActive')
+                  : t('voiceHealthLog.recordingStart')
               }
             </p>
             <p className="text-sm text-zinc-500 mt-1">
               {isProcessing 
-                ? 'Converting speech to text' 
+                ? t('voiceHealthLog.processingHint')
                 : isRecording 
-                  ? 'Speak naturally about your health' 
-                  : 'Speak clearly for best results'
+                  ? t('voiceHealthLog.recordingStatus')
+                  : t('voiceHealthLog.recordingHint')
               }
             </p>
           </div>
@@ -372,10 +374,10 @@ const VoiceHealthLog = () => {
         {/* Transcribed Text Box */}
         <div className="mb-6">
           <label className="block text-zinc-300 mb-3 text-sm font-medium">
-            Your Health Log
+            {t('voiceHealthLog.yourHealthLog')}
             {transcribedText && (
               <span className="ml-2 text-xs text-zinc-500">
-                ({transcribedText.length} characters)
+                ({transcribedText.length} {t('voiceHealthLog.characters')})
               </span>
             )}
           </label>
@@ -384,7 +386,7 @@ const VoiceHealthLog = () => {
             ref={textareaRef}
             value={transcribedText}
             onChange={(e) => setTranscribedText(e.target.value)}
-            placeholder="Your voice recording will appear here... You can also type or edit the text directly."
+            placeholder={t('voiceHealthLog.placeholder')}
             rows={6}
             className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-4 text-white placeholder-zinc-500 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20 transition-all resize-none custom-scrollbar"
           />
@@ -399,10 +401,10 @@ const VoiceHealthLog = () => {
               {isProcessing ? (
                 <span className="flex items-center">
                   <Loader className="w-4 h-4 mr-1.5 animate-spin" />
-                  Processing...
+                  {t('voiceHealthLog.processing')}
                 </span>
               ) : (
-                'Submit'
+                t('voiceHealthLog.submit')
               )}
             </button>
           </div>
@@ -412,14 +414,14 @@ const VoiceHealthLog = () => {
         {status === 'success' && transcribedText && (
           <div className="mb-6 flex items-center space-x-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3">
             <CheckCircle className="w-5 h-5 flex-shrink-0" />
-            <p className="text-sm">Voice recorded successfully! You can edit the text above or submit your log.</p>
+            <p className="text-sm">{t('voiceHealthLog.successMessage')}</p>
           </div>
         )}
 
         {status === 'error' && (
           <div className="mb-6 flex items-center space-x-2 text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <p className="text-sm">Please record or enter some text before submitting.</p>
+            <p className="text-sm">{t('voiceHealthLog.errorMessage')}</p>
           </div>
         )}
       </div>

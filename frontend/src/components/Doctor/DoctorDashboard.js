@@ -13,7 +13,6 @@ import {
   Mail,
   Activity,
   FileText,
-  Search,
   QrCode,
   Pill
 } from 'lucide-react';
@@ -35,13 +34,50 @@ import {
 const DoctorDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // DUMMY DATA FOR APPOINTMENTS (COMMENTED OUT DB FETCH)
+  const dummyAppointments = [
+    {
+      appointmentId: 'APT001',
+      patientName: 'Afham Adian',
+      appointmentDate: new Date(2025, 10, 15, 19, 47).toISOString(),
+      hospital: 'Ibn Sina Diagnostic and Consultation Center, Lalbagh',
+      status: 'Pending'
+    },
+    {
+      appointmentId: 'APT002',
+      patientName: 'Arafat Rahman',
+      appointmentDate: new Date(2025, 10, 16, 16, 51).toISOString(),
+      hospital: 'Asgar Ali Hospital',
+      status: 'Pending'
+    },
+    {
+      appointmentId: 'APT003',
+      patientName: 'Fatima Hassan',
+      appointmentDate: new Date(2025, 10, 17, 10, 30).toISOString(),
+      hospital: 'Bangladesh Institute of Health Sciences',
+      status: 'Scheduled'
+    },
+    {
+      appointmentId: 'APT004',
+      patientName: 'Mohammed Ali',
+      appointmentDate: new Date(2025, 10, 18, 14, 15).toISOString(),
+      hospital: 'Popular Hospital Ltd.',
+      status: 'Pending'
+    },
+    {
+      appointmentId: 'APT005',
+      patientName: 'Priya Sharma',
+      appointmentDate: new Date(2025, 10, 19, 9, 0).toISOString(),
+      hospital: 'Square Hospitals Ltd.',
+      status: 'Completed'
+    }
+  ];
+  
   const [doctorProfile, setDoctorProfile] = useState(null);
   const [stats, setStats] = useState(null);
-  const [appointments, setAppointments] = useState([]);
+  const [appointments, setAppointments] = useState(dummyAppointments);
   const [recentVisits, setRecentVisits] = useState([]);
-  const [patients, setPatients] = useState([]);
-  const [filteredPatients, setFilteredPatients] = useState([]);
-  const [patientSearchTerm, setPatientSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showQRModal, setShowQRModal] = useState(false);
@@ -49,87 +85,69 @@ const DoctorDashboard = () => {
   const [showPrescribeModal, setShowPrescribeModal] = useState(false);
 
   useEffect(() => {
-    fetchDoctorData();
+    // Load critical data first (profile & appointments)
+    fetchCriticalData();
+    // Load stats in background (non-blocking)
+    fetchStatsInBackground();
   }, []);
 
-  const fetchDoctorData = async () => {
+  const fetchCriticalData = async () => {
     try {
       setLoading(true);
       
-      // Fetch doctor profile
-      try{
-          const profileResponse = await axios.get(`${API_BASE_URL}/doctor/profile`);
-        console.log('Doctor Profile:', profileResponse.data.doctor);
-        console.log('Doctor Profile:', fallbackDoctorDashboardProfile);
-        setDoctorProfile(profileResponse.data.doctor );
-        console.log(doctorProfile); 
-      }
-      catch(err) { console.error('Error fetching doctor profile:', err); setDoctorProfile(fallbackDoctorDashboardProfile); }
-      // Fetch dashboard stats
+      // Run profile and appointments fetches in parallel (critical for UI)
+      const [profileResult, visitsResult] = await Promise.allSettled([
+        axios.get(`${API_BASE_URL}/doctor/profile`),
+        axios.get(`${API_BASE_URL}/doctor/recent-visits`)
+      ]).then(results => results);
 
-      try{
-          const statsResponse = await axios.get(`${API_BASE_URL}/doctor/dashboard/stats`);
-          console.log('Dashboard Stats:', statsResponse.data.stats);
-          setStats(statsResponse.data.stats || fallbackDoctorStats);
+      // Handle doctor profile result
+      if (profileResult.status === 'fulfilled') {
+        console.log('Doctor Profile:', profileResult.value.data.doctor);
+        setDoctorProfile(profileResult.value.data.doctor);
+      } else {
+        console.error('Error fetching doctor profile:', profileResult.reason);
+        setDoctorProfile(fallbackDoctorDashboardProfile);
       }
-      catch(err) { console.error('Error fetching dashboard stats:', err); setStats(fallbackDoctorStats); }
-      // Fetch today's appointments
-      try
-      {
-        const today = new Date().toISOString().split('T')[0];
-      const appointmentsResponse = await axios.get(`${API_BASE_URL}/doctor/appointments`);
-      setAppointments(appointmentsResponse.data.appointments || fallbackDoctorAppointments);
 
-      }catch(err) { console.error('Error fetching today\'s appointments:', err); setAppointments(fallbackDoctorAppointments); }
-      // Fetch recent visits (last 7 days)
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      const recentVisitsResponse = await axios.get(`${API_BASE_URL}/doctor/recent-visits`);
-      setRecentVisits(recentVisitsResponse.data.visits || fallbackDoctorRecentVisits);
-
-      // Fetch patients
-      try {
-        const patientsResponse = await doctorAPI.getPatients();
-        setPatients(patientsResponse.data.patients || fallbackDoctorPatients);
-        setFilteredPatients(patientsResponse.data.patients || fallbackDoctorPatients);
-      } catch (err) { 
-        console.error('Error fetching patients:', err); 
-        setPatients(fallbackDoctorPatients);
-        setFilteredPatients(fallbackDoctorPatients);
+      // Handle recent visits result
+      if (visitsResult.status === 'fulfilled') {
+        setRecentVisits(visitsResult.value.data.visits || fallbackDoctorRecentVisits);
+      } else {
+        console.error('Error fetching recent visits:', visitsResult.reason);
+        setRecentVisits(fallbackDoctorRecentVisits);
       }
+
+      // Using DUMMY DATA for appointments instead
+      setAppointments(dummyAppointments);
 
     } catch (err) {
-      // Use fallback data when API calls fail
-      
-      setAppointments(fallbackDoctorAppointments);
+      console.error('Error fetching critical data:', err);
+      setDoctorProfile(fallbackDoctorDashboardProfile);
       setRecentVisits(fallbackDoctorRecentVisits);
-      
-      setError('Using demo data - API connection failed');
-      console.error('Error fetching doctor data:', err);
+      setAppointments(dummyAppointments);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/doctor/login');
-  };
-
-  const handlePatientSearch = (searchTerm) => {
-    setPatientSearchTerm(searchTerm);
-    if (searchTerm.trim() === '') {
-      setFilteredPatients(patients);
-    } else {
-      const filtered = patients.filter((patient) =>
-        patient.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredPatients(filtered);
+  const fetchStatsInBackground = async () => {
+    // This runs WITHOUT blocking the UI - lazy loading stats
+    try {
+      const statsResponse = await axios.get(`${API_BASE_URL}/doctor/dashboard/stats`);
+      console.log('Dashboard Stats:', statsResponse.data.stats);
+      setStats(statsResponse.data.stats || fallbackDoctorStats);
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setStats(fallbackDoctorStats);
     }
   };
 
-  const handleViewPatient = (patientId) => {
-    navigate(`/patient/data?id=${patientId}`);
+
+
+  const handleLogout = () => {
+    logout();
+    navigate('/doctor/login');
   };
 
   const handleProfileClick = () => {
@@ -405,87 +423,6 @@ const DoctorDashboard = () => {
             height="500px"
             className="border border-gray-700 shadow-xl"
           />
-        </div>
-
-        {/* Patient Profiles */}
-        <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl mb-8">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">Patient Profiles</h3>
-              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-sm rounded-full">
-                {patients.length} Patients
-              </span>
-            </div>
-            
-            {/* Search Box */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search patients by name..."
-                value={patientSearchTerm}
-                onChange={(e) => handlePatientSearch(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-emerald-400"
-              />
-            </div>
-
-            {/* Patient List */}
-            {filteredPatients.length > 0 ? (
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
-                {filteredPatients.map((patient) => (
-                  <div 
-                    key={patient.id} 
-                    className="bg-gray-700/50 rounded-lg p-4 border border-gray-600 hover:border-emerald-400/30 transition-colors cursor-pointer"
-                    onClick={() => handleViewPatient(patient.id)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-white mb-1">{patient.name}</h4>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          {/* <p className="text-gray-400">
-                            <Mail className="w-3 h-3 inline mr-1" />
-                            {patient.email}
-                          </p>
-                          <p className="text-gray-400">
-                            <Phone className="w-3 h-3 inline mr-1" />
-                            {patient.phone}
-                          </p> */}
-                          <p className="text-gray-400">
-                            <span className="font-semibold">Gender:</span> {patient.gender}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end space-y-2">
-                        <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                          patient.status === 'Active' 
-                            ? 'bg-emerald-500/20 text-emerald-400' 
-                            : 'bg-gray-500/20 text-gray-400'
-                        }`}>
-                          {patient.status}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewPatient(patient.id);
-                          }}
-                          className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-xs font-semibold hover:bg-emerald-500/30 transition-colors"
-                        >
-                          View Profile
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400">
-                  {patientSearchTerm ? 'No patients found matching your search' : 'No patients yet'}
-                </p>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Quick Actions */}
