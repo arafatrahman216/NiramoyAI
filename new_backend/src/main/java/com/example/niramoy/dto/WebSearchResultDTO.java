@@ -25,4 +25,14 @@ public class WebSearchResultDTO {
                 .map(e -> "URL : " + e.getKey() + " -> Content : " + e.getValue())
                 .reduce("", (a, b) -> a + b + "\n");
     }
+
+        public String getURL() {
+        if (data == null || data.isEmpty()) return "";
+
+        return data.entrySet()
+                .stream()
+                .map(e -> "URL : " + e.getKey())
+                .reduce("", (a, b) -> a + b + "\n");
+    }
+
 }

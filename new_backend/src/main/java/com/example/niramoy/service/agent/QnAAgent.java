@@ -55,20 +55,34 @@ public class QnAAgent implements Agent {
 
     @Override
     public String processQuery(String query, Long userId) {
-        WebSearchResultDTO searchResult =  webSearchService.search(query, 5);
-        log.info("Web search completed with {} results.", searchResult.getResults());
+
+        log.info("Query before processing: {}", query);
+        WebSearchResultDTO searchResult =  webSearchService.search(query, 2);
+        log.info("Web search completed with results {}", searchResult.getURL());
+
+
+        //Uncomment if graph DB is resumed
+        // Map<String, Object> chainVariables = Map.of(
+        //     "visit_summary", userKGService.getVisitSummaryLastThree(userId),
+        //     "doctor_advice", userKGService.getDoctorAdvice(userId),
+        //     "patient_summary", userKGService.getPatientSummary(userId),
+        //     "history_summary", userKGService.getHistorySummary(userId),
+        //     "search_results", searchResult.getResults(),
+        //     "query", query
+        // );
 
         Map<String, Object> chainVariables = Map.of(
-            // "visit_summary", userKGService.getVisitSummaryLastThree(userId),
-            // "doctor_advice", userKGService.getDoctorAdvice(userId),
-            // "patient_summary", userKGService.getPatientSummary(userId),
-            // "history_summary", userKGService.getHistorySummary(userId),
+            "visit_summary", " ",
+            "doctor_advice", " ",
+            "patient_summary", " ",
+            "history_summary", " ",
             "search_results", searchResult.getResults(),
             "query", query
         );
 
-
         Prompt prompt = QNA_PROMPT.apply(chainVariables);
+
+        log.info("Generated prompt: {}", prompt.text());
         String response = aiService.generateContent(prompt.text());
 
         System.out.println("QnAAgent response: " + response);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { chatbotAPI, ttsAPI } from '../../services/api';
 import CarePlanTimeline from './CarePlanTimeline';
+import ReactMarkdown from 'react-markdown';
 
 // ==============================================
 // CHAT CONVERSATION COMPONENT
@@ -561,9 +562,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                         )}
                         {/* Attachment link display for user messages */}
                         {message.attachmentLink && renderAttachmentLink(message.attachmentLink, true)}
-                        <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap">
-                          {message.content}
-                        </p>
+                        <div className="text-base text-zinc-100 leading-7 whitespace-pre-wrap prose prose-invert max-w-none">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
                       </div>
                     ) : (
                       /* AI MESSAGE - Check for care plan data or render plain text */
@@ -596,9 +597,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                           </div>
                         ) : (
                           <>
-                            <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
-                              {message.content}
-                            </p>
+                            <div className="text-base text-zinc-100 leading-7 prose prose-invert max-w-none mb-3">
+                              <ReactMarkdown>{message.content}</ReactMarkdown>
+                            </div>
                             
                             {/* ACTION BUTTONS FOR AI RESPONSES */}
                             <div className="flex items-center space-x-2 mt-2">
@@ -809,7 +810,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                         : 'bg-zinc-800 text-zinc-100'
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    <div className="text-sm prose prose-sm prose-invert max-w-none">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
                     <p className="text-xs mt-1 opacity-70">
                       {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : t('chatConversation.now')}
                     </p>
