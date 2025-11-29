@@ -4,6 +4,58 @@ import { chatbotAPI, ttsAPI } from '../../services/api';
 import CarePlanTimeline from './CarePlanTimeline';
 import ReactMarkdown from 'react-markdown';
 
+// Custom link renderer for ChatGPT-style citation links
+const PerplexityLink = ({ href, children }: { href?: string; children?: React.ReactNode }) => {
+  const getDomainName = (url: string) => {
+    try {
+      const domain = new URL(url).hostname.replace('www.', '');
+      return domain.split('.')[0]; // Get first part of domain
+    } catch {
+      return 'source';
+    }
+  };
+
+  const getSourceColor = (url: string) => {
+    const domain = getDomainName(url).toLowerCase();
+    const colorMap: { [key: string]: string } = {
+      'wikipedia': 'bg-slate-700/50 border-slate-600/50',
+      'clevelandclinic': 'bg-blue-900/30 border-blue-700/40',
+      'mayoclinic': 'bg-blue-900/30 border-blue-700/40',
+      'webmd': 'bg-emerald-900/30 border-emerald-700/40',
+      'healthline': 'bg-teal-900/30 border-teal-700/40',
+      'nih': 'bg-indigo-900/30 border-indigo-700/40',
+      'pubmed': 'bg-purple-900/30 border-purple-700/40',
+      'medlineplus': 'bg-cyan-900/30 border-cyan-700/40',
+      'cdc': 'bg-blue-900/30 border-blue-700/40',
+      'who': 'bg-sky-900/30 border-sky-700/40',
+    };
+    return colorMap[domain] || 'bg-zinc-800/50 border-zinc-700/50';
+  };
+
+  const displayName = href ? getDomainName(href) : 'source';
+  const colorClasses = href ? getSourceColor(href) : 'bg-zinc-800/50 border-zinc-700/50';
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-xs font-normal text-zinc-300 ${colorClasses} border hover:bg-zinc-700/60 hover:border-zinc-600/60 transition-all no-underline`}
+      title={href}
+    >
+      <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+      </svg>
+      <span className="opacity-90">{children || displayName}</span>
+    </a>
+  );
+};
+
+// Custom markdown components configuration
+const markdownComponents = {
+  a: PerplexityLink,
+};
+
 // ==============================================
 // CHAT CONVERSATION COMPONENT
 // ==============================================
@@ -563,7 +615,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                         {/* Attachment link display for user messages */}
                         {message.attachmentLink && renderAttachmentLink(message.attachmentLink, true)}
                         <div className="text-base text-zinc-100 leading-7 whitespace-pre-wrap prose prose-invert max-w-none">
-                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                          <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
                         </div>
                       </div>
                     ) : (
@@ -598,7 +650,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                         ) : (
                           <>
                             <div className="text-base text-zinc-100 leading-7 prose prose-invert max-w-none mb-3">
-                              <ReactMarkdown>{message.content}</ReactMarkdown>
+                              <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
                             </div>
                             
                             {/* ACTION BUTTONS FOR AI RESPONSES */}
@@ -811,7 +863,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                     }`}
                   >
                     <div className="text-sm prose prose-sm prose-invert max-w-none">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                      <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
                     </div>
                     <p className="text-xs mt-1 opacity-70">
                       {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : t('chatConversation.now')}
