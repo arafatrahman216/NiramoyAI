@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { chatbotAPI } from '../../services/api';
+import { useTranslation } from 'react-i18next';
+import { chatbotAPI, ttsAPI } from '../../services/api';
+import CarePlanTimeline from './CarePlanTimeline';
 
 // ==============================================
 // CHAT CONVERSATION COMPONENT
@@ -12,6 +14,14 @@ interface Message {
   content: string;
   agent: boolean;
   timestamp?: string;
+  isPlan?: boolean;
+  attachmentLink?: string;
+  attachment?: {
+    name: string;
+    type: string;
+    size: number;
+    url?: string;
+  } | null;
 }
 
 interface ChatConversationProps {
@@ -19,15 +29,37 @@ interface ChatConversationProps {
   onBack: () => void;
   chatData?: any;
   embedded?: boolean;
+  isProcessing?: boolean;
+  visitContext?: any;
+  onClearVisitContext?: () => void;
+  showPlanningProgress?: boolean;
+  planningSteps?: Array<{id: number; text: string; duration: number}>;
+  currentPlanningStep?: number;
 }
 
-const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, chatData, embedded = false }) => {
+
+const ChatConversation: React.FC<ChatConversationProps> = ({ 
+  chatId, 
+  onBack, 
+  chatData, 
+  embedded = false, 
+  isProcessing = false, 
+  visitContext, 
+  onClearVisitContext,
+  showPlanningProgress = false,
+  planningSteps = [],
+  currentPlanningStep = 0
+}) => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null);
+  const [speakingMessageId, setSpeakingMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   // Scroll to bottom when messages update
   const scrollToBottom = () => {
@@ -38,16 +70,52 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     scrollToBottom();
   }, [messages]);
 
-  // Listen for chat updates from search input
+  // Listen for new messages to add locally (no refresh needed)
   useEffect(() => {
-    const handleChatUpdate = () => {
-      // Refetch messages when chat is updated
+    const handleAddMessage = (event: any) => {
+      const newMessage = event.detail;
+      console.log('Adding message locally:', newMessage);
+      
+      setMessages(prev => [...prev, {
+        messageId: newMessage.messageId,
+        content: newMessage.content,
+        agent: newMessage.isAgent,
+        isPlan : newMessage.isPlan, 
+        timestamp: newMessage.timestamp
+      }]);
+    };
+
+    window.addEventListener('addMessage', handleAddMessage);
+    return () => window.removeEventListener('addMessage', handleAddMessage);
+  }, []);
+
+  // Listen for chat refresh events (only when needed)
+  useEffect(() => {
+    const handleChatRefresh = () => {
+      console.log('Chat refresh event received - fetching messages');
       fetchMessages();
     };
 
-    window.addEventListener('chatRefresh', handleChatUpdate);
-    return () => window.removeEventListener('chatRefresh', handleChatUpdate);
-  }, [chatId]);
+    window.addEventListener('chatRefresh', handleChatRefresh);
+    return () => window.removeEventListener('chatRefresh', handleChatRefresh);
+  }, []);
+
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('Component unmounting - cleaning up audio');
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.remove();
+        currentAudioRef.current = null;
+      }
+      
+      if (currentAudioUrlRef.current) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+        currentAudioUrlRef.current = null;
+      }
+    };
+  }, []);
 
   // Fetch messages function
   const fetchMessages = async () => {
@@ -55,34 +123,13 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     
     setLoading(true);
     
-    // If we have chatData with messages, use it directly
-    if (chatData && chatData.messages) {
-      console.log('Using chatData messages:', chatData.messages);
-      const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
-        messageId: msg.messageId,
-        content: msg.content,
-        agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
-      }));
-      setMessages(formattedMessages);
-      setLoading(false);
-      return;
-    }
 
-    // Otherwise fetch from API
+
     try {
       console.log('Fetching messages for chat ID:', chatId);
       
-      const response = await fetch('/api/user/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ chatId: chatId.toString() })
-      });
-      
-      const conversationData = await response.json();
+      const response = await chatbotAPI.getMessages(chatId);
+      const conversationData = response.data;
       
       console.log('Full API Response:', response);
       console.log('Conversation Data:', conversationData);
@@ -93,7 +140,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         messageId: msg.messageId,
         content: msg.content,
         agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp ? msg.timestamp : undefined,
+        isPlan: msg.isPlan === true,
+        attachmentLink: msg.attachmentLink || msg.attachment_link || null
       }));
       
       console.log('Formatted Messages:', formattedMessages);
@@ -111,36 +160,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
 
   // Fetch conversation messages
   useEffect(() => {
+    console.log('ChatConversation: useEffect triggered - chatId:', chatId, 'chatData:', chatData);
     fetchMessages();
-  }, [chatId, chatData]);
-
-  // Update messages immediately when chatData changes (from parent component)
-  useEffect(() => {
-    if (chatData && chatData.messages) {
-      console.log('ChatData updated from parent:', chatData.messages);
-      const formattedMessages: Message[] = chatData.messages.map((msg: any) => ({
-        messageId: msg.messageId,
-        content: msg.content,
-        agent: msg.isAgent || msg.agent || false,
-        timestamp: msg.timestamp
-      }));
-      setMessages(formattedMessages);
-      // Scroll to bottom when new data comes from parent
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [chatData]);
-
-  // Listen for chat refresh events
-  useEffect(() => {
-    const handleChatRefresh = () => {
-      fetchMessages();
-    };
-
-    window.addEventListener('chatRefresh', handleChatRefresh);
-    return () => {
-      window.removeEventListener('chatRefresh', handleChatRefresh);
-    };
-  }, []);
+  }, [chatId]);
 
   // Send new message
   const handleSendMessage = async () => {
@@ -161,21 +183,53 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     try {
       const response = await chatbotAPI.sendMessage(messageToSend, chatId as any);
       const botResponse = response.data;
+      // console.log('Full sendMessage API response:', response);
+      // console.log('Bot response from API:', botResponse);
 
-      // Add bot response to messages
+      // Add bot response to messages - extract from aiResponse object
+      const aiResponseData = botResponse.aiResponse || botResponse;
+      
+      // Check if there's an image link in the AI response
+      const imageLink = aiResponseData.attachmentLink || aiResponseData.image_link || aiResponseData.imageUrl || null;
+      
       const botMessage: Message = {
-        messageId: Date.now() + 1,
-        content: botResponse.message || botResponse.response || 'No response received',
-        agent: true
+        messageId: aiResponseData.messageId || Date.now() + 1,
+        content: aiResponseData.content || botResponse.message || botResponse.response || 'No response received',
+        agent: true,
+        isPlan: aiResponseData.isPlan === true,
+        attachmentLink: imageLink
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      // If there's an image link, also add it to the user's last message
+      if (imageLink) {
+        setMessages(prev => {
+          const updatedMessages = [...prev];
+          // Find the last user message (iterate backwards)
+          let lastUserMessageIndex = -1;
+          for (let i = updatedMessages.length - 1; i >= 0; i--) {
+            if (!updatedMessages[i].agent) {
+              lastUserMessageIndex = i;
+              break;
+            }
+          }
+          
+          if (lastUserMessageIndex !== -1) {
+            updatedMessages[lastUserMessageIndex] = {
+              ...updatedMessages[lastUserMessageIndex],
+              attachmentLink: imageLink
+            };
+          }
+          return [...updatedMessages, botMessage];
+        });
+      } else {
+        setMessages(prev => [...prev, botMessage]);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       // Add error message
       const errorMessage: Message = {
         messageId: Date.now() + 1,
-        content: 'Sorry, there was an error sending your message. Please try again.',
+        content: t('chatConversation.errorSendingMessage'),
         agent: true
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -208,6 +262,256 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
     }
   };
 
+  // Function to stop any currently playing audio
+  const stopCurrentAudio = () => {
+    if (currentAudioRef.current) {
+      console.log('Stopping current audio playback');
+      currentAudioRef.current.pause();
+      currentAudioRef.current.remove();
+      currentAudioRef.current = null;
+    }
+    
+    if (currentAudioUrlRef.current) {
+      console.log('Cleaning up audio URL');
+      URL.revokeObjectURL(currentAudioUrlRef.current);
+      currentAudioUrlRef.current = null;
+    }
+    
+    setSpeakingMessageId(null);
+  };
+
+  // Handle text-to-speech functionality using backend API
+  const handleReadAloud = async (messageId: number, content: string) => {
+    console.log('Read aloud clicked for message:', messageId);
+    
+    // If clicking on the same message that's currently playing, just stop
+    if (speakingMessageId === messageId) {
+      console.log('Same message clicked, stopping audio');
+      stopCurrentAudio();
+      return;
+    }
+    
+    // Stop any currently playing audio before starting new one
+    if (speakingMessageId || currentAudioRef.current) {
+      console.log('Stopping previous audio before starting new one');
+      stopCurrentAudio();
+    }
+
+    try {
+      console.log('Requesting TTS from backend for content:', content.substring(0, 50) + '...');
+      setSpeakingMessageId(messageId);
+      
+      // Call backend TTS API
+      const response = await ttsAPI.generateSpeech(content);
+      console.log('TTS response received:', response);
+      
+      // Create blob URL from the audio data
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Store the URL for cleanup
+      currentAudioUrlRef.current = audioUrl;
+      
+      // Create and configure audio element
+      const audio = new Audio(audioUrl);
+      audio.id = `audio-${messageId}`;
+      
+      // Store the audio reference
+      currentAudioRef.current = audio;
+      
+      // Handle audio events
+      audio.onloadstart = () => {
+        console.log('Audio loading started');
+      };
+      
+      audio.oncanplay = () => {
+        console.log('Audio can start playing');
+      };
+      
+      audio.onplay = () => {
+        console.log('Audio playback started');
+      };
+      
+      audio.onended = () => {
+        console.log('Audio playback ended');
+        stopCurrentAudio();
+      };
+      
+      audio.onerror = (error) => {
+        console.error('Audio playback error:', error);
+        stopCurrentAudio();
+        alert(t('chatConversation.errorPlayingAudio'));
+      };
+      
+      // Start playing the audio
+      await audio.play();
+      
+    } catch (error: any) {
+      console.error('TTS error:', error);
+      stopCurrentAudio();
+      
+      if (error.response) {
+        console.error('TTS API error response:', error.response.data);
+        alert(t('chatConversation.ttsServiceError', { status: error.response.status }));
+      } else if (error.request) {
+        console.error('TTS network error:', error.request);
+        alert(t('chatConversation.networkError'));
+      } else {
+        console.error('TTS unexpected error:', error.message);
+        alert(t('chatConversation.unexpectedError'));
+      }
+    }
+  };
+
+  // Helper function to determine file type from URL
+  const getFileTypeFromUrl = (url: string) => {
+    const extension = url.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return { type: 'application/pdf', icon: '📄' };
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return { type: 'image', icon: '📷' };
+      case 'doc':
+      case 'docx':
+        return { type: 'document', icon: '📝' };
+      case 'txt':
+        return { type: 'text', icon: '📄' };
+      default:
+        return { type: 'file', icon: '📎' };
+    }
+  };
+
+  // Helper function to extract filename from URL
+  const getFilenameFromUrl = (url: string) => {
+    try {
+      const urlParts = url.split('/');
+      const filename = urlParts[urlParts.length - 1];
+      // Remove query parameters if any
+      return filename.split('?')[0] || t('chatConversation.attachment');
+    } catch {
+      return t('chatConversation.attachment');
+    }
+  };
+
+  // Helper function to render attachment link
+  const renderAttachmentLink = (attachmentLink: string, isUserMessage: boolean = false) => {
+    const fileInfo = getFileTypeFromUrl(attachmentLink);
+    const filename = getFilenameFromUrl(attachmentLink);
+    
+    // Check if the attachment is an image
+    const isImage = fileInfo.type === 'image';
+    
+    return (
+      <div className="mb-3">
+        {/* Image preview if it's an image */}
+        {isImage && (
+          <div className="mb-2">
+            <img
+              src={attachmentLink}
+              alt={filename}
+              className="max-w-xs max-h-48 rounded-lg object-cover border border-zinc-600/50"
+              onError={(e) => {
+                // Hide image if it fails to load
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+        
+        {/* Attachment info section - transparent background */}
+        <div className={`p-2 rounded-lg border border-dashed border-zinc-600/40 ${
+          isUserMessage ? 'bg-transparent' : 'bg-transparent hover:bg-zinc-800/20'
+        } transition-colors`}>
+          <div className="flex items-center space-x-2">
+            <div className={`w-6 h-6 rounded flex items-center justify-center ${
+              isUserMessage ? 'bg-zinc-600/50' : 'bg-zinc-700/50'
+            }`}>
+              <span className="text-xs">{fileInfo.icon}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2">
+                <p className="text-xs text-zinc-200 font-medium truncate">{filename}</p>
+                <a
+                  href={attachmentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors flex items-center space-x-1"
+                  title={t('chatConversation.openAttachment')}
+                >
+                  <span>{t('chatConversation.view')}</span>
+                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+              <p className="text-xs text-zinc-400/70 capitalize">{fileInfo.type} {t('chatConversation.attachment')}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Parse care plan data from JSON content
+  const parseCarePlanData = (content: string) => {
+    // console.log('=== PARSING CARE PLAN DATA ===');
+    // console.log('Content type:', typeof content);
+    // console.log('Content length:', content.length);
+    // console.log('First 200 chars:', content.substring(0, 200));
+    
+    try {
+      // Try to parse as JSON first
+      const parsed = JSON.parse(content);
+      // console.log('✅ JSON parsing successful');
+      // console.log('Parsed object keys:', Object.keys(parsed));
+      
+      if (parsed.Plan) {
+        // console.log('✅ Found Plan object');
+        // console.log('Plan keys:', Object.keys(parsed.Plan));
+        // console.log('PreTreatment_Phase exists:', !!parsed.Plan.PreTreatment_Phase);
+        // console.log('Treatment_Phase exists:', !!parsed.Plan.Treatment_Phase);
+        // console.log('PostTreatment_Phase exists:', !!parsed.Plan.PostTreatment_Phase);
+        
+        if (parsed.Plan.PreTreatment_Phase || parsed.Plan.Treatment_Phase || parsed.Plan.PostTreatment_Phase) {
+          console.log('✅ Valid care plan structure found, returning parsed data');
+          return parsed;
+        } else {
+          console.log('❌ Plan object exists but no treatment phases found');
+        }
+      } else {
+        console.log('❌ No Plan object found in parsed JSON');
+      }
+    } catch (error) {
+      console.log('❌ JSON parsing failed:', error instanceof Error ? error.message : String(error));
+      // console.log('Trying regex match...');
+      
+      // If JSON parsing fails, look for JSON-like structure in the content
+      const jsonMatch = content.match(/\{[\s\S]*"Plan"[\s\S]*\}/);
+      if (jsonMatch) {
+        console.log('Found JSON pattern with regex');
+        try {
+          const extracted = JSON.parse(jsonMatch[0]);
+          console.log('✅ Regex extraction successful');
+          if (extracted.Plan && (extracted.Plan.PreTreatment_Phase || extracted.Plan.Treatment_Phase || extracted.Plan.PostTreatment_Phase)) {
+            console.log('✅ Valid care plan data from regex');
+            return extracted;
+          }
+        } catch (nestedError) {
+          console.log('❌ Nested parsing failed:', nestedError instanceof Error ? nestedError.message : String(nestedError));
+        }
+      } else {
+        console.log('❌ No JSON pattern found with regex');
+      }
+    }
+    
+    console.log('❌ No valid care plan data found, returning null');
+    return null;
+  };
+
   if (embedded) {
     // Embedded mode - ChatGPT style with full-width messages
     return (
@@ -215,7 +519,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full"></div>
-            <span className="ml-3 text-zinc-400">Loading conversation...</span>
+            <span className="ml-3 text-zinc-400">{t('chatConversation.loadingConversation')}</span>
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-zinc-500 mt-8">
@@ -237,53 +541,111 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
                     {!message.agent ? (
                       /* USER MESSAGE - Wrapped in leaner, rounder box */
                       <div className="bg-zinc-800 rounded-3xl px-3 py-2 inline-block">
+                        {/* Attachment display for user messages */}
+                        {message.attachment && (
+                          <div className="mb-2 p-2 bg-zinc-700 rounded-lg flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-zinc-600 rounded flex items-center justify-center">
+                              {message.attachment.type.startsWith('image/') ? (
+                                <span className="text-xs text-zinc-300">📷</span>
+                              ) : (
+                                <span className="text-xs text-zinc-300">📄</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-zinc-200 font-medium truncate">{message.attachment.name}</p>
+                              <p className="text-xs text-zinc-400">
+                                {(message.attachment.size / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {/* Attachment link display for user messages */}
+                        {message.attachmentLink && renderAttachmentLink(message.attachmentLink, true)}
                         <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap">
                           {message.content}
                         </p>
                       </div>
                     ) : (
-                      /* AI MESSAGE - Plain text with action buttons */
+                      /* AI MESSAGE - Check for care plan data or render plain text */
                       <div className="flex-1">
-                        <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
-                          {message.content}
-                        </p>
+                        {/* Attachment display for AI messages */}
+                        {message.attachment && (
+                          <div className="mb-3 p-3 bg-zinc-800 rounded-lg flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-zinc-700 rounded flex items-center justify-center">
+                              {message.attachment.type.startsWith('image/') ? (
+                                <span className="text-sm text-zinc-300">📷</span>
+                              ) : (
+                                <span className="text-sm text-zinc-300">📄</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-zinc-200 font-medium truncate">{message.attachment.name}</p>
+                              <p className="text-xs text-zinc-400">
+                                {(message.attachment.size / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {/* Attachment link display for AI messages */}
+                        {message.attachmentLink && renderAttachmentLink(message.attachmentLink, false)}
                         
-                        {/* ACTION BUTTONS FOR AI RESPONSES */}
-                        <div className="flex items-center space-x-2 mt-2">
-                          {/* Copy functionality with visual feedback */}
-                          <button
-                            onClick={() => handleCopyMessage(message.messageId, message.content)}
-                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-                            title={copiedMessageId === message.messageId ? "Copied!" : "Copy response"}
-                          >
-                            {copiedMessageId === message.messageId ? (
-                              /* Checkmark icon when copied */
-                              <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              /* Copy icon default state */
-                              <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            )}
-                          </button>
+                        {/* Check if this is a plan message from backend */}
+                        {message.isPlan ? (
+                          <div className="w-full">
+                            <CarePlanTimeline careData={parseCarePlanData(message.content)} />
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-base text-zinc-100 leading-7 whitespace-pre-wrap mb-3">
+                              {message.content}
+                            </p>
+                            
+                            {/* ACTION BUTTONS FOR AI RESPONSES */}
+                            <div className="flex items-center space-x-2 mt-2">
+                              {/* Copy functionality with visual feedback */}
+                              <button
+                                onClick={() => handleCopyMessage(message.messageId, message.content)}
+                                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+                                title={copiedMessageId === message.messageId ? t('chatConversation.copied') : t('chatConversation.copyResponse')}
+                              >
+                                {copiedMessageId === message.messageId ? (
+                                  /* Checkmark icon when copied */
+                                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                ) : (
+                                  /* Copy icon default state */
+                                  <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                )}
+                              </button>
 
-                          {/* TODO: Read aloud functionality - implement text-to-speech */}
-                          <button
-                            onClick={() => {
-                              // TODO: Implement text-to-speech functionality
-                              // Use Web Speech API or external TTS service
-                              console.log('Read aloud functionality - TODO');
-                            }}
-                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-                            title="Read aloud"
-                          >
-                            <svg className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
-                            </svg>
-                          </button>
-                        </div>
+                              {/* Read aloud functionality with TTS */}
+                              <button
+                                onClick={() => handleReadAloud(message.messageId, message.content)}
+                                className={`p-2 rounded-lg transition-colors group ${
+                                  speakingMessageId === message.messageId 
+                                    ? 'bg-emerald-500/20 text-emerald-400' 
+                                    : 'hover:bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
+                                }`}
+                                title={speakingMessageId === message.messageId ? t('chatConversation.stopReading') : t('chatConversation.readAloud')}
+                              >
+                                {speakingMessageId === message.messageId ? (
+                                  /* Stop icon when speaking */
+                                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6h12v12H6z" />
+                                  </svg>
+                                ) : (
+                                  /* Speaker icon default state */
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 17h4l6 6V1L9 7H5v10z" />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -292,6 +654,93 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
             </div>
           ))
         )}
+        
+        {/* PROCESSING INDICATOR - Show when AI is generating response */}
+        {isProcessing && (
+          <div className="w-full py-6">
+            <div className="max-w-3xl mx-auto px-6">
+              <div className="flex justify-start">
+                <div className="flex-1">
+                  {showPlanningProgress && planningSteps.length > 0 ? (
+                    /* PLANNING STEPS INDICATOR */
+                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 max-w-md">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2 pb-2 border-b border-zinc-800">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                          <span className="text-xs font-medium text-zinc-300">{t('chatConversation.planning')}</span>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {planningSteps.map((step, index) => (
+                            <div 
+                              key={step.id} 
+                              className={`flex items-start space-x-2 transition-all duration-300 ${
+                                index < currentPlanningStep 
+                                  ? 'opacity-100' 
+                                  : 'opacity-40'
+                              }`}
+                            >
+                              <div className={`flex-shrink-0 mt-0.5 transition-all duration-200 ${
+                                index < currentPlanningStep 
+                                  ? 'text-emerald-400' 
+                                  : index === currentPlanningStep
+                                  ? 'text-zinc-400'
+                                  : 'text-zinc-700'
+                              }`}>
+                                {index < currentPlanningStep ? (
+                                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                ) : index === currentPlanningStep ? (
+                                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                ) : (
+                                  <div className="w-3.5 h-3.5 rounded-full border border-current"></div>
+                                )}
+                              </div>
+                              <p className={`text-xs ${
+                                index < currentPlanningStep 
+                                  ? 'text-zinc-400' 
+                                  : index === currentPlanningStep
+                                  ? 'text-zinc-200 font-medium'
+                                  : 'text-zinc-600'
+                              }`}>
+                                {step.text}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="pt-2 border-t border-zinc-800">
+                          <div className="flex items-center justify-between text-xs text-zinc-500">
+                            <span>Step {currentPlanningStep}/{planningSteps.length}</span>
+                            <span className="flex items-center space-x-1">
+                              <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></span>
+                              <span>{t('chatConversation.processing')}</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* DEFAULT THINKING INDICATOR */
+                    <div className="flex items-center space-x-3 text-zinc-400">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                      <span className="text-sm">{t('chatConversation.aiThinking')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
     );
@@ -312,8 +761,8 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
             </svg>
           </button>
           <div>
-            <h2 className="text-lg font-semibold text-white">Chat Conversation</h2>
-            <p className="text-sm text-zinc-400">Chat ID: {chatId}</p>
+            <h2 className="text-lg font-semibold text-white">{t('chatConversation.chatConversation')}</h2>
+            <p className="text-sm text-zinc-400">{t('chatConversation.chatId')}: {chatId}</p>
           </div>
         </div>
       </div>
@@ -323,36 +772,52 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full"></div>
-            <span className="ml-3 text-zinc-400">Loading conversation...</span>
+            <span className="ml-3 text-zinc-400">{t('chatConversation.loadingConversation')}</span>
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-zinc-500 mt-8">
             <svg className="w-12 h-12 mx-auto mb-4 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p className="text-sm">No messages yet</p>
-            <p className="text-xs text-zinc-600 mt-1">Start the conversation by sending a message</p>
+            <p className="text-sm">{t('chatConversation.noMessagesYet')}</p>
+            <p className="text-xs text-zinc-600 mt-1">{t('chatConversation.startConversation')}</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.messageId}
-              className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  !message.agent
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-zinc-800 text-zinc-100'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-                <p className="text-xs mt-1 opacity-70">
-                  {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
-                </p>
-              </div>
-            </div>
-          ))
+          messages.map((message) => {
+            // Check if this is a plan message from backend
+            if (message.agent && message.isPlan) {
+              // Parse the JSON content for care plan data
+              const carePlanData = parseCarePlanData(message.content);
+              
+              // Render care plan timeline in full width
+              return (
+                <div key={message.messageId} className="w-full">
+                  <CarePlanTimeline careData={carePlanData} />
+                </div>
+              );
+            } else {
+              // Render regular chat bubble
+              return (
+                <div
+                  key={message.messageId}
+                  className={`flex ${!message.agent ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      !message.agent
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-zinc-800 text-zinc-100'
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                    <p className="text-xs mt-1 opacity-70">
+                      {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : t('chatConversation.now')}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -365,7 +830,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId, onBack, cha
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Type your message..."
+            placeholder={t('chatConversation.typeYourMessage')}
             disabled={sending}
             className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
           />

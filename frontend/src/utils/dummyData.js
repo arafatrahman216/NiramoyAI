@@ -361,8 +361,7 @@ export const fallbackTestReports = [
     summary: 'All blood cell counts within normal limits. No signs of infection, anemia, or bleeding disorders. White blood cells: 7.2 K/uL, Red blood cells: 4.5 M/uL, Hemoglobin: 14.2 g/dL.',
     urgency: 'normal',
     imageLinks: [
-      'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop'
+      'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=400&fit=crop'
     ]
   },
   {
@@ -414,7 +413,6 @@ export const fallbackTestReports = [
     summary: 'Fasting glucose elevated at 118 mg/dL (normal <100), consistent with diabetes diagnosis. Kidney function normal with creatinine 1.0 mg/dL and eGFR >60. Electrolytes balanced.',
     urgency: 'moderate',
     imageLinks: [
-      'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop',
       'https://images.unsplash.com/photo-1584362917165-526a968579e8?w=400&h=400&fit=crop',
       'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=400&fit=crop'
     ]
@@ -710,22 +708,7 @@ export const fallbackDashboardVitals = {
   heartRate: [],
 };
 
-export const fallbackDashboardVisits = [
-  { 
-    appointmentDate: "2025-08-20", 
-    doctorName: "Dr. Smith", 
-    symptoms: "General Checkup",
-    prescription: "Continue current medications",
-    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Prescription+Image"
-  },
-  { 
-    appointmentDate: "2025-09-01", 
-    doctorName: "Dr. Brown", 
-    symptoms: "Blood Test Follow-up",
-    prescription: "Review lab results next visit",
-    prescriptionFileUrl: "https://via.placeholder.com/400x300/374151/f3f4f6?text=Lab+Results"
-  },
-];
+export const fallbackDashboardVisits = [];
 
 export const fallbackDashboardProfile = {
   allergies: "...",
@@ -895,3 +878,51 @@ export const fallbackDoctorDashboardProfile = {
   experience: 12,
   licenseNumber: "MD12345"
 };
+
+export const fallbackDoctorPatients = [
+  {
+    id: 1,
+    name: "Sarah Johnson",
+    email: "sarah.johnson@example.com",
+    phone: "+1-555-0101",
+    bloodType: "A+",
+    lastVisit: "2025-01-10",
+    status: "Active"
+  },
+  {
+    id: 2,
+    name: "Michael Chen",
+    email: "michael.chen@example.com",
+    phone: "+1-555-0102",
+    bloodType: "B+",
+    lastVisit: "2025-01-09",
+    status: "Active"
+  },
+  {
+    id: 3,
+    name: "Emma Williams",
+    email: "emma.williams@example.com",
+    phone: "+1-555-0103",
+    bloodType: "O+",
+    lastVisit: "2025-01-08",
+    status: "Inactive"
+  },
+  {
+    id: 4,
+    name: "David Martinez",
+    email: "david.martinez@example.com",
+    phone: "+1-555-0104",
+    bloodType: "AB+",
+    lastVisit: "2025-01-07",
+    status: "Active"
+  },
+  {
+    id: 5,
+    name: "Lisa Anderson",
+    email: "lisa.anderson@example.com",
+    phone: "+1-555-0105",
+    bloodType: "A-",
+    lastVisit: "2025-01-06",
+    status: "Active"
+  }
+];

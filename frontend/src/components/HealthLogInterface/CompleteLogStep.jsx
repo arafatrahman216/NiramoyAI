@@ -7,6 +7,7 @@ import { CheckCircle, RotateCcw, FileText } from 'lucide-react';
 import { useEffect, useState , useRef} from 'react';
 import LogSummary from './LogSummary';
 import axios from 'axios';
+import { API_BASE_URL } from '../../services/api';
 
 const CompleteLogStep = ({ formData, resetForm }) => {
   const [vitals, setVitals] = useState([]);
@@ -33,7 +34,7 @@ const CompleteLogStep = ({ formData, resetForm }) => {
 
       console.log("Formatted vitals:", formData );
       try {
-        const response = await axios.post('http://localhost:8000/api/user/vitals',   formData,
+        const response = await axios.post(`${API_BASE_URL}/user/vitals`,   formData,
          {
           headers: {
             'Content-Type': 'application/json',

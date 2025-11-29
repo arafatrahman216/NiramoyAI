@@ -12,81 +12,138 @@ import {
   Phone,
   Mail,
   Activity,
-  FileText
+  FileText,
+  QrCode,
+  Pill
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL, doctorAPI } from '../../services/api';
 import RecentVisits from '../RecentVisits';
+import DoctorQRModal from './DoctorQRModal';
+import PrescribeModal from './PrescribeModal';
 import { 
   fallbackDoctorAppointments,
   fallbackDoctorRecentVisits,
   fallbackDoctorStats,
-  fallbackDoctorDashboardProfile
+  fallbackDoctorDashboardProfile,
+  fallbackDoctorPatients
 } from '../../utils/dummyData';
 
 const DoctorDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // DUMMY DATA FOR APPOINTMENTS (COMMENTED OUT DB FETCH)
+  const dummyAppointments = [
+    {
+      appointmentId: 'APT001',
+      patientName: 'Afham Adian',
+      appointmentDate: new Date(2025, 10, 15, 19, 47).toISOString(),
+      hospital: 'Ibn Sina Diagnostic and Consultation Center, Lalbagh',
+      status: 'Pending'
+    },
+    {
+      appointmentId: 'APT002',
+      patientName: 'Arafat Rahman',
+      appointmentDate: new Date(2025, 10, 16, 16, 51).toISOString(),
+      hospital: 'Asgar Ali Hospital',
+      status: 'Pending'
+    },
+    {
+      appointmentId: 'APT003',
+      patientName: 'Fatima Hassan',
+      appointmentDate: new Date(2025, 10, 17, 10, 30).toISOString(),
+      hospital: 'Bangladesh Institute of Health Sciences',
+      status: 'Scheduled'
+    },
+    {
+      appointmentId: 'APT004',
+      patientName: 'Mohammed Ali',
+      appointmentDate: new Date(2025, 10, 18, 14, 15).toISOString(),
+      hospital: 'Popular Hospital Ltd.',
+      status: 'Pending'
+    },
+    {
+      appointmentId: 'APT005',
+      patientName: 'Priya Sharma',
+      appointmentDate: new Date(2025, 10, 19, 9, 0).toISOString(),
+      hospital: 'Square Hospitals Ltd.',
+      status: 'Completed'
+    }
+  ];
+  
   const [doctorProfile, setDoctorProfile] = useState(null);
   const [stats, setStats] = useState(null);
-  const [appointments, setAppointments] = useState([]);
+  const [appointments, setAppointments] = useState(dummyAppointments);
   const [recentVisits, setRecentVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrData, setQrData] = useState(null);
+  const [showPrescribeModal, setShowPrescribeModal] = useState(false);
 
   useEffect(() => {
-    fetchDoctorData();
+    // Load critical data first (profile & appointments)
+    fetchCriticalData();
+    // Load stats in background (non-blocking)
+    fetchStatsInBackground();
   }, []);
 
-  const fetchDoctorData = async () => {
+  const fetchCriticalData = async () => {
     try {
       setLoading(true);
       
-      // Fetch doctor profile
-      try{
-          const profileResponse = await axios.get(`${API_BASE_URL}/doctor/profile`);
-        console.log('Doctor Profile:', profileResponse.data.doctor);
-        console.log('Doctor Profile:', fallbackDoctorDashboardProfile);
-        setDoctorProfile(profileResponse.data.doctor );
-        console.log(doctorProfile); 
-      }
-      catch(err) { console.error('Error fetching doctor profile:', err); setDoctorProfile(fallbackDoctorDashboardProfile); }
-      // Fetch dashboard stats
+      // Run profile and appointments fetches in parallel (critical for UI)
+      const [profileResult, visitsResult] = await Promise.allSettled([
+        axios.get(`${API_BASE_URL}/doctor/profile`),
+        axios.get(`${API_BASE_URL}/doctor/recent-visits`)
+      ]).then(results => results);
 
-      try{
-          const statsResponse = await axios.get(`${API_BASE_URL}/doctor/dashboard/stats`);
-          console.log('Dashboard Stats:', statsResponse.data.stats);
-          setStats(statsResponse.data.stats || fallbackDoctorStats);
+      // Handle doctor profile result
+      if (profileResult.status === 'fulfilled') {
+        console.log('Doctor Profile:', profileResult.value.data.doctor);
+        setDoctorProfile(profileResult.value.data.doctor);
+      } else {
+        console.error('Error fetching doctor profile:', profileResult.reason);
+        setDoctorProfile(fallbackDoctorDashboardProfile);
       }
-      catch(err) { console.error('Error fetching dashboard stats:', err); setStats(fallbackDoctorStats); }
-      // Fetch today's appointments
-      try
-      {
-        const today = new Date().toISOString().split('T')[0];
-      const appointmentsResponse = await axios.get(`${API_BASE_URL}/doctor/appointments?startDate=${today}&endDate=${today}`);
-      setAppointments(appointmentsResponse.data.appointments || fallbackDoctorAppointments);
 
-      }catch(err) { console.error('Error fetching today\'s appointments:', err); setAppointments(fallbackDoctorAppointments); }
-      // Fetch recent visits (last 7 days)
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      const recentVisitsResponse = await axios.get(`${API_BASE_URL}/doctor/recent-visits`);
-      setRecentVisits(recentVisitsResponse.data.visits || fallbackDoctorRecentVisits);
+      // Handle recent visits result
+      if (visitsResult.status === 'fulfilled') {
+        setRecentVisits(visitsResult.value.data.visits || fallbackDoctorRecentVisits);
+      } else {
+        console.error('Error fetching recent visits:', visitsResult.reason);
+        setRecentVisits(fallbackDoctorRecentVisits);
+      }
+
+      // Using DUMMY DATA for appointments instead
+      setAppointments(dummyAppointments);
 
     } catch (err) {
-      // Use fallback data when API calls fail
-      
-      setAppointments(fallbackDoctorAppointments);
+      console.error('Error fetching critical data:', err);
+      setDoctorProfile(fallbackDoctorDashboardProfile);
       setRecentVisits(fallbackDoctorRecentVisits);
-      
-      setError('Using demo data - API connection failed');
-      console.error('Error fetching doctor data:', err);
+      setAppointments(dummyAppointments);
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchStatsInBackground = async () => {
+    // This runs WITHOUT blocking the UI - lazy loading stats
+    try {
+      const statsResponse = await axios.get(`${API_BASE_URL}/doctor/dashboard/stats`);
+      console.log('Dashboard Stats:', statsResponse.data.stats);
+      setStats(statsResponse.data.stats || fallbackDoctorStats);
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setStats(fallbackDoctorStats);
+    }
+  };
+
+
 
   const handleLogout = () => {
     logout();
@@ -97,11 +154,73 @@ const DoctorDashboard = () => {
     navigate('/doctor/profile');
   };
 
+  const handleShowQR = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/doctor/qr`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.data.success) {
+        setQrData({
+          link: response.data.link,
+          qrImage: response.data.qrImage,
+          doctorName: doctorProfile?.name || user?.name,
+          specialty: doctorProfile?.specialization,
+          degree: doctorProfile?.degree
+        });
+        setShowQRModal(true);
+      }
+    } catch (err) {
+      console.error('Error fetching QR data:', err);
+      // Show error notification
+    }
+  };
+
+  const handleCreateNewQR = async () => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/doctor/qr`, {}, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.data.success) {
+        setQrData({
+          link: response.data.link,
+          qrImage: response.data.qrImage,
+          doctorName: doctorProfile?.name || user?.name,
+          specialty: doctorProfile?.specialization,
+          degree: doctorProfile?.degree
+        });
+        setShowQRModal(true);
+      }
+    } catch (err) {
+      console.error('Error creating new QR:', err);
+      // Show error notification
+    }
+  };
+
   const formatTime = (timeString) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      // Handle full ISO datetime strings (e.g., "2025-11-15T19:47:42")
+      if (timeString.includes('T')) {
+        return new Date(timeString).toLocaleString([], {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+      // Handle time-only strings (e.g., "19:47:42")
+      return new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (err) {
+      return timeString;
+    }
   };
 
   const getStatusColor = (status) => {
@@ -134,6 +253,14 @@ const DoctorDashboard = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowPrescribeModal(true)}
+                className="flex items-center px-3 py-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                title="Create a new prescription"
+              >
+                <Pill className="w-4 h-4 mr-2" />
+                Prescribe
+              </button>
               <button
                 onClick={handleProfileClick}
                 className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
@@ -207,7 +334,7 @@ const DoctorDashboard = () => {
               <div className="text-2xl font-bold text-emerald-400 mb-1">
                 {stats?.todayAppointments || 0}
               </div>
-              <div className="text-sm text-gray-400">Today's Appointments</div>
+              <div className="text-sm text-gray-400">Appointments</div>
             </div>
             
             <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 text-center">
@@ -246,43 +373,35 @@ const DoctorDashboard = () => {
           {/* Today's Appointments */}
           <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl">
             <div className="p-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Today's Appointments</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Appointments</h3>
               {appointments.length > 0 ? (
                 <div className="max-h-96 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
                   {appointments.map((appointment) => (
-                    <div key={appointment.id} className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
+                    <div key={appointment.appointmentId} className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-semibold text-white">
-                            {appointment.patient?.firstName} {appointment.patient?.lastName}
+                            {appointment.patientName}
                           </h4>
                           <p className="text-gray-400 text-sm">
-                            {formatTime(appointment.appointmentTime)}
+                            {formatTime(appointment.appointmentDate)}
+                          </p>
+                          <p className="text-gray-500 text-xs mt-1">
+                            {appointment.hospital}
                           </p>
                         </div>
                         <div className="flex flex-col items-end space-y-1">
                           <span className={`px-2 py-1 text-xs rounded-full ${
-                            appointment.status === 'SCHEDULED' ? 'bg-blue-500/20 text-blue-400' :
-                            appointment.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400' :
-                            appointment.status === 'CANCELLED' ? 'bg-red-500/20 text-red-400' :
-                            'bg-yellow-500/20 text-yellow-400'
+                            appointment.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            appointment.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                            appointment.status === 'Cancelled' ? 'bg-red-500/20 text-red-400' :
+                            appointment.status === 'Scheduled' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-gray-500/20 text-gray-400'
                           }`}>
                             {appointment.status}
                           </span>
-                          <span className="px-2 py-1 text-xs bg-gray-600 text-gray-300 rounded-full">
-                            {appointment.consultationType}
-                          </span>
                         </div>
                       </div>
-                      {appointment.symptoms && (
-                        <p className="text-gray-400 text-sm mt-2">
-                          <span className="font-medium">Symptoms:</span> {
-                            appointment.symptoms.length > 80 ? 
-                            appointment.symptoms.substring(0, 80) + '...' : 
-                            appointment.symptoms
-                          }
-                        </p>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -310,7 +429,7 @@ const DoctorDashboard = () => {
         <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl">
           <div className="p-6">
             <h3 className="text-xl font-semibold text-white mb-6">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 onClick={() => navigate('/doctor/appointments')}
                 className="flex flex-col items-center p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
@@ -334,7 +453,7 @@ const DoctorDashboard = () => {
                 <Users className="w-8 h-8 text-purple-400 mb-2" />
                 <span className="text-white font-medium">Patient Records</span>
               </button>
-              
+
               <button
                 onClick={() => navigate('/doctor/profile')}
                 className="flex flex-col items-center p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
@@ -342,10 +461,38 @@ const DoctorDashboard = () => {
                 <User className="w-8 h-8 text-yellow-400 mb-2" />
                 <span className="text-white font-medium">Update Profile</span>
               </button>
+
+              <button
+                onClick={handleShowQR}
+                className="flex flex-col items-center p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                <QrCode className="w-8 h-8 text-pink-400 mb-2" />
+                <span className="text-white font-medium">Show QR</span>
+              </button>
+
+              <button
+                onClick={handleCreateNewQR}
+                className="flex flex-col items-center p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                <QrCode className="w-8 h-8 text-cyan-400 mb-2" />
+                <span className="text-white font-medium">Create New QR</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <DoctorQRModal 
+        isOpen={showQRModal} 
+        onClose={() => setShowQRModal(false)} 
+        doctorData={qrData}
+      />
+
+      <PrescribeModal
+        isOpen={showPrescribeModal}
+        onClose={() => setShowPrescribeModal(false)}
+        doctorProfile={doctorProfile}
+      />
     </div>
   );
 };

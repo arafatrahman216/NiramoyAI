@@ -1,51 +1,100 @@
+import React, { useMemo, useState } from 'react';
+import { userInfoAPI } from '../../services/api'; //CONTEXT: Import API for fetching visit details
 
+const VisitGraph = ({ visits = [], onVisitContextSet, onVisitLoading }) => {
+  const [hoveredVisit, setHoveredVisit] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [loadingVisitId, setLoadingVisitId] = useState(null); //CONTEXT: Track which visit is being loaded
 
-
-
-
-
-import React, { useMemo } from 'react';
-
-const VisitGraph = () => {
-  // ------------------------------
-  // Sample visit data
-  // ------------------------------
-  const visits = [
-    { "visit_id": 1, "visit_time": "2025-09-01T09:00:00Z", "doctor_id": 101 },
-    { "visit_id": 2, "visit_time": "2025-09-01T11:30:00Z", "doctor_id": 102 },
-    { "visit_id": 3, "visit_time": "2025-09-01T15:15:00Z", "doctor_id": 103 },
-    { "visit_id": 4, "visit_time": "2025-09-02T08:45:00Z", "doctor_id": 101 },
-    { "visit_id": 5, "visit_time": "2025-09-02T13:20:00Z", "doctor_id": 104 },
-    { "visit_id": 6, "visit_time": "2025-09-02T17:10:00Z", "doctor_id": 102 },
-    { "visit_id": 7, "visit_time": "2025-09-03T09:30:00Z", "doctor_id": 105 },
-    // { "visit_id": 8, "visit_time": "2025-09-03T14:00:00Z", "doctor_id": 106 },
-    { "visit_id": 9, "visit_time": "2025-09-04T10:15:00Z", "doctor_id": 103 },
-    { "visit_id": 10, "visit_time": "2025-09-04T16:40:00Z", "doctor_id": 104 }
-  ];
-
+  // Handle visit click to fetch details from backend and set context
+  const handleVisitClick = async (visit, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    if (onVisitContextSet) {
+      //CONTEXT: Set loading state
+      setLoadingVisitId(visit.visitId);
+      if (onVisitLoading) onVisitLoading(true); //CONTEXT: Notify parent that loading started
+      
+      try {
+        //CONTEXT: Fetch visit details from backend
+        const response = await userInfoAPI.getVisitDetails(visit.visitId);
+        
+        //CONTEXT: Extract visit context from API response (backend wraps in data.data)
+        const visitData = response.data.data || response.data;
+        const visitContext = {
+          visitId: visitData.visitId || visit.visitId,
+          doctorName: visitData.doctorName || visit.doctorName,
+          appointmentDate: visitData.appointmentDate || visit.appointmentDate,
+          symptoms: visitData.symptoms || visit.symptoms || [],
+          prescription: visitData.prescription || visit.prescription || [],
+          diagnosis: visitData.diagnosis || null, //CONTEXT: Additional field from backend
+          summary: visitData.summary || null, //CONTEXT: Summary from backend
+          otherInfo: visitData.otherInfo || visit.otherInfo || {}
+        };
+        
+        console.log('Fetched visit context from backend:', visitContext);
+        onVisitContextSet(visitContext);
+      } catch (error) {
+        console.error('Error fetching visit details:', error);
+        
+        //CONTEXT: Fallback to local data if API fails
+        const visitContext = {
+          visitId: visit.visitId,
+          doctorName: visit.doctorName,
+          appointmentDate: visit.appointmentDate,
+          symptoms: visit.symptoms || [],
+          prescription: visit.prescription || [],
+          otherInfo: visit.otherInfo || {},
+          summary: "You visited Dr. " + visit.doctorName + " on " + visit.appointmentDate + ". Main symptoms were: " + (Array.isArray(visit.symptoms) ? visit.symptoms.join(', ') : visit.symptoms) + ". Prescribed: " + (Array.isArray(visit.prescription) ? visit.prescription.join(', ') : visit.prescription) + "." +
+            " Please note that this is a summary and may not include all relevant information." +
+            " As a reminder, please follow the prescribed treatment and consult your doctor if symptoms persist or worsen." +
+            " For more details, refer to your full medical history in the app."
+        };
+        
+        console.warn('Using fallback visit context:', visitContext);
+        onVisitContextSet(visitContext);
+      } finally {
+        //CONTEXT: Clear loading state
+        setLoadingVisitId(null);
+        if (onVisitLoading) onVisitLoading(false); //CONTEXT: Notify parent that loading finished
+      }
+    }
+  };
   // ------------------------------
   // Colors for each doctor/track
   // ------------------------------
   const colors = [
   "#4ADE80", // bright green
   "#A7F3D0", // mint
-  "#FACC15", // yellow
+  "#FACC95", // yellow
   "#60A5FA", // blue
   "#F472B6", // pink
   "#F87171", // red
   "#FBBF24", // orange
+  "#C084FC", // purple
+  "#34D399", // teal
+  "#F9A8D4"  // light pink
+
 ];
   // ------------------------------
   // Process visits to assign tracks, colors, and branch connections
   // ------------------------------
   const graphData = useMemo(() => {
+    // Handle empty visits case inside useMemo
+    if (!visits || visits.length === 0) {
+      return { processedVisits: [], totalTracks: 0, branchConnections: [] };
+    }
     const doctorTracks = new Map(); // track index per doctor
     const processedVisits = [];     // visits with track info
     const branchConnections = [];   // connections between new tracks
     let trackCounter = 0;
 
     visits.forEach((visit, index) => {
-      if (!doctorTracks.has(visit.doctor_id)) {
+      // Handle both old format (doctor_id) and new format (doctorId)
+      const doctorName = visit.doctorName;
+      if (!doctorTracks.has(doctorName)) {
         // New doctor → assign a track
         if (trackCounter > 0) {
           // Connect previous track to this new track
@@ -59,21 +108,23 @@ const VisitGraph = () => {
           });
         }
 
-        doctorTracks.set(visit.doctor_id, {
+        doctorTracks.set(doctorName, {
           trackIndex: trackCounter++,
           color: colors[(trackCounter - 1) % colors.length],
           lastVisitIndex: index
         });
       } else {
         // Existing doctor → update last visit index
-        doctorTracks.get(visit.doctor_id).lastVisitIndex = index;
+        doctorTracks.get(doctorName).lastVisitIndex = index;
       }
 
       // Add track info to the visit
       processedVisits.push({
         ...visit,
-        trackIndex: doctorTracks.get(visit.doctor_id).trackIndex,
-        color: doctorTracks.get(visit.doctor_id).color,
+        trackIndex: doctorTracks.get(doctorName).trackIndex,
+        color: doctorTracks.get(doctorName).color,
+        doctorName: doctorName, // Normalize the doctor ID field
+        visitId: visit.visitId || visit.visit_id, // Normalize the visit ID field
         index
       });
     });
@@ -94,10 +145,19 @@ const VisitGraph = () => {
   const svgWidth = graphData.totalTracks * TRACK_WIDTH + GRAPH_PADDING * 2;
   const svgHeight = visits.length * ROW_HEIGHT + GRAPH_PADDING * 2;
 
+  // Handle empty visits case
+  if (!visits || visits.length === 0) {
+    return (
+      <div className="text-center text-zinc-400 py-8">
+        <p>No visits data available</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full bg-zinc-900 overflow-auto">
-      <div className="p-2">
-        <div className="bg-zinc-900 rounded-lg p-3 overflow-auto border border-zinc-800">
+    <div className="h-full bg-zinc-900">
+      <div>
+        <div className="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
           <svg width={svgWidth} height={svgHeight} className="bg-zinc-900">
           <defs>
             <marker
@@ -161,7 +221,7 @@ const VisitGraph = () => {
               OFFSET applied: startY and endY are raised by START_OFFSET
           ------------------------------ */}
           {graphData.processedVisits.map((visit, index) => {
-            const nextVisit = graphData.processedVisits.slice(index + 1).find(v => v.doctor_id === visit.doctor_id);
+            const nextVisit = graphData.processedVisits.slice(index + 1).find(v => v.doctorName === visit.doctorName);
             if (nextVisit) {
               const startX = GRAPH_PADDING + visit.trackIndex * TRACK_WIDTH + TRACK_WIDTH/2;
               const startY = GRAPH_PADDING + index * ROW_HEIGHT - START_OFFSET;
@@ -173,7 +233,7 @@ const VisitGraph = () => {
 
               return (
                 <path
-                  key={`connection-${visit.visit_id}-${nextVisit.visit_id}`}
+                  key={`connection-${visit.doctorName}-${index}-${nextVisit.index}`}
                   d={`M ${startX} ${startY} Q ${controlX} ${controlY}, ${endX} ${endY}`}
                   stroke={visit.color}
                   strokeWidth="2"
@@ -192,9 +252,23 @@ const VisitGraph = () => {
           {graphData.processedVisits.map((visit, index) => {
             const x = GRAPH_PADDING + visit.trackIndex * TRACK_WIDTH + TRACK_WIDTH/2;
             const y = GRAPH_PADDING + index * ROW_HEIGHT;
+            const isLoading = loadingVisitId === visit.visitId; //CONTEXT: Check if this visit is loading
 
             return (
-              <g key={visit.visit_id}>
+              <g 
+                key={visit.visitId} 
+                style={{ cursor: isLoading ? 'wait' : 'pointer' }} //CONTEXT: Show wait cursor when loading
+                onMouseEnter={(e) => {
+                  if (!isLoading) { //CONTEXT: Don't show hover when loading
+                    setHoveredVisit(visit);
+                    setMousePosition({ x: e.clientX, y: e.clientY });
+                  }
+                }}
+                onMouseLeave={() => setHoveredVisit(null)}
+                onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
+                onClick={(e) => handleVisitClick(visit, e)}
+              >
+                {/* CONTEXT: Outer ring - show animation when loading */}
                 <circle
                   cx={x}
                   cy={y}
@@ -202,20 +276,35 @@ const VisitGraph = () => {
                   fill="#18181b" // zinc-900
                   stroke={visit.color}
                   strokeWidth="3"
-                />
+                  opacity={isLoading ? "0.5" : "1"}
+                >
+                  {isLoading && (
+                    <animate
+                      attributeName="r"
+                      from={NODE_RADIUS + 2}
+                      to={NODE_RADIUS + 5}
+                      dur="0.8s"
+                      repeatCount="indefinite"
+                    />
+                  )}
+                </circle>
+                {/* CONTEXT: Inner circle */}
                 <circle
                   cx={x}
                   cy={y}
                   r={NODE_RADIUS - 2}
                   fill={visit.color}
+                  opacity={isLoading ? "0.5" : "1"}
                 />
+                {/* CONTEXT: Visit ID text */}
                 <text
                   x={x}
                   y={y + 2}
                   textAnchor="middle"
                   className="text-xs font-bold fill-zinc-200"
+                  opacity={isLoading ? "0.5" : "1"}
                 >
-                  {visit.visit_id}
+                  {visit.visitId}
                 </text>
               </g>
             );
@@ -229,20 +318,42 @@ const VisitGraph = () => {
         <div className="mt-3 bg-zinc-900 rounded-lg p-2 border border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-200 mb-2">Doctors</h3>
           <div className="flex flex-wrap gap-2">
-            {[...new Set(visits.map(v => v.doctor_id))].map((doctorId, index) => (
-              <div key={doctorId} className="flex items-center gap-1">
+            {[...new Map(visits.map(v => [v.doctorName])).entries()].map(([ doctorName], index) => (
+              <div key={doctorName} className="flex items-center gap-1">
                 <div 
                   className="w-3 h-3 rounded-full border border-zinc-700"
                   style={{ backgroundColor: colors[index % colors.length] }}
                 />
-                <span className="text-zinc-400 text-xs">Dr {doctorId}</span>
+                <span className="text-zinc-400 text-xs">Dr. {doctorName}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Hover Tooltip */}
+      {hoveredVisit && (
+        <div 
+          className="fixed bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg p-3 pointer-events-none z-50 text-sm"
+          style={{
+            left: mousePosition.x + 10,
+            top: mousePosition.y - 10,
+            transform: 'translateY(-100%)'
+          }}
+        >
+          <div className="space-y-1">
+            <div className="font-semibold text-zinc-200">Visit #{hoveredVisit.visitId}</div>
+            <div className="text-zinc-300">Dr. {hoveredVisit.doctorName}</div>
+            {hoveredVisit.appointmentDate && (
+              <div className="text-zinc-400">{hoveredVisit.appointmentDate}</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default VisitGraph;
+// Export as Timeline for better naming consistency
+const Timeline = VisitGraph;
+export default Timeline;

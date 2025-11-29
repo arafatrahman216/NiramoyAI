@@ -1,35 +1,41 @@
 package com.example.niramoy.controller;
 
 import com.example.niramoy.customExceptions.AgentProcessingException;
-import com.example.niramoy.dto.UserDTO;
+import com.example.niramoy.dto.*;
 import com.example.niramoy.dto.Request.UploadVisitReqDTO;
-import com.example.niramoy.dto.VisitDTO;
-import com.example.niramoy.entity.ChatSessions;
-import com.example.niramoy.entity.HealthLog;
-import com.example.niramoy.entity.HealthProfile;
-import com.example.niramoy.entity.User;
-import com.example.niramoy.entity.Messages;
-import com.example.niramoy.dto.HealthProfileDTO;
+import com.example.niramoy.entity.*;
 import com.example.niramoy.service.*;
 import com.example.niramoy.service.AIServices.AIService;
-import com.example.niramoy.dto.HealthLogRecord;
-import com.example.niramoy.service.AIServices.AIService;
+import com.example.niramoy.repository.ChatSessionRepository;
+import com.example.niramoy.repository.MessageRepository;
+import com.example.niramoy.repository.PermissionsRepository;
+import com.example.niramoy.repository.DoctorRepository;
+
 import lombok.RequiredArgsConstructor;
+
+import org.json.JSONObject;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
+
+import static com.example.niramoy.utils.JsonParser.objectMapper;
 
 @Slf4j
 @RestController
@@ -43,6 +49,17 @@ public class UserController {
     private final MessageService messageService;
     private final HealthService healthService;
     private final ElevenLabService elevenLabService;
+    private final QRService qrService;
+    private final UserKGService userKGService;
+    private final DoctorProfileService doctorProfileService;
+    private final PermissionsRepository permissionsRepository;
+    private final DoctorRepository doctorRepository;
+
+    //FIXME : Has to refactor these into a service 
+    private final ChatSessionRepository chatSessionRepository;
+    private final MessageRepository messageRepository;
+    private final String baseQrUrl = "http://localhost:3000/link/";
+
 
 
 
@@ -122,6 +139,7 @@ public class UserController {
 
     }
 
+
     @GetMapping("chat-sessions")
     public ResponseEntity<HashMap<String, Object>> getChatSessions(){
         HashMap<String, Object> response = new HashMap<>();
@@ -133,8 +151,10 @@ public class UserController {
             return ResponseEntity.ok(response);
         }
         User user = (User) authentication.getPrincipal();
-        List<ChatSessions> chatSessionsList = user.getChatSession();
-        response.put("chatSessions", chatSessionsList);
+        List<ChatSessionDTO> chatSessionDTOs = messageService.getChatSessionDtoByUser(user);
+
+//        response.put("chatSessions", chatSessionsList);
+        response.put("chatSessions", chatSessionDTOs);
         return ResponseEntity.ok(response);
 
     }
@@ -152,7 +172,7 @@ public class UserController {
         
         try {
             User user = (User) authentication.getPrincipal();
-            ChatSessions newChatSession = messageService.createNewChatSession(user);
+            ChatSessionDTO newChatSession = messageService.createNewChatSession(user);
             
             response.put("success", true);
             response.put("message", "New chat session created successfully");
@@ -171,7 +191,7 @@ public class UserController {
 
 
     @PostMapping("/chat")
-    public ResponseEntity<HashMap<String, Object>> sendMessage(@RequestBody Map<String, String> body){
+    public ResponseEntity<HashMap<String, Object>> sendMessage(@RequestBody Map<String, Object> body){
         HashMap<String, Object> response = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
@@ -182,12 +202,21 @@ public class UserController {
         
         try {
             User user = (User) authentication.getPrincipal();
-            String message = body.get("message");
-            String chatIdStr = body.get("chatId");
-            String mode = body.get("mode");
+            String message = (String) body.get("message");
+            String chatIdStr = (String) body.get("chatId");
+            String mode = (String) body.get("mode");
+            
+            //CONTEXT: Extract previous messages and visit context if provided
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> previousMessages = (List<Map<String, String>>) body.get("previousMessages");
+            
+            @SuppressWarnings("unchecked")
+            Map<String, Object> visitContext = (Map<String, Object>) body.get("visitContext");
 
             log.info("Received message: {}", message);
             log.info("Received mode: {}", mode);
+            // log.info("Previous messages count: {}", previousMessages != null ? previousMessages.size() : 0);
+            // log.info("Visit context provided: {}", visitContext != null);
 
             if (message == null || message.trim().isEmpty()) {
                 response.put("success", false);
@@ -202,22 +231,43 @@ public class UserController {
             }
             
             Long chatId = Long.parseLong(chatIdStr);
+            Long userId = user.getId();
             
-            // Process message and get AI reply (synchronous for now, but DB saves are async internally)
-            Messages aiReply = messageService.sendMessageAndGetReply(chatId, message, mode);
+            //CONTEXT: Build context prompt from previous messages and visit context
+            String contextPrompt = buildContextPrompt(previousMessages, visitContext);
+            String fullMessage = contextPrompt.isEmpty() ? message : contextPrompt + "\n\nCurrent User Query: " + message;
+            
+            log.info("\nFull message with context: {}", fullMessage);
+            
+
+            //FIXME : Refactor in service
+            // Save user message to database
+            ChatSessions chatSession = chatSessionRepository.findChatSessionsByChatId(chatId);
+            Messages userMessage = Messages.builder()
+                    .content(message)
+                    .isAgent(false)
+                    .isPlan(false)
+                    .chatSession(chatSession)
+                    .build();
+            messageRepository.save(userMessage);
+
+            // Process message and get AI reply (with context)
+            Messages aiReply = messageService.sendMessageAndGetReply(chatId, fullMessage, mode, userId);
 
             response.put("success", true);
             response.put("message", "Message sent and processed successfully");
             response.put("userMessage", Map.of(
                 "content", message,
                 "isAgent", false,
-                "chatId", chatId
+                "chatId", chatId,
+                "isPlan", false
             ));
             response.put("aiResponse", Map.of(
                 "messageId", aiReply.getMessageId(),
                 "content", aiReply.getContent(),
                 "isAgent", aiReply.isAgent(),
-                "chatId", chatId
+                "chatId", chatId,
+                "isPlan", aiReply.getIsPlan()
             ));
             
             return ResponseEntity.ok(response);
@@ -232,13 +282,19 @@ public class UserController {
         } catch (Exception e) {
             log.error("Error processing message: ", e);
             response.put("success", false);
+            response.put("aiResponse", Map.of(
+                    "messageId", null,
+                    "content", "Failed to get response: " + e.getMessage(),
+                    "isAgent", true,
+                    "chatId", body.get("chatId")
+            ));
             response.put("message", "Failed to process message: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
     @PostMapping("/message")
-    public  ResponseEntity<HashMap<String,Object>> getAgentMessage(@RequestBody Map<String,String> query){
+    public  ResponseEntity<HashMap<String,Object>> getMessages(@RequestBody Map<String,String> query){
 
         HashMap<String,Object> response = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -251,8 +307,10 @@ public class UserController {
         Long chatId = Long.parseLong(query.get("chatId") );
         response.put("success", true );
         System.out.println(chatId);
-        ChatSessions chatSession = messageService.getMessagesByChatId(chatId); // get the single chat session by chatId
-        response.put("data", chatSession.getMessages()); // messages of the distinct chat session(this is what is required)
+        List<Messages> messages = messageService.getMessagesByChatId(chatId); // get the single chat session by chatId
+        List<Map<String,Object>> messageMaps = messageService.convertToMessageMap(messages);
+        System.out.println(messageMaps);
+        response.put("data", messages); // messages of the distinct chat session(this is what is required)
 //        List<ChatSessions> chatSessionsList = new ArrayList<>();
 //        for (ChatSessions cs: chatSession.getUser().getChatSession()){ // all chat sessions of the user(no use for now)
 //            if (cs.getMessages().size() >0){
@@ -288,6 +346,7 @@ public class UserController {
 
 
     
+
 
     @GetMapping("/username")
     public ResponseEntity<UserDTO> findByUsername(@RequestParam("q") String email){
@@ -332,6 +391,7 @@ public class UserController {
         response.put("success", true);
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/health-log")
     public ResponseEntity<Map<String, Object>> getHealthLogs() {
@@ -381,19 +441,97 @@ public class UserController {
         return ResponseEntity.ok("healthLogRecord");
     }
 
+    // @PostMapping("/upload-visit")
+    // public ResponseEntity<String> uploadVisit(@ModelAttribute UploadVisitReqDTO visitDTO){
+    //     try {
+
+    //         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();   
+    //         UserDTO userDTO = userService.convertToUserDTO(user);
+        
+    //         String appointmentDate = visitDTO.getAppointmentDate();
+    //         String doctorName = visitDTO.getDoctorName();
+    //         String symptoms = visitDTO.getSymptoms();
+    //         String prescription = visitDTO.getPrescription();
+    //         String doctorId = visitDTO.getDoctorId();
+    //         System.out.println("doctor id : " + doctorId);
+
+    //         String prescriptionFileUrl = null;
+    //         // Check if prescription file is present and upload it
+    //         if (visitDTO.getPrescriptionFile() != null && !visitDTO.getPrescriptionFile().isEmpty()) {
+    //             log.info("Prescription file found: {}", visitDTO.getPrescriptionFile().getOriginalFilename());
+    //             try {
+    //                 prescriptionFileUrl = imageService.uploadImage(visitDTO.getPrescriptionFile());
+    //                 log.info("Prescription file uploaded successfully. URL: {}", prescriptionFileUrl);
+    //             } catch (Exception e) {
+    //                 log.error("Error uploading prescription file: {}", e.getMessage());
+    //                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                         .body("Error uploading prescription file: " + e.getMessage());
+    //             }
+    //         } else {
+    //             log.warn("No prescription file provided");
+    //         }
+            
+    //         List<String> testReportFileUrl = new ArrayList<>();
+    //         if (visitDTO.getTestReports() != null && !visitDTO.getTestReports().isEmpty()) {
+    //             for (MultipartFile testReport : visitDTO.getTestReports()) {
+    //                 log.info("Test report file found: {}", testReport.getOriginalFilename());
+    //                 try {
+    //                     String testReportUrl = imageService.uploadImage(testReport);
+    //                     testReportFileUrl.add(testReportUrl);
+    //                 } catch (Exception e) {
+    //                     log.error("Error uploading test report file: {}", e.getMessage());
+    //                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                             .body("Error uploading test report file: " + e.getMessage());
+    //                 }
+    //             }
+    //         } else {
+    //             log.warn("No test report file provided");
+    //         }
+            
+    //         log.info("=== UPLOAD SUMMARY ===");
+    //         log.info("Prescription File URL: {}", prescriptionFileUrl != null ? prescriptionFileUrl : "Not uploaded");
+    //         log.info("Test Report File URL: {}", testReportFileUrl != null ? testReportFileUrl : "Not uploaded");
+    //         log.info("Visit data processed successfully");
+    
+
+    //         UploadVisitReqDTO uploadedData = visitService.saveVisitData(
+    //                                                         userDTO.getId(),
+    //                                                         appointmentDate,
+    //                                                         doctorName,
+    //                                                         doctorId,
+    //                                                         symptoms,
+    //                                                         prescription,
+    //                                                         prescriptionFileUrl,
+    //                                                         testReportFileUrl
+    //                                                     );
+
+    //         log.info("Visit data saved successfully for user: {}", userDTO.getId());
+
+    //         return ResponseEntity.ok("Visit data received, files uploaded, and saved successfully. Prescription URL: " + prescriptionFileUrl);
+            
+    //     } catch (Exception e) {
+    //         log.error("Error in upload-visit endpoint: {}", e.getMessage(), e);
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                 .body("Error processing visit data: " + e.getMessage());
+    //     }
+    // }
+
+
+
+
     @PostMapping("/upload-visit")
     public ResponseEntity<String> uploadVisit(@ModelAttribute UploadVisitReqDTO visitDTO){
         try {
 
             User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();   
             UserDTO userDTO = userService.convertToUserDTO(user);
-        
+
             String appointmentDate = visitDTO.getAppointmentDate();
             String doctorName = visitDTO.getDoctorName();
             String symptoms = visitDTO.getSymptoms();
-            String prescription = visitDTO.getPrescription();
+            String prescription = "Take Medication as prescribed and rest well."; // Placeholder prescription //FIXME
             String doctorId = visitDTO.getDoctorId();
-            System.out.println("doctor id : " + doctorId);
+            // System.out.println("doctor id : " + doctorId);
 
             String prescriptionFileUrl = null;
             // Check if prescription file is present and upload it
@@ -427,7 +565,7 @@ public class UserController {
             } else {
                 log.warn("No test report file provided");
             }
-
+            
             log.info("=== UPLOAD SUMMARY ===");
             log.info("Prescription File URL: {}", prescriptionFileUrl != null ? prescriptionFileUrl : "Not uploaded");
             log.info("Test Report File URL: {}", testReportFileUrl != null ? testReportFileUrl : "Not uploaded");
@@ -436,7 +574,7 @@ public class UserController {
 
             UploadVisitReqDTO uploadedData = visitService.saveVisitData(
                                                             userDTO.getId(),
-                                                            appointmentDate,
+                                                            // appointmentDate,
                                                             doctorName,
                                                             doctorId,
                                                             symptoms,
@@ -457,6 +595,9 @@ public class UserController {
     }
 
 
+
+
+
     @PostMapping("/audio-log")
     public ResponseEntity<Map<String, Object>> uploadAudio(@ModelAttribute MultipartFile audio) {
         try {
@@ -466,14 +607,57 @@ public class UserController {
             response.put("success", true);
             response.put("text", transcription);
             System.out.println(transcription);
+
             HealthLogRecord healthLogRecord = healthService.getLogFromTranscription(transcription);
             response.put("healthLogRecord", healthLogRecord);
+            response.put("transcription", transcription);
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/text-log")
+    public ResponseEntity<Map<String, Object>> textLog(@RequestBody String logs) {
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        HealthLogRecord healthLogRecord = healthService.getLogFromTranscription(logs);
+        
+        
+        response.put("healthLogRecord", healthLogRecord);
+        return ResponseEntity.ok(response);
+
+    }
+
+
+    @PostMapping("/audio")
+    public ResponseEntity<Map<String, Object>> uploadAudioAndSaveLog(@ModelAttribute MultipartFile audio) {
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        try {
+            String transcription = elevenLabService.transcribeAudio(audio);
+            response.put("success", true);
+            response.put("text", transcription);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to transcribe audio: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -491,9 +675,376 @@ public class UserController {
         List<VisitDTO> recentVisits = visitService.getRecentVisits(user, 10);
         response.put("success", true);
         response.put("recentVisits", recentVisits);
+
         return ResponseEntity.ok(response);
-        
+    }
+
+    @PostMapping(value = "/tts", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<byte[]> getSpeech(@RequestBody String text) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new RuntimeException("Authentication token is null. Please login to get speech");
+        }
+        User user = (User) authentication.getPrincipal();
+        byte[] audio = elevenLabService.generateTextToSpeech( text);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"speech.mp3\"")
+                .contentType(MediaType.valueOf("audio/mpeg"))
+                .body(audio);
+
     }
 
 
+    @GetMapping("/HELLO")
+    public ResponseEntity<String> hello(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication token is null. Please login to upload profile image");
+        }
+        return ResponseEntity.ok("Hello, Niramoy User!");
+    }
+
+
+    @PostMapping("/chat-attachment")
+    public ResponseEntity<HashMap<String, Object>> sendMessageWithAttachment(
+            @RequestParam("message") String message,
+            @RequestParam("chatId") String chatId,
+            @RequestParam("mode") String mode,
+            @RequestParam(value = "attachment", required = false) MultipartFile attachment) {
+        
+        HashMap<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to send messages");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        User user = (User) authentication.getPrincipal();
+        Long userId = user.getId();
+        Long chatIdLong;
+        try {
+            chatIdLong = Long.parseLong(chatId);
+        } catch (NumberFormatException e) {
+            response.put("success", false);
+            response.put("message", "Invalid chat ID format");
+            return ResponseEntity.badRequest().body(response);
+        }
+        String fileUrl = null;
+        Messages aiReply = messageService.sendMessageAndGetReplyWithAttachment(chatIdLong, message, attachment, mode, userId);
+        response.put("success", true);
+        response.put("message", "Message with attachment sent and processed successfully");
+        response.put("userMessage", Map.of(
+            "content", message,
+            "isAgent", false,
+            "chatId", chatIdLong,
+            "isPlan", false,
+            "attachmentLink", aiReply.getAttachmentLink()
+        ));
+        response.put("aiResponse", Map.of(
+            "messageId", aiReply.getMessageId(),
+            "content", aiReply.getContent(),
+            "isAgent", aiReply.isAgent(),
+            "chatId", chatIdLong,
+            "isPlan", aiReply.getIsPlan(),
+                "attachmentLink", aiReply.getAttachmentLink()
+        ));
+        return ResponseEntity.ok(response);
+
+    }
+
+
+    @GetMapping("/profile/share")
+    public ResponseEntity<Map<String, Object>> getShareableLink(){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        UserDTO profile = userService.convertToUserDTO(user);
+        response.put("success", true);
+        response.put("message", "Shareable link generated successfully" );
+        String data = profile.getUsername() + "###" + (System.currentTimeMillis() + 24*60*60*1000); // 1 day expiry
+        
+        //FIXME : Fix hardcoded url
+        String profileLink = "http://localhost:3000/shared/profile/" + (profile.getUsername() != null ? qrService.encrypt(data): "user123");
+        response.put("link", profileLink);
+        String excryptedData = qrService.encrypt(data);
+        response.put("user", qrService.decrypt(qrService.encrypt(data)));
+        response.put("expire", qrService.decrypt(qrService.encrypt(data)).split("###")[1]);
+        response.put("qrImage",  qrService.generateQrCode(profileLink));
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/medicines")
+    public ResponseEntity<Map<String,Object>> getMedicines (){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        response.put("success", true);
+        List<Medicine> medicines = userService.getMedicinesByUserId(user.getId());
+        response.put("medicines",medicines);
+        return ResponseEntity.ok(response);
+    }
+
+
+    @DeleteMapping("/medicines/{id}")
+    public ResponseEntity<Map<String,Object>> deleteMedicine (@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        boolean deleted = userService.deleteMedicineByIdAndUserId(id, user.getId());
+        if (deleted){
+            response.put("success", true);
+            response.put("message", "Medicine deleted successfully");
+        }
+        else {
+            response.put("success", false);
+            response.put("message", "Failed to delete medicine. Medicine not found or does not belong to user");
+        }
+        return ResponseEntity.ok(response);
+    }
+
+
+    //CONTEXT: Endpoint to get visit details by visit ID from Knowledge Graph
+    @GetMapping("/visit/{visitId}")
+    public ResponseEntity<Map<String, Object>> getVisitDetails(@PathVariable Long visitId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            log.info("Fetching visit details for visit ID: {}", visitId);
+            
+            // Fetch visit context from Knowledge Graph
+            VisitContextDTO visitData = userKGService.getVisitContextByID(visitId);
+            
+            if (visitData == null) {
+                log.warn("Visit not found with ID: {}", visitId);
+                response.put("success", false);
+                response.put("message", "Visit not found with ID: " + visitId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            
+            response.put("success", true);
+            response.put("data", visitData);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error fetching visit details: {}", e.getMessage(), e);
+            response.put("success", false);
+            response.put("message", "Failed to fetch visit details: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+
+
+    //CONTEXT: Helper method to build context prompt from previous messages and visit context
+    private String buildContextPrompt(List<Map<String, String>> previousMessages, Map<String, Object> visitContext) {
+        StringBuilder prompt = new StringBuilder();
+        
+        // Add previous conversation context
+        if (previousMessages != null && !previousMessages.isEmpty()) {
+            prompt.append("Previous conversation:\n");
+            for (Map<String, String> msg : previousMessages) {
+                String role = msg.getOrDefault("role", "user").toUpperCase();
+                String content = msg.getOrDefault("content", "");
+                if (!content.isEmpty()) {
+                    prompt.append(role).append(": ").append(content).append("\n");
+                }
+            }
+            prompt.append("\n");
+        }
+        
+        // Add visit context
+        if (visitContext != null) {
+            prompt.append("Relevant Visit Information:\n");
+            
+            if (visitContext.containsKey("visitId")) {
+                prompt.append("Visit ID: ").append(visitContext.get("visitId")).append("\n");
+            }
+            if (visitContext.containsKey("doctorName")) {
+                prompt.append("Doctor: ").append(visitContext.get("doctorName")).append("\n");
+            }
+            if (visitContext.containsKey("appointmentDate")) {
+                prompt.append("Date: ").append(visitContext.get("appointmentDate")).append("\n");
+            }
+            if (visitContext.containsKey("diagnosis") && visitContext.get("diagnosis") != null) {
+                prompt.append("Diagnosis: ").append(visitContext.get("diagnosis")).append("\n");
+            }
+            if (visitContext.containsKey("symptoms") && visitContext.get("symptoms") != null) {
+                Object symptomsObj = visitContext.get("symptoms");
+                if (symptomsObj instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<String> symptoms = (List<String>) symptomsObj;
+                    if (!symptoms.isEmpty()) {
+                        prompt.append("Symptoms: ").append(String.join(", ", symptoms)).append("\n");
+                    }
+                } else {
+                    // Handle as string
+                    prompt.append("Symptoms: ").append(symptomsObj.toString()).append("\n");
+                }
+            }
+            if (visitContext.containsKey("prescription") && visitContext.get("prescription") != null) {
+                Object prescriptionObj = visitContext.get("prescription");
+                if (prescriptionObj instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<String> prescription = (List<String>) prescriptionObj;
+                    if (!prescription.isEmpty()) {
+                        prompt.append("Prescription: ").append(String.join(", ", prescription)).append("\n");
+                    }
+                } else {
+                    // Handle as string
+                    prompt.append("Prescription: ").append(prescriptionObj.toString()).append("\n");
+                }
+            }
+            if (visitContext.containsKey("summary") && visitContext.get("summary") != null) {
+                prompt.append("Summary: ").append(visitContext.get("summary")).append("\n");
+            }
+            
+            prompt.append("\n");
+        }
+        
+        return prompt.toString();
+    }
+
+    @GetMapping("/medical-summary")
+    public ResponseEntity<Map<String,Object>> getMedicalSummary (){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        response.put("success", true);
+        JSONObject medicalSummary = userService.generateMedicalSummary(user.getId());
+        log.info("Medical Summary JSON: {}", medicalSummary.toString(4));
+        // Map<
+        response.put("medicalSummary", medicalSummary.toMap());
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/link/{data}")
+    public ResponseEntity<Map<String,Object>> getDoctorLink ( @PathVariable String data){
+        Map<String, Object> response = new HashMap<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "Authentication token is null. Please login to upload profile image");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        User user = (User) authentication.getPrincipal();
+        response.put("success", true);
+        log.info("Encrypted data: {}", data);   
+         String decryptedData = qrService.decrypt(data);
+         log.info("Decrypted data: {}", decryptedData);
+         DoctorProfile doctorProfile= doctorProfileService.verifyQr(baseQrUrl+data);
+        if (doctorProfile==null){
+            response.put("success", false);
+            response.put("message", "Invalid QR code");
+            return ResponseEntity.badRequest().body(response);
+        }
+        log.info("Doctor profile: {}", doctorProfile);
+        Map<String, Object> linkData = new HashMap<>();
+        linkData.put("doctorId", doctorProfile.getDoctorId());
+        linkData.put("name", doctorProfile.getDoctor().getName());
+        linkData.put("degree", doctorProfile.getDoctor().getDegree());
+        linkData.put("hospital", doctorProfile.getDoctor().getHospitalName());
+        linkData.put("specialization", doctorProfile.getDoctor().getSpecialization());
+        linkData.put("experience", doctorProfile.getDoctor().getExperience());        
+        response.put("doctorData", linkData);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/permission")
+    public ResponseEntity<HashMap<String, Object>> grantDoctorAccess(@RequestBody HashMap<String, Object> request) {
+        HashMap<String, Object> response = new HashMap<>();
+        
+        try {
+            // Get authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                response.put("success", false);
+                response.put("message", "User not authenticated");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            User user = (User) authentication.getPrincipal();
+            
+            
+            // Extract doctorId from request
+            Object doctorIdObj = request.get("doctorId");
+            if (doctorIdObj == null) {
+                response.put("success", false);
+                response.put("message", "doctorId is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Long doctorId = Long.valueOf(doctorIdObj.toString());
+            Doctor doctor = doctorRepository.findById(doctorId).orElse(null);
+            if (doctor == null) {
+                response.put("success", false);
+                response.put("message", "Doctor not found");
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            boolean permissionAccess = Boolean.parseBoolean(request.getOrDefault("permission", "false").toString());
+            
+            // Check if permission already exists
+            Permissions existingPermission = permissionsRepository.findByUserAndDoctor(user, doctor).orElse(null);
+            if (existingPermission != null) {
+                // Update existing permission
+                existingPermission.setPermission(permissionAccess);
+            } else {
+                // Create new permission
+                Permissions permission = Permissions.builder()
+                    .user(user)
+                    .doctor(doctor)
+                    .permission(permissionAccess)
+                    .build();
+                permissionsRepository.save(permission);
+            }
+            
+            response.put("success", true);
+            response.put("message", "Permission granted successfully");
+            response.put("doctorId", doctorId);
+            response.put("doctorName", doctor.getName());
+            response.put("permissions", request);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Failed to grant permission: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    
+    
+
+//    @GetMapping("")
+
+    // @GetMapping("/visit-context")
 }
+

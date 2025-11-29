@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.print.Doc;
@@ -26,5 +27,8 @@ public interface DoctorProfileRepository extends JpaRepository<DoctorProfile, Lo
 
     DoctorProfile findByUserId(Long userId);
 
+    List<DoctorProfile> findByDoctor_NameContainingIgnoreCaseOrDoctor_SpecializationContainingIgnoreCase(String name, String specialization);
 
+
+    DoctorProfile findByQrUrl(String qrUrl);
 }

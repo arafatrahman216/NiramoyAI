@@ -11,6 +11,8 @@ import com.example.niramoy.utils.JsonParser;
 import com.example.niramoy.service.AIServices.AIService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,21 +29,21 @@ import static java.lang.Integer.parseInt;
 @Service
 @RequiredArgsConstructor
 public class HealthService {
-
     private final HealthLogRepository healthLogRepository;
     private final AIService AiService;
-
 
 
     public Page<HealthLog> findByUser(User user, Pageable pageable) {
         return healthLogRepository.findByUser(user, pageable);
     }
 
+    @Cacheable(value = "healthLogs", key = "#user.id")
     public Page<HealthLog> findByUserOrderByDateDesc(User user, Pageable pageable) {
         return healthLogRepository.findByUserOrderByLogDatetimeDesc(user, pageable);
     }
 
     @Transactional
+    @CacheEvict(value = "healthLogs", key = "#user.id")
     public boolean addNewHealthLog( User user ,Map<String, Object> formData) {
         try{
             String systolic = safeGetString(formData, "blood_pressure_systolic", "120");
@@ -68,7 +70,7 @@ public class HealthService {
             Double temperature = safeGetDouble(formData, "temperature", 98.6);
             System.out.println(temperature);
 
-            List<String> otherSymptoms = (List<String>) formData.get("symptoms");
+            List<String> otherSymptoms = extractStringList(formData, "symptoms");
             if (otherSymptoms == null) otherSymptoms = List.of();
 
             System.out.println("hi2");
@@ -118,6 +120,15 @@ public class HealthService {
         } catch (NumberFormatException e) {
             return defaultValue;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> extractStringList(Map<String, Object> formData, String key) {
+        Object value = formData.get(key);
+        if (value instanceof List<?>) {
+            return (List<String>) value;
+        }
+        return null;
     }
 
 

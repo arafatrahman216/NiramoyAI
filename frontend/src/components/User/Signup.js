@@ -35,7 +35,7 @@ const Signup = () => {
     phoneNumber: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const { signup, logout, loading, error } = useAuth();
+  const { signup, login, logout, loading, error } = useAuth();
   const navigate = useNavigate();
 
   // Dark theme styles for form inputs
@@ -90,19 +90,16 @@ const Signup = () => {
         formData.password.trim()) {
       const success = await signup(formData);
       if (success) {
-        // Get user data and check if admin
-        const userData = JSON.parse(localStorage.getItem('user'));
-        
-        // Block admin users from normal signup (shouldn't happen but safety check)
-        if (userData.role && userData.role==='ADMIN') {
-          logout();
-          alert('Admin accounts must be created through the Admin Portal.');
-          return;
+        // Auto-login after successful signup
+        alert('Account created successfully! Logging you in...');
+        const loginSuccess = await login(formData.username, formData.password);
+        if (loginSuccess) {
+          // The login function will automatically show onboarding modal for new users
+          navigate('/', { replace: true });
+        } else {
+          // If auto-login fails, redirect to login page
+          navigate('/login', { replace: true });
         }
-        alert('Account created successfully! Please log in.');
-        navigate('/login');
-        
-        // redirectBasedOnRole(userData, navigate);
       }
     }
   };

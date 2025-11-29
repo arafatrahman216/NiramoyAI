@@ -20,19 +20,26 @@ import DoctorLogin from './components/Doctor/DoctorLogin';
 import DoctorDashboard from './components/Doctor/DoctorDashboard';
 import DoctorProfile from './components/Doctor/DoctorProfile';
 import DoctorSignup from './components/Doctor/DoctorSignup';
+import DoctorPatientView from './components/Doctor/DoctorPatientView';
 import SearchDoctors from './components/SearchDoctors';
 import EnhancedSearchDoctors from './components/EnhancedSearchDoctors';
 import BookAppointment from './components/BookAppointment';
 import HealthLogForm from './components/HealthLogInterface/HealthLogForm';
+import VoiceHealthLog from './components/HealthLogInterface/VoiceHealthLog';
 import BookAppointmentPage from './components/BookAppointmentPage';
 import PatientAppointments from './components/PatientAppointments';
 import DoctorAppointments from './components/Doctor/DoctorAppointments';
 import DoctorSchedule from './components/Doctor/DoctorSchedule';
 import DiagnosisInterface from './components/DiagnosisInterface/DiagnosisInterface';
 import HealthDataForm from './components/HealthDataInterface/HealthDataForm'
+import UpdatedHealthDataForm from './components/HealthDataInterface/UpdatedHealthDataForm'
 import Timeline from './components/Timeline/Timeline';
 import ExampleDashboardComponent from './components/HealthLogInterface/ExampleUsage';
 import PatientProfile from './components/PatientProfile/PatientProfile';
+import SharedProfile from './components/SharedProfile';
+import PermissionManager from './components/PermissionManager';
+import { default as UserDoctorProfile } from './components/User/DoctorProfile';
+import AppWrapper from './components/AppWrapper';
 
 
 const theme = createTheme({
@@ -98,7 +105,9 @@ const theme = createTheme({
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -123,7 +132,9 @@ const ProtectedRoute = ({ children }) => {
 const PatientRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -161,7 +172,9 @@ const PatientRoute = ({ children }) => {
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -204,7 +217,9 @@ const AdminRoute = ({ children }) => {
 const DoctorRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -247,7 +262,9 @@ const DoctorRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) {
+  // Only show loading on initial auth check (user is null and loading is true)
+  // Don't show loading screen during navigation after login/signup
+  if (loading && user === null && !localStorage.getItem('token')) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -272,9 +289,12 @@ function App() {
       <AuthProvider>
         <Router>
           <NavigationGuard />
-          <div className="App">
-            <Routes>
+          <AppWrapper>
+            <div className="App">
+              <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/shared/profile/:encryptedId" element={<SharedProfile />} />
+              <Route path="/link/:encryptedData" element={<PermissionManager />} />
               <Route
                 path="/login"
                 element={
@@ -404,6 +424,14 @@ function App() {
                 }
               />
               <Route
+                path="/patient/data"
+                element={
+                  <DoctorRoute>
+                    <DoctorPatientView />
+                  </DoctorRoute>
+                }
+              />
+              <Route
                   path="/diagnosis"
                     element={
                         <PatientRoute>
@@ -419,13 +447,29 @@ function App() {
                     </PatientRoute>
                   }
                 />
+                <Route 
+                  path='/updatedHealthDataform'
+                  element={
+                    <PatientRoute>
+                      <UpdatedHealthDataForm />
+                    </PatientRoute>
+                  }
+                />
                 <Route
-                path='/healthlog'
-                element={
-                  <PatientRoute>
-                    < HealthLogForm />
-                  </PatientRoute>
-                }
+                  path='/healthlog'
+                  element={
+                    <PatientRoute>
+                      <VoiceHealthLog />
+                    </PatientRoute>
+                  }
+                />
+                <Route
+                  path='/healthlog/form'
+                  element={
+                    <PatientRoute>
+                      <HealthLogForm />
+                    </PatientRoute>
+                  }
                 />
                 <Route 
                   path='/timeline'
@@ -435,6 +479,16 @@ function App() {
                     </PatientRoute>
                   }
                 />
+
+                <Route 
+                path = '/doctor-profile'
+                element = {
+                  <PatientRoute>
+                    <UserDoctorProfile />
+                  </PatientRoute>
+                }
+                />
+
 
                 <Route
                   path='/patient/profile'
@@ -454,6 +508,7 @@ function App() {
                 } />
             </Routes>
           </div>
+          </AppWrapper>
         </Router>
       </AuthProvider>
       

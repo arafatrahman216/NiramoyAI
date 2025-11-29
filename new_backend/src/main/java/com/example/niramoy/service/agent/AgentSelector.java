@@ -19,7 +19,7 @@ public class AgentSelector {
 
     public Agent selectAgent(String mode) {
         if (mode == null) {
-            return explainAgent; // Default fallback
+            return explainAgent;    // Default fallback
         }
         
         switch (mode.toLowerCase()) {

@@ -5,10 +5,7 @@ import {
   ArrowLeft, 
   User, 
   Calendar, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Heart, 
+  Heart,
   Activity, 
   Thermometer, 
   Weight,
@@ -25,8 +22,7 @@ import VitalsChart from './VitalsChart';
 import HealthLogs from './HealthLogs';
 import VisitTimeline from './VisitTimeline';
 import TestReports from './TestReports';
-import axios from 'axios';
-import { API_BASE_URL, doctorAPI } from '../../services/api';
+import { doctorAPI } from '../../services/api';
 import { Height } from '@mui/icons-material';
 
 const PatientProfile = () => {
@@ -168,89 +164,84 @@ const PatientProfile = () => {
           </div>
         )}
 
-        {/* Patient Overview Card */}
-        <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl mb-8">
-          <div className="p-6">
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Patient Info */}
-              <div className="flex-1">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center text-2xl font-bold text-white">
-                    {patient?.name?.charAt(0)}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-white mb-2">
-                      {patient?.name}
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center text-gray-400">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Age: {calculateAge(vitals?.dateOfBirth)} years
-                      </div>
-                      <div className="flex items-center text-gray-400">
-                        <User className="w-4 h-4 mr-2" />
-                        {patient?.gender}
-                      </div>
-                      <div className="flex items-center text-gray-400">
-                        <Phone className="w-4 h-4 mr-2" />
-                        {patient?.phoneNumber}
-                      </div>
-                      <div className="flex items-center text-gray-400">
-                        <Mail className="w-4 h-4 mr-2" />
-                        {patient?.email}
-                      </div>
-                      <div className="flex items-center text-gray-400">
-                        <Droplets className="w-4 h-4 mr-2" />
-                        Blood Type: {vitals?.bloodType}
-                      </div>
-                      <div className="flex items-center text-gray-400">
-                        <User2Icon className="w-4 h-4 mr-2" />
-                        @{patient?.username}
-                      </div>
-                    </div>
-                    
-                    {patient?.allergies && (
-                      <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-red-400 font-medium">Allergies: {patient.allergies}</p>
-                      </div>
-                    )}
+        {/* Patient Overview Card - Modern & Compact */}
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700/50 shadow-2xl mb-8 overflow-hidden">
+          <div className="p-8">
+            {/* Header with Patient Info */}
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-6">
+              {/* Avatar & Basic Info */}
+              <div className="flex items-center gap-4">
+                <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 via-emerald-500 to-blue-600 rounded-2xl flex items-center justify-center text-3xl font-bold text-white shadow-lg">
+                  {patient?.name?.charAt(0)}
+                </div>
+                
+                <div className="flex flex-col justify-center">
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    {patient?.name}
+                  </h2>
+                  <p className="text-emerald-400 font-medium text-sm mb-2">@{patient?.username}</p>
+                  <div className="flex gap-3 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/15 border border-blue-500/30 rounded-full text-xs font-medium text-blue-300">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {calculateAge(vitals?.dateOfBirth)} yrs
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-xs font-medium text-purple-300">
+                      <User className="w-3.5 h-3.5" />
+                      {patient?.gender}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/15 border border-rose-500/30 rounded-full text-xs font-medium text-rose-300">
+                      <Droplets className="w-3.5 h-3.5" />
+                      {vitals?.bloodType}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Current Vitals */}
-              <div className="lg:w-80">
-                <h3 className="text-lg font-semibold text-white mb-4">Current Vitals</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                    <Heart className="w-6 h-6 text-red-400 mx-auto mb-1" />
-                    <p className="text-xs text-gray-400">Blood Pressure</p>
-                    <p className="text-sm font-semibold text-white">{vitals?.bloodPressure}</p>
+              {/* Current Vitals - Compact Grid */}
+              <div className="flex-1 w-full md:w-auto">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-xl p-3 text-center hover:border-red-500/40 transition-all">
+                    <Heart className="w-5 h-5 text-red-400 mx-auto mb-1.5" />
+                    <p className="text-xs text-gray-400 font-medium">BP</p>
+                    <p className="text-sm font-bold text-white">{vitals?.bloodPressure || 'N/A'}</p>
                   </div>
-                  <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                    <Activity className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
-                    <p className="text-xs text-gray-400">Heart Rate</p>
-                    <p className="text-sm font-semibold text-white">{vitals?.heartRate} bpm</p>
+                  <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 rounded-xl p-3 text-center hover:border-emerald-500/40 transition-all">
+                    <Activity className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
+                    <p className="text-xs text-gray-400 font-medium">HR</p>
+                    <p className="text-sm font-bold text-white">{vitals?.heartRate || 'N/A'} bpm</p>
                   </div>
-                  <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                    <Height className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
-                    <p className="text-xs text-gray-400">Height</p>
-                    <p className="text-sm font-semibold text-white">{vitals?.height} cm</p>
+                  <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border border-yellow-500/20 rounded-xl p-3 text-center hover:border-yellow-500/40 transition-all">
+                    <Height className="w-5 h-5 text-yellow-400 mx-auto mb-1.5" />
+                    <p className="text-xs text-gray-400 font-medium">Height</p>
+                    <p className="text-sm font-bold text-white">{vitals?.height || 'N/A'} cm</p>
                   </div>
-                  <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                    <User className="w-6 h-6 text-blue-400 mx-auto mb-1" />
-                    <p className="text-xs text-gray-400">Weight</p>
-                    <p className="text-sm font-semibold text-white">{vitals?.weight} kgs</p>
+                  <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-3 text-center hover:border-blue-500/40 transition-all">
+                    <Weight className="w-5 h-5 text-blue-400 mx-auto mb-1.5" />
+                    <p className="text-xs text-gray-400 font-medium">Weight</p>
+                    <p className="text-sm font-bold text-white">{vitals?.weight || 'N/A'} kg</p>
                   </div>
                 </div>
-                {vitals?.chronicDiseases && (
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Chronic Diseases: {vitals.chronicDiseases}
-                  </p>
-                )}
               </div>
             </div>
+
+            {/* Allergies Alert */}
+            {patient?.allergies && (
+              <div className="mt-4 p-4 bg-gradient-to-r from-red-500/15 to-rose-500/10 border border-red-500/30 rounded-xl flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-red-300 mb-0.5">Allergies</p>
+                  <p className="text-sm text-red-200">{patient.allergies}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Chronic Diseases */}
+            {vitals?.chronicDiseases && (
+              <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                <p className="text-xs font-semibold text-amber-300 mb-1">Chronic Conditions</p>
+                <p className="text-sm text-amber-200">{vitals.chronicDiseases}</p>
+              </div>
+            )}
           </div>
         </div>
 

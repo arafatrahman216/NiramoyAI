@@ -10,11 +10,21 @@ import com.example.niramoy.enumerate.Role;
 import com.example.niramoy.error.DuplicateUserException;
 import com.example.niramoy.repository.MedicineRepository;
 import com.example.niramoy.repository.UserRepository;
+import com.example.niramoy.service.AIServices.AIService;
+import com.example.niramoy.utils.JsonParser;
 import com.example.niramoy.repository.HealthProfileRepository;
+
+import org.json.JSONObject;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,10 +34,12 @@ import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
@@ -36,6 +48,7 @@ public class UserService implements UserDetailsService {
     private final HealthService healthService;
     private final MedicineRepository medicineRepository;
     private final UserKGService userKGService;
+    private final AIService aiService;
 
     // get all users ; if there is an error then db roll back, if ok then after ending the method it will commit the transaction
     // until then the query result will be stored in persistence context
@@ -56,11 +69,17 @@ public class UserService implements UserDetailsService {
         String phoneNumber = newUser.get("phoneNumber");
         String gender = newUser.get("gender");
         String foundRole = newUser.get("role");
-        Role role = Role.valueOf(foundRole.toUpperCase());
+        // Default to PATIENT role if not specified
+        Role role = (foundRole != null && !foundRole.isEmpty())
+            ? Role.valueOf(foundRole.toUpperCase())
+            : Role.PATIENT;
 
         String profilePictureUrl = newUser.get("profilePictureUrl");
         String status = "ACTIVE";
-        LocalDate dateOfBirth = LocalDate.parse(newUser.get("dateOfBirth"));
+        LocalDate dateOfBirth = null;
+        if (newUser.get("dateOfBirth") != null && !newUser.get("dateOfBirth").isEmpty()) {
+            dateOfBirth = LocalDate.parse(newUser.get("dateOfBirth"));
+        }
         User user = userRepository.findUserByUsernameOrEmail(username,email);
         if (user != null) {
             throw new DuplicateUserException("User already exists with username or email: " + username + " or " + email);
@@ -72,14 +91,28 @@ public class UserService implements UserDetailsService {
                 .status(status).dateOfBirth(dateOfBirth).role(role)
                 .build();
         System.out.println("hi");
-        userRepository.save(newUser1);
-//        return convertToUserDTO(newUser1);
 
+        User savedUser = null;
+        try{
+            savedUser = userRepository.save(newUser1);
+        } catch (Exception e) {
+            System.out.println("Error saving user: " + e.getMessage());
+        }
+
+        try{
+            if (savedUser != null) {
+                userKGService.createPatientDuringSignup(savedUser.getId(), savedUser.getName());
+            } else {
+                throw new Exception("Saved user is null, cannot create patient in Knowledge Graph.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error creating patient in Knowledge Graph: " + e.getMessage());
+        }
         return newUser1;
-
     }
 
     @Transactional(readOnly = true)
+//    @Cacheable(value = "users", key = "'username:' + #username")
     public UserDTO findByUsername(String username) {
         System.out.println("hey");
         User user = userRepository.findByUsername(username);
@@ -87,6 +120,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
+//    @Cacheable(value = "users", key = "'email:' + #email")
     public UserDTO findByEmail(String email) {
         User user = userRepository.findByEmail(email);
         return convertToUserDTO(user);
@@ -120,6 +154,7 @@ public class UserService implements UserDetailsService {
 
 
     @Transactional
+    @CachePut(value = "users", key = "#id")
     public UserDTO updateUserProfile(Long id, Map<String, Object> updates) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         if (updates.containsKey("name")) {
@@ -189,6 +224,14 @@ public class UserService implements UserDetailsService {
         healthProfile.setAllergies(dto.getAllergies() != null ? String.join(",", dto.getAllergies()) : null);
         healthProfile.setMajorEvents(dto.getMajorEvents() != null ? String.join(",", dto.getMajorEvents()) : null);
         healthProfile.setChronicDiseases(dto.getChronicDiseases() != null ? String.join(",", dto.getChronicDiseases()) : null);
+
+        boolean success = userKGService.createOrUpdatePatient( healthProfile.getUserId(), healthProfile.getUser().getName(), healthProfile.getGender(), 21, healthProfile.getWeight(),
+                healthProfile.getHeight(), healthProfile.getBloodType(), healthProfile.getAllergies(), healthProfile.getChronicDiseases(), healthProfile.getLifestyle(), healthProfile.getMajorEvents());
+        if (!success) {
+            throw new RuntimeException("Failed to create patient in knowledge graph");
+        }
+        System.out.println("Health profile updated successfully: " + healthProfile);
+
     }
 
     private HealthProfileDTO convertToHealthProfileDTO(HealthProfile healthProfile) {
@@ -225,8 +268,67 @@ public class UserService implements UserDetailsService {
     public HashMap<String, Object> createUserDashboardMap(User user) {
 
         HashMap<String,Object> healthDashboard = healthService.getHealthDashboardByUser(user);
-        List<Medicine> medications = medicineRepository.findMedicineByVisit_User(user);
+        List<Medicine> medications = new ArrayList<>(medicineRepository.findMedicineByVisit_User(user));
         healthDashboard.put("medications", medications);
         return healthDashboard;
     }
+
+    @Cacheable(value = "medicines", key = "#userId")
+    public List<Medicine> getMedicinesByUserId(Long userId){
+        return medicineRepository.findMedicineByVisit_User(userRepository.findById(userId).orElseThrow());
+    }
+
+    @Transactional
+    @Modifying
+//    @CachePut(value = "dashboards", key = "#user.id")
+    @CacheEvict(value = "medicines", key = "#userId")
+    public boolean deleteMedicineByIdAndUserId(Long medicineId, Long userId) {
+        Medicine medicine = medicineRepository.findById(medicineId).orElseThrow(() -> new RuntimeException("Medicine not found with id: " + medicineId));
+        if (medicine.getVisit().getUser().getId().equals(userId)) {
+            medicine.setTaking(false);
+            medicineRepository.save(medicine);
+            System.out.println("Medicine deleted"+" "+medicine.isTaking());
+            return true;
+        }
+        return false;
+    }
+
+    public JSONObject generateMedicalSummary(Long id) {
+        String kgInferedInfo = userKGService.getMedicalSummary(id);
+        String llmGeneratedSummary = aiService.generateContent("""
+                You are a helpful medical assistant. Based on the following patient information extracted from their medical records, generate a concise and comprehensive medical summary suitable for review by healthcare professionals
+                having the following details. Donot write anything extra other than the json format mentioned below. donot add any explanations, delimeters or additional text outside the json brackets. The summary should include the following sections:
+                - History of Present Illness (also analyze the issues for visits)
+                - Past Medical History
+                - Allergies (array , donot write any medicine name here)
+                - Medications (array of medications)
+                - Social History (if there's none simply mention none)
+                - Surgical History (")
+                - Family History (")
+
+                extract the relevant details and format them into a well-structured medical summary in json :
+                {
+                  "history_of_illness": "...",
+                  "past_medical_history": "...",
+                  "allergies": [ "...", "..." ],
+                  "medications": [ "...", "..."],
+                  "social_history": "...",
+                  "surgical_history": "...",
+                  "family_history": "..."
+                }""", """
+                The given patient information : 
+                """+ kgInferedInfo);
+
+        if (llmGeneratedSummary == null || llmGeneratedSummary.isEmpty()) {
+            return null;
+        }
+        // log.info("LLM Generated Medical Summary for user ID {}: \n{}", id, llmGeneratedSummary);
+
+        JSONObject json = JsonParser.parseJsonToObject(llmGeneratedSummary);
+        // System.out.println(json.toString(4));
+        return json;
+
+
+    }
+        
 }

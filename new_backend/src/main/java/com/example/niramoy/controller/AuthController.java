@@ -12,7 +12,6 @@ import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.service.AuthService;
 import com.example.niramoy.service.DoctorProfileService;
 import com.example.niramoy.service.UserService;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,13 +41,21 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<HashMap<String,Object>> signup(@RequestBody Map<String, String> user){
-        HashMap<String, Object> response =new HashMap<>();
-        User newUser = authService.signup(user);
-        if (newUser !=null) response.put("success", true);
-        else response.put("success", false);
-//        response.put("userDTO", userDTO);
+        HashMap<String, Object> response = new HashMap<>();
+        try {
+            User newUser = authService.signup(user);
+            if (newUser != null) {
+                response.put("success", true);
+                response.put("message", "Account created successfully. Please login.");
+            } else {
+                response.put("success", false);
+                response.put("message", "Registration failed");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Registration failed: " + e.getMessage());
+        }
         return ResponseEntity.status(HttpStatus.OK).body(response);
-
     }
 
     @PostMapping("/doctor/signup")

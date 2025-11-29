@@ -1,18 +1,22 @@
 // src/components/RecentVisits.js
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Image } from 'lucide-react';
+import { vi } from 'date-fns/locale';
 
 const RecentVisits = ({ 
   visits = [], 
-  title = "Recent Visits",
+  title,
   height = "auto",
   width = "100%",
   viewerType = "patient", // "patient" or "doctor"
   showPrescriptionImage = true,
   className = ""
 }) => {
-    const navigate = useNavigate();
+    const { t } = useTranslation();
+    const finalTitle = title || t('recentVisits.title');
+  const navigate = useNavigate();
   const [expandedVisit, setExpandedVisit] = useState(null);
 
   const getPersonName = (visit) => {
@@ -28,7 +32,9 @@ const RecentVisits = ({
   };
 
   const onclick = (userid) => {
-    navigate('/patient/profile?id=' + userid);
+    if (viewerType === "doctor" && userid) {
+      navigate('/patient/profile?id=' + userid);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -51,7 +57,7 @@ const RecentVisits = ({
         date: visit.appointmentDate || visit.date || visit.visitDate,
         primaryInfo: visit.symptoms || visit.reason || visit.chiefComplaint,
         secondaryInfo: visit.prescription || visit.treatment || visit.notes,
-        badge: "Visit"
+        badge: t('recentVisits.visit')
       };
     } else {
       return {
@@ -59,7 +65,7 @@ const RecentVisits = ({
         date: visit.appointmentDate || visit.date || visit.visitDate,
         primaryInfo: visit.diagnosis || visit.reason || visit.chiefComplaint,
         secondaryInfo: visit.treatment || visit.notes || visit.prescription,
-        badge: "Completed"
+        badge: t('recentVisits.completed')
       };
     }
   };
@@ -75,7 +81,7 @@ const RecentVisits = ({
           <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
             <span className="text-gray-500 text-2xl">📋</span>
           </div>
-          <p className="text-gray-400">No recent visits found</p>
+          <p className="text-gray-400">{t('recentVisits.noRecentVisits')}</p>
         </div>
       </div>
     );
@@ -86,7 +92,7 @@ const RecentVisits = ({
       className={`bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
       style={{ height, width }}
     >
-      <h2 className="text-xl font-semibold mb-6 text-white">{title}</h2>
+      <h2 className="text-xl font-semibold mb-6 text-white">{finalTitle}</h2>
       <div className="space-y-4 overflow-y-auto" style={{ maxHeight: height === "auto" ? "none" : `calc(${height} - 120px)` }}>
         {visits.map((visit, index) => {
           const displayData = getVisitDisplayData(visit);
@@ -132,7 +138,7 @@ const RecentVisits = ({
                   <span className="text-gray-400 text-xs mt-0.5">🩺</span>
                   <div>
                     <p className="text-xs text-gray-400 uppercase tracking-wide">
-                      {viewerType === "patient" ? "Symptoms" : "Diagnosis"}
+                      {viewerType === "patient" ? t('recentVisits.symptoms') : t('recentVisits.diagnosis')}
                     </p>
                     <p className="text-white text-sm">{displayData.primaryInfo}</p>
                   </div>
@@ -143,7 +149,7 @@ const RecentVisits = ({
                     <span className="text-gray-400 text-xs mt-0.5">📝</span>
                     <div>
                       <p className="text-xs text-gray-400 uppercase tracking-wide">
-                        {viewerType === "patient" ? "Notes" : "Treatment"}
+                        {viewerType === "patient" ? t('recentVisits.notes') : t('recentVisits.treatment')}
                       </p>
                       <p className="text-emerald-400 text-sm">{displayData.secondaryInfo}</p>
                     </div>
@@ -156,7 +162,7 @@ const RecentVisits = ({
                 <div className="mt-4 pt-4 border-t border-gray-600">
                   <div className="flex items-center space-x-2 mb-3">
                     <Image className="w-4 h-4 text-blue-400" />
-                    <p className="text-xs text-gray-400 uppercase tracking-wide">Prescription Image</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">{t('recentVisits.prescriptionImage')}</p>
                   </div>
                   <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-600">
                     <img 
@@ -172,7 +178,7 @@ const RecentVisits = ({
                       className="hidden text-center py-8 text-gray-400"
                     >
                       <Image className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Image not available</p>
+                      <p className="text-sm">{t('recentVisits.imageNotAvailable')}</p>
                     </div>
                   </div>
                 </div>

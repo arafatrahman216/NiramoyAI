@@ -10,9 +10,22 @@ import Timeline from '../Timeline/Timeline';
 interface VisitsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onVisitContextSet?: (context: any) => void;
+  onVisitLoading?: (isLoading: boolean) => void; //CONTEXT: Loading handler for visit context
+  visits?: Array<{
+    visitId: number;
+    appointmentDate: string;
+    doctorName: string;
+    doctorId: number;
+    patientName?: string;
+    symptoms?: string;
+    prescription?: string;
+    prescriptionFileUrl?: string;
+  }>; // Recent visits data to display in timeline
+  isLoading?: boolean; // Loading state from parent
 }
 
-const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose }) => {
+const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose, onVisitContextSet, onVisitLoading, visits = [], isLoading = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -33,7 +46,17 @@ const VisitsSidebar: React.FC<VisitsSidebarProps> = ({ isOpen, onClose }) => {
       
       {/* SIDEBAR CONTENT - Timeline */}
       <div className="flex-1 overflow-hidden">
-        <Timeline />
+        <div className="h-full overflow-y-scroll scrollbar-hide p-2">
+          {isLoading ? (
+            /* Loading State */
+            <div className="text-center text-zinc-400 py-8">
+              <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full mx-auto mb-4"></div>
+              <p className="text-sm">Loading visits timeline...</p>
+            </div>
+          ) : (
+            <Timeline visits={visits as any} onVisitContextSet={onVisitContextSet} onVisitLoading={onVisitLoading} />
+          )}
+        </div>
       </div>
     </div>
   );

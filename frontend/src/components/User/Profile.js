@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
-  ArrowLeft, 
   Edit, 
   Save, 
   X, 
@@ -22,6 +22,11 @@ import { API_BASE_URL } from '../../services/api';
 const Profile = () => {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    document.title = t('profile.pageTitle');
+  }, [t]);
   
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,8 +42,6 @@ const Profile = () => {
     logout();
     navigate('/login');
   };
-
-  const isAdmin = user?.role === 'ADMIN';
 
   const handleEdit = () => {
     setEditData({
@@ -124,21 +127,21 @@ const Profile = () => {
                 className="flex items-center px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <Home className="w-4 h-4 mr-2" />
-                Home
+                {t('profile.navHome')}
               </button>
               <button
                 onClick={() => navigate('/profile')}
                 className="flex items-center px-3 py-2 text-emerald-400 hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <User className="w-4 h-4 mr-2" />
-                Profile
+                {t('profile.navProfile')}
               </button>
               <button
                 onClick={handleLogout}
                 className="flex items-center px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Logout
+                {t('profile.navLogout')}
               </button>
             </div>
           </div>
@@ -149,8 +152,8 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Profile Settings</h1>
-          <p className="text-gray-400">Manage your account information</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('profile.profileSettings')}</h1>
+          <p className="text-gray-400">{t('profile.manageAccount')}</p>
         </div>
 
         {/* Profile Card */}
@@ -187,7 +190,7 @@ const Profile = () => {
                   className="flex items-center px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
                 >
                   <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
+                  {t('profile.editProfile')}
                 </button>
               ) : (
                 <>
@@ -197,14 +200,14 @@ const Profile = () => {
                     className="flex items-center px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    {loading ? 'Saving...' : 'Save'}
+                    {loading ? t('profile.saving') : t('profile.save')}
                   </button>
                   <button
                     onClick={handleCancel}
                     className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                   >
                     <X className="w-4 h-4 mr-2" />
-                    Cancel
+                    {t('profile.cancel')}
                   </button>
                 </>
               )}
@@ -229,7 +232,7 @@ const Profile = () => {
             <div>
               <label className="flex items-center text-gray-300 mb-2">
                 <User className="w-4 h-4 mr-2" />
-                Full Name
+                {t('profile.fullName')}
               </label>
               <input
                 type="text"
@@ -249,7 +252,7 @@ const Profile = () => {
             <div>
               <label className="flex items-center text-gray-300 mb-2">
                 <Mail className="w-4 h-4 mr-2" />
-                Email Address
+                {t('profile.emailAddress')}
               </label>
               <input
                 type="email"
@@ -269,7 +272,7 @@ const Profile = () => {
             <div>
               <label className="flex items-center text-gray-300 mb-2">
                 <Phone className="w-4 h-4 mr-2" />
-                Phone Number
+                {t('profile.phoneNumber')}
               </label>
               <input
                 type="tel"
@@ -289,7 +292,7 @@ const Profile = () => {
             <div>
               <label className="flex items-center text-gray-300 mb-2">
                 <User className="w-4 h-4 mr-2" />
-                Username
+                {t('profile.username')}
               </label>
               <input
                 type="text"
@@ -297,14 +300,14 @@ const Profile = () => {
                 disabled
                 className="w-full px-4 py-3 rounded-lg border bg-gray-700/50 border-gray-600 text-gray-400 cursor-not-allowed"
               />
-              <p className="text-gray-500 text-sm mt-1">Username cannot be changed</p>
+              <p className="text-gray-500 text-sm mt-1">{t('profile.usernameNote')}</p>
             </div>
 
             {/* Member Since */}
             <div className="md:col-span-2">
               <label className="flex items-center text-gray-300 mb-2">
                 <Calendar className="w-4 h-4 mr-2" />
-                Member Since
+                {t('profile.memberSince')}
               </label>
               <input
                 type="text"
@@ -318,7 +321,7 @@ const Profile = () => {
           {isEditing && (
             <div className="mt-6 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
               <p className="text-blue-400 text-sm">
-                <strong>Note:</strong> Some changes may require email verification.
+                <strong>{t('common.note')}:</strong> {t('profile.verificationNote')}
               </p>
             </div>
           )}

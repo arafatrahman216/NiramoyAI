@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { chatbotAPI } from '../../services/api';
 
 // ==============================================
@@ -12,28 +13,38 @@ interface ChatsSidebarProps {
   onClose: () => void;
   setChatid: (chatId: string) => void;
   setSelectedChat?: (chat: any) => void;
+  chatSessions?: any[]; // Preloaded chat sessions from parent
+  setChatSessions?: (sessions: any[]) => void; // Function to update chat sessions in parent
+  isLoading?: boolean; // Loading state from parent
 }
 
-const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, setSelectedChat, onClose }) => {
-  const [chatSessions, setChatSessions] = useState([]);
-  const [loading, setLoading] = useState(false);
+const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ 
+  isOpen, 
+  setChatid, 
+  setSelectedChat, 
+  onClose, 
+  chatSessions = [], 
+  setChatSessions,
+  isLoading = false
+}) => {
+  const { t } = useTranslation();
+  const [refreshing, setRefreshing] = useState(false);
   const [creatingNewChat, setCreatingNewChat] = useState(false);
   
-  // Fetch chat sessions from backend API
-  const fetchChatSessions = async () => {
-    if (!isOpen) return; // Only fetch when sidebar is open
+  // Refresh chat sessions if needed (for new chat creation)
+  const refreshChatSessions = async () => {
+    if (!setChatSessions) return;
     
-    setLoading(true);
+    setRefreshing(true);
     try {
       const response = await chatbotAPI.getChatSessions();
       const data = response.data;
       setChatSessions(data.chatSessions || []);
-      console.log('Chat sessions loaded:', data);
+      console.log('Chat sessions refreshed:', data);
     } catch (error) {
-      console.error('Error fetching chat sessions:', error);
-      setChatSessions([]);
+      console.error('Error refreshing chat sessions:', error);
     } finally {
-      setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -53,7 +64,7 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, setSelec
       }
       
       // Refresh the chat sessions list
-      await fetchChatSessions();
+      await refreshChatSessions();
     } catch (error) {
       console.error('Error creating new chat:', error);
     } finally {
@@ -61,16 +72,19 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, setSelec
     }
   };
   
-  useEffect(() => {
-    fetchChatSessions();
-  }, [isOpen]);
+  // No longer need useEffect to fetch on open since data is preloaded
   if (!isOpen) return null;
 
   return (
     <div className="fixed left-16 top-0 bottom-0 w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col z-30">
       {/* SIDEBAR HEADER */}
       <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-white">Chat History</h2>
+        <div className="flex items-center space-x-2">
+          <h2 className="text-lg font-semibold text-white">{t('chatsSidebar.chatHistory')}</h2>
+          {refreshing && (
+            <div className="animate-spin w-4 h-4 border-2 border-zinc-600 border-t-emerald-500 rounded-full"></div>
+          )}
+        </div>
         <button
           onClick={onClose}
           className="p-1 hover:bg-zinc-800 rounded transition-colors"
@@ -92,26 +106,26 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, setSelec
           {creatingNewChat ? (
             <>
               <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-              <span>Creating...</span>
+              <span>{t('chatsSidebar.creating')}</span>
             </>
           ) : (
             <>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span>New Chat</span>
+              <span>{t('chatsSidebar.newChat')}</span>
             </>
           )}
         </button>
       </div>
       
       {/* SIDEBAR CONTENT */}
-      <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-800 hover:scrollbar-thumb-zinc-700">
-        {loading ? (
+      <div className="flex-1 p-4 overflow-y-scroll scrollbar-hide">
+        {isLoading ? (
           /* Loading State */
           <div className="text-center text-zinc-500 mt-8">
             <div className="animate-spin w-8 h-8 border-2 border-zinc-600 border-t-emerald-500 rounded-full mx-auto mb-4"></div>
-            <p className="text-sm">Loading chat history...</p>
+            <p className="text-sm">{t('chatsSidebar.loadingChatHistory')}</p>
           </div>
         ) : chatSessions.length === 0 ? (
           /* Empty State */
@@ -119,8 +133,8 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, setSelec
             <svg className="w-12 h-12 mx-auto mb-4 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p className="text-sm">No conversations yet</p>
-            <p className="text-xs text-zinc-600 mt-1">Start a new chat to begin your medical consultation</p>
+            <p className="text-sm">{t('chatsSidebar.noConversations')}</p>
+            <p className="text-xs text-zinc-600 mt-1">{t('chatsSidebar.startNewChat')}</p>
           </div>
         ) : (
           /* Chat History */
@@ -131,9 +145,8 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, setSelec
                 className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-colors"
                 onClick={() => {
                   setChatid(session.chatId);
-                  if (setSelectedChat) {
-                    setSelectedChat(session);
-                  }
+                  // Don't pass session data since it doesn't contain messages
+                  // Let ChatConversation fetch messages separately
                   onClose();
                 }}
               >
@@ -143,7 +156,7 @@ const ChatsSidebar: React.FC<ChatsSidebarProps> = ({ isOpen, setChatid, setSelec
                       {session.title || 'Untitled Chat'}
                     </h3>
                     <p className="text-xs text-zinc-400 mt-1">
-                      {session.messages?.length ? `${session.messages.length} messages` : 'No messages yet...'}
+                      {session.messageCount !== undefined ? `${session.messageCount} messages` : 'No messages yet...'}
                     </p>
                   </div>
                   <span className="text-xs text-zinc-500 ml-2">

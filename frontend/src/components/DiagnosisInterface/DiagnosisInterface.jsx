@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import Sidebar from './Sidebar';
 import SearchInput from './SearchInput';
 import MainLogo from './MainLogo';
@@ -6,8 +8,9 @@ import VisitsSidebar from './VisitsSidebar';
 import ChatsSidebar from './ChatsSidebar';
 import UploadVisitModal from './UploadVisitModal';
 import ChatConversation from './ChatConversation';
+import VisitContext from './VisitContext';
 
-import { chatbotAPI, doctorAPI } from '../../services/api'
+import { chatbotAPI, doctorAPI, userInfoAPI } from '../../services/api'
 
 // ==============================================
 // DIAGNOSIS INTERFACE MAIN CONTAINER
@@ -15,8 +18,13 @@ import { chatbotAPI, doctorAPI } from '../../services/api'
 // Combines all components and handles main search logic
 // Edit handleSearch() to add your search implementation
 const DiagnosisInterface = () => {
+  const { t } = useTranslation();
+  
   // SEARCH STATE
   const [query, setQuery] = useState('');
+  
+  // SEARCH INPUT REF for clearing attachments
+  const searchInputRef = useRef(null);
   
   // VISITS SIDEBAR STATE
   const [isVisitsSidebarOpen, setIsVisitsSidebarOpen] = useState(false);
@@ -28,20 +36,125 @@ const DiagnosisInterface = () => {
   const [selectedChatId, setSelectedChatId] = useState(null);
   
   // SELECTED CHAT DATA - tracks full chat data with messages
-  const [selectedChatData, setSelectedChatData] = useState(null);
+  const [selectedChatData, setSelectedChatData] = useState({ messages: [] });
+  
+  //CONTEXT: Store previous messages to send as context to LLM
+  const [previousMessages, setPreviousMessages] = useState([]);
   
   // UPLOAD VISIT MODAL STATE
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  
+  // PROCESSING STATE - tracks when AI is generating response
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // VISIT CONTEXT STATE - stores visit information for chatbot context
+  const [visitContext, setVisitContext] = useState(null);
+  
+  //CONTEXT: Loading state for visit context
+  const [isLoadingVisitContext, setIsLoadingVisitContext] = useState(false);
+
+  // PLANNING MODE STEPS - dummy progress indicator
+  const [planningSteps, setPlanningSteps] = useState([]);
+  const [currentPlanningStep, setCurrentPlanningStep] = useState(0);
+  const [showPlanningProgress, setShowPlanningProgress] = useState(false);
+
+  // Define planning steps - dynamically based on language
+  const PLANNING_STEPS = i18n.language === 'bn' ? [
+    { id: 1, text: "চিকিৎসা ইতিহাস বিশ্লেষণ করা হচ্ছে...", duration: 3000 },
+    { id: 2, text: "ওয়েবে অনুসন্ধান করা হচ্ছে...", duration: 4000 },
+    { id: 3, text: "নিয়মাবলী পরামর্শ নেওয়া হচ্ছে...", duration: 3000 },
+    { id: 4, text: "স্বাস্থ্য পরিকল্পনা তৈরি হচ্ছে...", duration: 10000 }
+  ] : [
+    { id: 1, text: "Analyzing medical history...", duration: 3000 },
+    { id: 2, text: "Searching Web...", duration: 4000 },
+    { id: 3, text: "Consulting guidelines...", duration: 3000 },
+    { id: 4, text: "Generating health plan...", duration: 10000 }
+  ];
+
+  // Handle visit context from timeline clicks
+  const handleVisitContextSet = (context) => {
+    setVisitContext(context);
+    setIsLoadingVisitContext(false); //CONTEXT: Clear loading when context is set
+  };
+  
+  //CONTEXT: Handle visit loading state
+  const handleVisitLoading = (isLoading) => {
+    setIsLoadingVisitContext(isLoading);
+  };
+
+  // Clear visit context
+  const clearVisitContext = () => {
+    setVisitContext(null);
+    setIsLoadingVisitContext(false); //CONTEXT: Clear loading when context is cleared
+  };
+  
+  // RECENT VISITS STATE - for Timeline component
+  const [recentVisits, setRecentVisits] = useState([]);
+  const [visitsLoading, setVisitsLoading] = useState(true);
+  
+  // CHAT SESSIONS STATE - for ChatsSidebar component
+  const [chatSessions, setChatSessions] = useState([]);
+  const [chatSessionsLoading, setChatSessionsLoading] = useState(true);
+
+  // FETCH RECENT VISITS ON COMPONENT MOUNT
+  useEffect(() => {
+    const fetchRecentVisits = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('No token found, skipping visit fetch');
+          setVisitsLoading(false);
+          return;
+        }
+        
+        const response = await userInfoAPI.getRecentVisits();
+        
+        if (response.data.success) {
+          console.log('Recent visits fetched:', response.data.recentVisits);
+          setRecentVisits(response.data.recentVisits);
+        }
+      } catch (error) {
+        console.error('Failed to fetch recent visits:', error);
+      } finally {
+        setVisitsLoading(false);
+      }
+    };
+    
+    const fetchChatSessions = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('No token found, skipping chat sessions fetch');
+          setChatSessionsLoading(false);
+          return;
+        }
+        
+        const response = await chatbotAPI.getChatSessions();
+        
+        if (response.data && response.data.chatSessions) {
+          console.log('Chat sessions fetched:', response.data.chatSessions);
+          setChatSessions(response.data.chatSessions);
+        }
+      } catch (error) {
+        console.error('Failed to fetch chat sessions:', error);
+      } finally {
+        setChatSessionsLoading(false);
+      }
+    };
+    
+    fetchRecentVisits();
+    fetchChatSessions();
+  }, []);
 
   // MAIN SEARCH HANDLER
   // Handles search/message sending based on current context
-  const handleSearch = async (mode = 'explain') => {
-    if (!query.trim()) return;
+  const handleSearch = async (mode = 'explain', attachment = null) => {
+    if (!query.trim() && !attachment) return;
     
     // Check if user is authenticated
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Please log in to send messages.');
+      alert(t('diagnosis.messages.authFailed'));
       return;
     }
     
@@ -49,74 +162,116 @@ const DiagnosisInterface = () => {
     if (selectedChatId) {
       console.log('Sending message to current chat:', selectedChatId);
       console.log('Message content:', query);
+      console.log('Visit context:', visitContext);
+      console.log('Previous messages:', previousMessages);
+      console.log('Attachment:', attachment?.name);
       console.log('Auth token exists:', !!localStorage.getItem('token'));
       
-      // Add user message immediately to local state
-      const userMessage = {
-        messageId: Date.now(),
-        content: query.trim(),
-        isAgent: false,
-        timestamp: new Date().toISOString()
-      };
+      //CONTEXT: No longer embedding context in message - sending as separate attributes
+      const originalQuery = query.trim();
       
-      // Update local chat data immediately to show user message
-      if (selectedChatData) {
-        const updatedChatData = {
-          ...selectedChatData,
-          messages: [...(selectedChatData.messages || []), userMessage]
-        };
-        setSelectedChatData(updatedChatData);
+      setQuery(''); // Clear input immediately
+      clearVisitContext(); // Clear visit context after sending
+
+      // Set processing state to show loading indicator
+      setIsProcessing(true);
+      
+      // If in planning mode, show step-by-step progress
+      if (mode === 'plan') {
+        setShowPlanningProgress(true);
+        setCurrentPlanningStep(0);
+        setPlanningSteps([]);
+        
+        // Simulate step progression
+        PLANNING_STEPS.forEach((step, index) => {
+          setTimeout(() => {
+            setCurrentPlanningStep(index + 1);
+            setPlanningSteps(prev => [...prev, step]);
+          }, step.duration * index);
+        });
       }
       
-      const messageToSend = query.trim();
-      setQuery(''); // Clear input immediately
+      // Add user message immediately to local state (show original query)
+      const userMessage = {
+        messageId: Date.now(),
+        content: originalQuery, // Show original user query
+        isAgent: false,
+        timestamp: new Date().toISOString(),
+        isPlan: false
+      };
       
+      // Add user message immediately to chat
+      window.dispatchEvent(new CustomEvent('addMessage', { detail: userMessage }));
+      
+      var aiMessage;
       try {
-        // Send message to current chat using chatbotAPI
-        const response = await chatbotAPI.sendMessage(messageToSend, selectedChatId, mode);
+        //CONTEXT: Prepare context data with both previous messages and visit context
+        const contextData = {
+          previousMessages: previousMessages,
+          visitContext: visitContext
+        };
+        
+        // Choose API method based on whether we have attachment
+        const response = attachment 
+          ? await chatbotAPI.sendMessageWithAttachment(originalQuery, selectedChatId, attachment, mode, contextData)
+          : await chatbotAPI.sendMessage(originalQuery, selectedChatId, mode, contextData);
         
         console.log('API Response:', response);
         
-        if (response.data.success) {
+        if (response.data.success && response.data.aiResponse) {
           console.log('Message sent successfully:', response.data);
           
-          // Add AI reply to local state
-          const aiReply = {
-            messageId: response.data.aiResponse.messageId || Date.now() + 1,
-            content: response.data.aiResponse.content,
-            isAgent: true,
-            timestamp: new Date().toISOString()
-          };
-          
-          // Update local chat data with AI reply
-          if (selectedChatData) {
-            const updatedChatData = {
-              ...selectedChatData,
-              messages: [...(selectedChatData.messages || []), userMessage, aiReply]
-            };
-            setSelectedChatData(updatedChatData);
+          // Clear attachment after successful send
+          if (attachment && searchInputRef.current) {
+            searchInputRef.current.clearAttachment();
           }
           
-          // Force a refresh of the chat conversation component
-          window.dispatchEvent(new CustomEvent('chatRefresh'));
+          // Add AI response directly from API response
+          aiMessage = {
+            messageId: response.data.aiResponse.messageId,
+            content: response.data.aiResponse.content,
+            isAgent: true,
+            agent: true, // For ChatConversation compatibility
+            timestamp: new Date().toISOString(),
+            isPlan: response.data.aiResponse.isPlan || false,
+            attachmentLink: response.data.aiResponse.imageLink || response.data.aiResponse.image_link || response.data.aiResponse.imageUrl || null
+          };
+          
+          // Update local chat data with AI reply (user message should already be there)
+          setSelectedChatData(prevData => {
+            const updatedChatData = {
+              ...prevData,
+              messages: [...(prevData.messages || []), aiMessage]
+            };
+            console.log('DiagnosisInterface: Setting updated chat data:', updatedChatData);
+            return updatedChatData;
+          });
+          
+          // Send AI message to ChatConversation component
+          window.dispatchEvent(new CustomEvent('addMessage', { detail: aiMessage }));
+          
+          //CONTEXT: Update previousMessages queue with new user message, keep max 6
+          setPreviousMessages(prev => {
+            const updated = [...prev, { role: 'user', content: originalQuery }];
+            return updated.slice(-10);
+          });
           
         } else {
           console.error('Failed to send message:');
           alert('Failed to send message: ' + response.data.message);
           
 
-          if (selectedChatData) {
-            const errorMessage = {
-              messageId: Date.now() + 2,
-              content: "Something went wrong. Please try again.",
-              isAgent: true,
-              timestamp: new Date().toISOString()
-            };
-            setSelectedChatData({
-              ...selectedChatData,
-              messages: [...(selectedChatData.messages || []), errorMessage]
-            });
-          }
+          const errorMessage = {
+            messageId: Date.now() + 2,
+            content: t('diagnosis.messages.errorSendingMessage'),
+            isAgent: true,
+            timestamp: new Date().toISOString(),
+            isPlan: false
+          };
+          setSelectedChatData(prevData => ({
+            ...prevData,
+            messages: [...(prevData.messages || []), errorMessage]
+          }));
 
 
         }
@@ -125,27 +280,43 @@ const DiagnosisInterface = () => {
         console.error('Error response:', error.response);
         console.error('Error status:', error.response?.status);
         console.error('Error data:', error.response?.data);
-      
         
+
+          setQuery(originalQuery); // Restore original query, not the context-enhanced version
           if (error.response?.status === 401) {
-            alert('Authentication failed. Please log in again.');
+            alert(t('diagnosis.messages.authenticationFailed'));
           } else if (error.response?.status === 403) {
-            alert('Access denied. You don\'t have permission to send messages.');
+            alert(t('diagnosis.messages.accessDenied'));
           } else if (error.response?.status === 500) {
-            alert('Server error. Please try again later.');
+            window.dispatchEvent(new CustomEvent('addMessage', { detail: {
+            messageId: Date.now() + 1,
+            isAgent: true,
+            content: t('diagnosis.messages.serverError'),
+
+          } }));
+            alert(t('diagnosis.messages.serverError'));
           } else if (error.response == 400){
-            alert('Bad request. Please check your message and try again.');
+            alert(t('diagnosis.messages.badRequest'));
           } else if (error.response?.status === 429) {
-            alert('Too many requests. Please slow down.');
+            alert(t('diagnosis.messages.tooManyRequests'));
           } else if (error.response?.status === 503) {
-            alert('Service unavailable. Try again.');
+            alert(t('diagnosis.messages.serviceUnavailable'));
           } else {
-            alert('Error sending message. Please try again.');
+            alert(t('diagnosis.messages.errorSendingMessage'));
           }
+      } finally {
+        // Always clear processing state
+        setIsProcessing(false);
+        // Hide planning progress
+        setShowPlanningProgress(false);
+        setPlanningSteps([]);
+        setCurrentPlanningStep(0);
       }
     } else {
       // If not in chat mode, create new chat (default search behavior)
       console.log('Creating new chat for search query:', query);
+      
+      setIsProcessing(true);
       
       try {
         const response = await chatbotAPI.startConversation();
@@ -153,18 +324,15 @@ const DiagnosisInterface = () => {
         
         if (newChatId) {
           setSelectedChatId(newChatId);
-          setSelectedChatData({
-            chatId: newChatId,
-            title: 'New Chat',
-            messages: []
-          });
           
           // Don't clear query here - let user send it as first message
           console.log('New chat created, user can now send their query');
         }
       } catch (error) {
         console.error('Error creating new chat:', error);
-        alert('Unable to start new chat. Please try again.');
+        alert(t('diagnosis.messages.unableToStartChat'));
+      } finally {
+        setIsProcessing(false);
       }
     }
   };
@@ -180,22 +348,39 @@ const DiagnosisInterface = () => {
   };
 
   // CHAT SELECTION HANDLER
-  const handleChatSelection = (chatId) => {
+  const handleChatSelection = async (chatId) => {
     setSelectedChatId(chatId);
     console.log('Selected chat ID:', chatId);
+    
+    //CONTEXT: Fetch and store previous messages when a chat is selected
+    try {
+      const response = await chatbotAPI.getMessages(chatId);
+      const conversationData = response.data;
+      
+      //CONTEXT: Filter only user messages and keep last 6
+      const userMessages = (conversationData.data || [])
+        .filter((msg) => !msg.isAgent)
+        .map((msg) => ({
+          role: 'user',
+          content: msg.content
+        }))
+        .slice(-10);
+      
+      setPreviousMessages(userMessages);
+      console.log('Previous messages loaded as context:', userMessages);
+    } catch (error) {
+      console.error('Error loading previous messages:', error);
+      setPreviousMessages([]);
+    }
   };
 
   // BACK TO SEARCH HANDLER
   const handleBackToSearch = () => {
     setSelectedChatId(null);
-    setSelectedChatData(null);
+    setSelectedChatData({ messages: [] });
+    clearVisitContext(); // Clear visit context when returning to search
+    setPreviousMessages([]); //CONTEXT: Clear previous messages context
     console.log('Returning to search interface');
-  };
-
-  // HANDLE SELECTED CHAT DATA
-  const handleSelectedChat = (chatData) => {
-    setSelectedChatData(chatData);
-    console.log('Selected full chat data:', chatData);
   };
 
   // HANDLE NEW CHAT CREATION
@@ -211,14 +396,11 @@ const DiagnosisInterface = () => {
       if (newChatId) {
         // Set the new chat as selected
         setSelectedChatId(newChatId);
-        setSelectedChatData({
-          chatId: newChatId,
-          title: 'New Chat',
-          messages: []
-        });
         
         // Clear any existing query
         setQuery('');
+        
+        setPreviousMessages([]); //CONTEXT: Clear previous messages for new chat
         
         console.log('New chat created and selected:', newChatId);
       }
@@ -244,13 +426,20 @@ const DiagnosisInterface = () => {
         isOpen={isChatsSidebarOpen}
         onClose={() => setIsChatsSidebarOpen(false)}
         setChatid={handleChatSelection}
-        setSelectedChat={handleSelectedChat}
+        setSelectedChat={handleChatSelection}
+        chatSessions={chatSessions}
+        setChatSessions={setChatSessions}
+        isLoading={chatSessionsLoading}
       />
 
       {/* VISITS SIDEBAR */}
       <VisitsSidebar 
         isOpen={isVisitsSidebarOpen}
         onClose={() => setIsVisitsSidebarOpen(false)}
+        onVisitContextSet={handleVisitContextSet}
+        onVisitLoading={handleVisitLoading} //CONTEXT: Pass loading handler
+        visits={recentVisits}
+        isLoading={visitsLoading}
       />
 
       {/* MAIN CONTENT AREA - WITH LEFT MARGIN FOR FIXED SIDEBAR */}
@@ -264,7 +453,7 @@ const DiagnosisInterface = () => {
                 <button
                   onClick={handleBackToSearch}
                   className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                  title="Back to search"
+                  title={t('diagnosis.backToSearch')}
                 >
                   <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -272,10 +461,10 @@ const DiagnosisInterface = () => {
                 </button>
                 <div>
                   <h2 className="text-lg font-semibold text-white">
-                    {selectedChatData?.title || 'Chat Conversation'}
+                    {t('diagnosis.chatConversation')}
                   </h2>
                   <p className="text-sm text-zinc-400">
-                    {selectedChatData?.messages?.length || 0} messages
+                    {t('diagnosis.activeChat')}
                   </p>
                 </div>
               </>
@@ -291,7 +480,7 @@ const DiagnosisInterface = () => {
               <svg className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              <span className="text-white font-medium">Upload Visit</span>
+              <span className="text-white font-medium">{t('diagnosis.uploadVisit')}</span>
             </div>
           </button>
         </div>
@@ -307,18 +496,34 @@ const DiagnosisInterface = () => {
                   chatId={selectedChatId}
                   onBack={handleBackToSearch}
                   chatData={selectedChatData}
+                  isProcessing={isProcessing}
+                  visitContext={visitContext}
+                  onClearVisitContext={clearVisitContext}
                   embedded={true}
+                  showPlanningProgress={showPlanningProgress}
+                  planningSteps={PLANNING_STEPS}
+                  currentPlanningStep={currentPlanningStep}
                 />
               </div>
 
               {/* FIXED SEARCH INPUT AT BOTTOM */}
               <div className={`fixed bottom-0 ${(isChatsSidebarOpen || isVisitsSidebarOpen) ? 'left-96' : 'left-16'} right-0 py-4 bg-gradient-to-t from-zinc-950 via-zinc-950 to-zinc-950/80 backdrop-blur-sm z-40 transition-all duration-300`}>
                 <div className="max-w-4xl mx-auto px-6">
+                  {/* VISIT CONTEXT DISPLAY */}
+                  <VisitContext 
+                    visitContext={visitContext} 
+                    onClearVisitContext={clearVisitContext}
+                    isInChatMode={!!selectedChatId}
+                    isLoading={isLoadingVisitContext} //CONTEXT: Pass loading state
+                  />
+
                   <SearchInput 
+                    ref={searchInputRef}
                     query={query} 
                     setQuery={setQuery} 
                     onSearch={handleSearch}
-                    placeholder="Continue conversation or search..."
+                    placeholder={t('diagnosis.continueConversation')}
+                    disabled={isProcessing}
                   />
                 </div>
               </div>
@@ -331,9 +536,11 @@ const DiagnosisInterface = () => {
 
               {/* SEARCH SECTION */}
               <SearchInput 
+                ref={searchInputRef}
                 query={query} 
                 setQuery={setQuery} 
-                onSearch={handleSearch} 
+                onSearch={handleSearch}
+                disabled={isProcessing}
               />
             </div>
           )}

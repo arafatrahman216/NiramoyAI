@@ -35,7 +35,7 @@ public class ImageService {
 
             // Validate file type
             String contentType = image.getContentType();
-            if (contentType == null || !contentType.startsWith("image/")) {
+            if (contentType == null ) {
                 throw new RuntimeException("File must be an image");
             }
 
@@ -84,6 +84,8 @@ public class ImageService {
             throw new RuntimeException("Failed to upload to Supabase Storage: " + e.getMessage(), e);
         }
     }
+
+      
 
 
 

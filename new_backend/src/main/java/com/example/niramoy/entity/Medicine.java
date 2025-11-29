@@ -29,9 +29,13 @@ public class Medicine {
     private Visits visit;
 
     private String medicineName;
+    @Builder.Default
     private List<String> frequency= new ArrayList<>();
     private String doses;
     private String duration;
     private String instructions;
     private String type ; // tablet, capsule, injection, syrup
+    @Column(name = "taking",nullable = true)
+    @Builder.Default
+    private boolean taking = true ;
 }

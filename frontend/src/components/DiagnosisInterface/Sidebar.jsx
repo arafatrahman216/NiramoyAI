@@ -1,5 +1,6 @@
-import React from 'react';
 import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // ==============================================
 // SIDEBAR COMPONENT
@@ -7,9 +8,14 @@ import { Plus, Home, Calendar, MessageCircle, User } from 'lucide-react';
 // Contains: Logo, New Chat, Navigation, Sign In
 // Edit handleNavigation() to add routing/page changes
 const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSidebarOpen, onNewChat }) => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   // TODO: Add navigation logic here
   const handleNavigation = (section) => {
     console.log(`Navigate to: ${section}`);
+    navigate(`/${section}`);
+
+
     // Add your routing logic here (React Router, Next.js router, etc.)
   };
 
@@ -40,6 +46,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
   // TODO: Add sign in functionality
   const handleSignIn = () => {
     console.log('Sign in clicked');
+    navigate('/dashboard');
     // Add authentication logic here
   };
 
@@ -58,7 +65,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
       <button 
         onClick={handleNewChat}
         className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-        title="New Chat"
+        title={t('sidebar.newChat')}
       >
         <Plus size={20} className="text-zinc-500 group-hover:text-zinc-300" />
       </button>
@@ -69,13 +76,13 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
         {/* Home Section */}
         <div className="flex flex-col items-center space-y-2">
           <button 
-            onClick={() => handleNavigation('home')}
+            onClick={() => handleNavigation('')}
             className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-            title="Home"
+            title={t('sidebar.home')}
           >
             <Home size={20} className="text-zinc-500 group-hover:text-zinc-300" />
           </button>
-          <span className="text-xs text-zinc-600">Home</span>
+          <span className="text-xs text-zinc-600">{t('sidebar.home')}</span>
         </div>
         
         {/* Chats Section */}
@@ -87,7 +94,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
                 ? 'bg-emerald-500/20 text-emerald-400' 
                 : 'hover:bg-zinc-800 text-zinc-500'
             }`}
-            title="Chats"
+            title={t('sidebar.chats')}
           >
             <MessageCircle size={20} className={`${
               isChatsSidebarOpen 
@@ -97,7 +104,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
           </button>
           <span className={`text-xs ${
             isChatsSidebarOpen ? 'text-emerald-400' : 'text-zinc-600'
-          }`}>Chats</span>
+          }`}>{t('sidebar.chats')}</span>
         </div>
         
         {/* Visits Section */}
@@ -109,7 +116,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
                 ? 'bg-emerald-500/20 text-emerald-400' 
                 : 'hover:bg-zinc-800 text-zinc-500'
             }`}
-            title="Visits"
+            title={t('sidebar.visits')}
           >
             <Calendar size={20} className={`${
               isVisitsSidebarOpen 
@@ -119,7 +126,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
           </button>
           <span className={`text-xs ${
             isVisitsSidebarOpen ? 'text-emerald-400' : 'text-zinc-600'
-          }`}>Visits</span>
+          }`}>{t('sidebar.visits')}</span>
         </div>
       </div>
       
@@ -128,7 +135,7 @@ const Sidebar = ({ onVisitsClick, isVisitsSidebarOpen, onChatsClick, isChatsSide
       <button 
         onClick={handleSignIn}
         className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
-        title="Sign In"
+        title={t('sidebar.signIn')}
       >
         <User size={20} className="text-emerald-400 group-hover:text-emerald-300" />
       </button>

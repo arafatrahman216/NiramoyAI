@@ -29,6 +29,4 @@ public class GivenTests {
     @Column(name = "image_link")
     private java.util.List<String> imageLinks;
 
-    private String summary;
-
 }

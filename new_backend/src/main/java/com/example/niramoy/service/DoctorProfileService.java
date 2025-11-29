@@ -6,13 +6,18 @@ import com.example.niramoy.dto.UserDTO;
 import com.example.niramoy.entity.*;
 import com.example.niramoy.enumerate.DoctorSource;
 import com.example.niramoy.error.DuplicateUserException;
+import com.example.niramoy.repository.AppointmentsRepository;
 import com.example.niramoy.repository.DoctorProfileRepository;
 import com.example.niramoy.repository.DoctorRepository;
+import com.example.niramoy.repository.PermissionsRepository;
 import com.example.niramoy.repository.UserRepository;
 import com.example.niramoy.repository.VisitsRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,6 +28,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DoctorProfileService {
 
     private final DoctorRepository doctorRepository;
@@ -32,12 +38,16 @@ public class DoctorProfileService {
     private final ModelMapper modelMapper;
     private final VisitsRepository visitsRepository;
     private final HealthService healthService;
+    private final PermissionsRepository permissionsRepository;
+    private final AppointmentsRepository appointmentsRepository;
 
-    public DoctorProfile findDoctorByUsername(String username){
-        return doctorProfileRepository.findByUsername(username);
+    // @Cacheable(value = "doctorProfiles")
+    public List<DoctorProfile> findAllDoctor(){
+        return doctorProfileRepository.findAll();
     }
 
     @Transactional
+    // @CacheEvict(value = "doctorProfiles", allEntries = true)
     public DoctorProfile createDoctorProfile(Map<String, String> newDoctor, Doctor doctor, User user) {
         try{
             newDoctor = makeDoctorProfileNotNull(newDoctor);
@@ -55,11 +65,12 @@ public class DoctorProfileService {
         catch (DuplicateUserException e){
             throw new DuplicateUserException("User already exists");
         }
-        
+
     }
 
 
     @Transactional
+    // @CacheEvict(value = "doctorProfiles", allEntries = true)
     public Doctor createDoctor(Map<String, String> doctorMap){
         String name = (String) doctorMap.get("name");
         DoctorSource dc = DoctorSource.REGISTERED;
@@ -94,6 +105,7 @@ public class DoctorProfileService {
 
 
     }
+
 
 
     public DoctorProfileDTO getDoctorProfile(User user) {
@@ -143,6 +155,9 @@ public class DoctorProfileService {
                 doctorProfile.getDoctor().setExperience((Integer) Integer.parseInt( updates.get("experienceYears").toString()));
                 System.out.println("experience: " + updates.get("experienceYears"));
             }
+            if (updates.containsKey("qrUrl")){
+                doctorProfile.setQrUrl((String) updates.get("qrUrl"));
+            }
         }
         catch (Exception e){
             System.out.println(e.getMessage());
@@ -172,13 +187,17 @@ public class DoctorProfileService {
         if (patient == null) {
             throw new RuntimeException("Patient not found with id: " + patientId);
         }
+
+        DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
+        Doctor doc = doctorProfile.getDoctor();
+
+        Permissions permissions = permissionsRepository.findByUserAndDoctor(patient, doc).orElse(null);
+        boolean hasPermission = (permissions != null) && permissions.isPermission();
+        log.info("Has permission: {}", hasPermission);
         HealthProfile healthProfile = patient.getHealthProfile();
         // FIX : last 10 logs should be sent
         List<HealthLog> healthLog = patient.getHealthLogs();
         healthLog.sort((o1, o2) -> o2.getLogDatetime().compareTo(o1.getLogDatetime()));
-
-        DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
-
         List<Visits> visits = visitsRepository.findByUserAndDoctor_DoctorId(patient, doctorProfile.getDoctorId());
         UserDTO userDTO =modelMapper.map(patient, UserDTO.class);
 
@@ -187,14 +206,69 @@ public class DoctorProfileService {
         response.put("healthLogs", healthLog);
         response.put("charts",healthService.transformToVitals(healthLog));
         response.put("visits", visits);
-
-
-
+        response.put("hasPermission", hasPermission);
+//        System.out.println("Visit :"+ visits);
         return response;
+    }
 
+    // @Cacheable(value = "doctorProfile", key = "#query")
+    public List<DoctorProfile> findDoctorBy(String query){
+        return doctorProfileRepository.findByDoctor_NameContainingIgnoreCaseOrDoctor_SpecializationContainingIgnoreCase(query, query);
+    }
 
-
+    public DoctorProfile getDoctorProfileByUserId(Long userId){
+        return doctorProfileRepository.findByUserId(userId);
     }
 
 
+    public DoctorProfile verifyQr(String data) {
+        if (data == null) {
+            return null;
+        }
+
+        DoctorProfile doctorProfile = doctorProfileRepository.findByQrUrl(data);
+        return doctorProfile;
+    }
+
+    public List<Visits>  getPatientVisits( Long patientId){
+        return visitsRepository.findByUserIdOrderByAppointmentDateDesc( patientId);
+    }
+
+//    @Cacheable(value = "accessedPatient", key = "#doctor.id")
+    public List<Map<String, Object>> getAccessedPatients(User doctor) {
+
+        DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
+        Doctor doc = doctorProfile.getDoctor();
+        List<User> patients = permissionsRepository.findDistinctUserByDoctor(doc);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (User patient : patients) {
+            Map<String, Object> patientData = new HashMap<>();
+            patientData.put("id", patient.getId());
+            patientData.put("name", patient.getName());
+            patientData.put("email", patient.getEmail());
+            patientData.put("gender", patient.getGender()!=null? patient.getGender() : "Not specified");
+            patientData.put("dateOfBirth", patient.getDateOfBirth()!=null? patient.getDateOfBirth().toString() : null);
+            patientData.put("phoneNumber", patient.getPhoneNumber() != null ? patient.getPhoneNumber() : "Not Given");
+            log.info("Accessed patient: {}", patientData);
+            result.add(patientData);
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> getDoctorAppointments(User doctor) {
+        DoctorProfile doctorProfile = doctorProfileRepository.findByUserId(doctor.getId());
+        Doctor doc = doctorProfile.getDoctor();
+        List<Appointments> appointments = appointmentsRepository.findByDoctorId(doc.getDoctorId());
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Appointments appointment : appointments) {
+            Map<String, Object> appointmentData = new HashMap<>();
+            appointmentData.put("appointmentId", appointment.getAppointmentId());
+            appointmentData.put("patientName", appointment.getUser().getName());
+            appointmentData.put("appointmentDate", appointment.getAppointmentDatetime().toString());
+            appointmentData.put("status", appointment.getStatus());
+            appointmentData.put("hospital", appointment.getHospital()); 
+            result.add(appointmentData);
+        }
+        return result;
+    }
 }

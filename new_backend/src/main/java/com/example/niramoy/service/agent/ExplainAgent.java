@@ -1,5 +1,6 @@
 package com.example.niramoy.service.agent;
 
+import com.example.niramoy.service.UserKGService;
 import com.example.niramoy.service.AIServices.AIService;
 import org.springframework.stereotype.Service;
 import dev.langchain4j.model.input.Prompt;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ExplainAgent implements Agent {
     private final AIService aiService;
+    private final UserKGService userKGService;
 
     private static final PromptTemplate EXPLANATION_PROMPT = PromptTemplate.from(
         "You are a professional Health Assistant. " +
@@ -24,21 +26,28 @@ public class ExplainAgent implements Agent {
         "5. Keep the conclusion in a new para, concise, very fluent and friendly.\n" +
         "6. Make points or segments as needed, but when explaining keep it fluent and easy, dont use jargon.\n" +
         "7. IMPORTANT: Keep your response under 1500 characters. Be concise but helpful.\n" +
-        "MUST return JSON like this: {\"Explanation\": \"...\"}.\n\n" +
+        "MUST strictly return JSON like this: {\"Explanation\": \"...\"}.\n\n" +
+        "8. Answer in current user query language.\n" +
         "Visit Summary: {{visit_summary}}\n" +
         "Doctor's Advice: {{doctor_advice}}\n" +
         "Patient Summary: {{patient_summary}}\n" +
         "History Summary: {{history_summary}}\n" + "\n\n" +
+        "Also track user intent. If intent is not relevant at all, politely refuse to answer and suggest consulting a healthcare professional." +
+        "If intent is somewhat relevent answer the question with basic knowledge" +
+        "If the question type doesnot match EXPLANATION mode, refer to use other Modes like QnA,Consult, Next Move Planner" +
+        "ALWAYS strictly return JSON like this {\"Explanation\": \"...\"}.\n\n" +
         "user_query: {{query}}"
     );
 
+
+
     @Override
-    public String processQuery(String query) {
+    public String processQuery(String query, Long userId) {
         Map<String, Object> chainVariables = Map.of(
-            "visit_summary", getVisitSummary(),
-            "doctor_advice", getDoctorAdvice(),
-            "patient_summary", getPatientSummary(),
-            "history_summary", getHistorySummary(),
+            "visit_summary", userKGService.getVisitSummaryLastThree(userId),
+            "doctor_advice", userKGService.getDoctorAdvice(userId),
+            "patient_summary", userKGService.getPatientSummary(userId),
+            "history_summary", userKGService.getHistorySummary(userId),
             "query", query
         );
         
@@ -47,22 +56,28 @@ public class ExplainAgent implements Agent {
         
         return response;
     }
-    
 
-    //TODO: Fetch data from KG
-    private String getVisitSummary() {
-        return "Patient visited on 2025-09-13 for complaints of persistent headache and mild fever. Vitals were stable. No alarming symptoms detected during examination.";
-    }
 
-    private String getDoctorAdvice() {
-        return "Doctor advised rest, increased fluid intake, and prescribed paracetamol for headache. Recommended follow-up if symptoms persist or worsen.";
-    }
+    @Override
+    public String processImageQuery(String query, String imageUrl, Long userId) {
 
-    private String getPatientSummary() {
-        return "35-year-old male, generally healthy, with no significant chronic illnesses. Reports occasional migraines and mild seasonal allergies.";
-    }
+        String imageText = aiService.getTextFromImageUrl(imageUrl);
+        query = query +  ". Also analyze the image text provided and incorporate any relevant information from it"
+            + " into your explanation. The image contains the following text (donot use \", use \\\" if needed): " + imageText;
+        System.out.println("query: " + query);
 
-    private String getHistorySummary() {
-        return "Previous visits include treatment for mild respiratory infections and routine check-ups. No history of major surgeries or hospitalizations.";
+        Map<String, Object> chainVariables = Map.of(
+            "visit_summary", userKGService.getVisitSummaryLastThree(userId),
+            "doctor_advice", userKGService.getDoctorAdvice(userId),
+            "patient_summary", userKGService.getPatientSummary(userId),
+            "history_summary", userKGService.getHistorySummary(userId),
+            "query", query  
+
+        );
+
+        Prompt prompt = EXPLANATION_PROMPT.apply(chainVariables);
+        String response = aiService.generateContent(prompt.text());
+
+        return response;
     }
 }

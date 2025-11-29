@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { diagnosisAPI } from '../../services/api';
 
@@ -14,29 +15,41 @@ interface UploadVisitModalProps {
   onClose: () => void;
 }
 
+// Doctor database with ID mapping
+const DOCTORS_DB: { [key: string]: string } = {
+  "1": "Hasib",
+  "5": "Dr Dip",
+  "6": "Dr Masud",
+  "7": "Dr Ikbal",
+  "8": "S. Ahmed",
+  "9": "S. M. Mahfuzur Rahman",
+  "10": "Shamim Ahmed"
+};
+
 interface VisitData {
-  appointmentDate: string;
   doctorName: string;
+  doctorId: string | null;
   symptoms: string;
-  doctorId: string;
-  prescription: string;
   prescriptionFile: File | null;
   testReports: File[];
 }
 
 const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // MODAL STATE MANAGEMENT
   const [visitData, setVisitData] = useState<VisitData>({
-    appointmentDate: '',
     doctorName: '',
-    doctorId : '',
+    doctorId: null,
     symptoms: '',
-    prescription: '',
     prescriptionFile: null,
     testReports: []
   });
+
+  const [showDoctorSuggestions, setShowDoctorSuggestions] = useState(false);
+  const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
+  const [selectedDoctorIndex, setSelectedDoctorIndex] = useState<number>(-1);
 
   // FORM HANDLERS
   const handleInputChange = (field: keyof VisitData, value: string | boolean) => {
@@ -63,9 +76,8 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
   // UPLOAD HANDLER
   const handleFinalUpload = async () => {
     // Validate required fields
-    if (!visitData.appointmentDate || !visitData.doctorName || !visitData.symptoms || 
-        !visitData.prescription || !visitData.prescriptionFile) {
-      toast.error('Please fill in all required fields and upload a prescription image.', {
+    if (!visitData.doctorName || !visitData.symptoms || !visitData.prescriptionFile) {
+      toast.error(t('uploadVisit.fileError'), {
         style: {
           background: '#7f1d1d',
           color: '#fff',
@@ -85,11 +97,13 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     
     // Create FormData for upload
     const formData = new FormData();
-    formData.append('appointmentDate', visitData.appointmentDate);
     formData.append('doctorName', visitData.doctorName);
     formData.append('symptoms', visitData.symptoms);
-    formData.append('doctorId', visitData.doctorId);
-    formData.append('prescription', visitData.prescription);
+    
+    // Append doctorId only if selected from suggestions
+    if (visitData.doctorId) {
+      formData.append('doctorId', visitData.doctorId);
+    }
     
     // Prescription file is mandatory
     if (visitData.prescriptionFile) {
@@ -105,20 +119,20 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     toast.promise(
       diagnosisAPI.uploadVisitData(formData),
       {
-        loading: 'Uploading visit data...',
-        success: 'Visit uploaded successfully! 🎉',
+        loading: t('uploadVisit.uploading'),
+        success: t('uploadVisit.uploadSuccess'),
         error: (err) => {
           console.error('Upload error:', err);
           
           // Handle different error status codes
           if (err.response?.status === 401) {
-            return 'Authentication failed. Please log in again.';
+            return t('uploadVisit.authError');
           } else if (err.response?.status === 500) {
-            return 'Server error. Please try again later.';
+            return t('uploadVisit.serverError');
           } else if (err.response?.status === 400) {
-            return 'Bad request. Please check your data.';
+            return t('uploadVisit.badRequestError');
           } else {
-            return 'Upload failed. Please try again.';
+            return t('uploadVisit.uploadError');
           }
         }
       },
@@ -171,14 +185,13 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
   // UTILITY FUNCTIONS
   const resetForm = () => {
     setVisitData({
-      appointmentDate: '',
       doctorName: '',
-      doctorId: '',
+      doctorId: null,
       symptoms: '',
-      prescription: '',
       prescriptionFile: null,
       testReports: []
     });
+    setShowDoctorSuggestions(false);
   };
 
   const handleClose = () => {
@@ -186,12 +199,93 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
     onClose();
   };
 
+  // DOCTOR AUTOCOMPLETE FUNCTIONS
+  // Get doctor suggestions based on input
+  const getFilteredDoctors = useMemo(() => {
+    if (!visitData.doctorName.trim()) return [];
+    
+    const input = visitData.doctorName.toLowerCase();
+    const doctorsList = Object.entries(DOCTORS_DB);
+    
+    // Filter doctors that match the input
+    return doctorsList.filter(([_, name]) => 
+      name.toLowerCase().includes(input)
+    );
+  }, [visitData.doctorName]);
+
+  // Handle doctor name input change
+  const handleDoctorNameChange = (value: string) => {
+    setVisitData(prev => ({
+      ...prev,
+      doctorName: value,
+      doctorId: null // Clear doctorId when user types
+    }));
+    setSelectedDoctorIndex(-1); // Reset selected index
+    
+    // Show loading state and simulate DB fetch delay
+    if (value.trim().length > 0) {
+      setIsLoadingDoctors(true);
+      setShowDoctorSuggestions(false);
+      
+      // Simulate database fetch delay (300-500ms)
+      const delay = Math.random() * 200 + 300;
+      setTimeout(() => {
+        setIsLoadingDoctors(false);
+        setShowDoctorSuggestions(true);
+      }, delay);
+    } else {
+      setIsLoadingDoctors(false);
+      setShowDoctorSuggestions(false);
+    }
+  };
+
+  // Handle doctor selection from suggestions
+  const handleDoctorSelect = (doctorId: string, doctorName: string) => {
+    setVisitData(prev => ({
+      ...prev,
+      doctorName: doctorName,
+      doctorId: doctorId
+    }));
+    setShowDoctorSuggestions(false);
+    setSelectedDoctorIndex(-1);
+  };
+
+  // Handle keyboard navigation in doctor list
+  const handleDoctorInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showDoctorSuggestions || getFilteredDoctors.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedDoctorIndex(prev => 
+          prev < getFilteredDoctors.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedDoctorIndex(prev => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedDoctorIndex >= 0 && selectedDoctorIndex < getFilteredDoctors.length) {
+          const [doctorId, doctorName] = getFilteredDoctors[selectedDoctorIndex];
+          handleDoctorSelect(doctorId, doctorName);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setShowDoctorSuggestions(false);
+        setSelectedDoctorIndex(-1);
+        break;
+      default:
+        break;
+    }
+  };
+
   // VALIDATION
   const isFormValid = () => {
-    return visitData.appointmentDate && 
-           visitData.doctorName && 
-           visitData.symptoms && 
-           visitData.prescription &&
+    return visitData.doctorName && 
+           visitData.symptoms &&
            visitData.prescriptionFile; // Prescription file is mandatory
   };
 
@@ -209,9 +303,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
           {/* MODAL HEADER */}
           <div className="p-6 border-b border-zinc-700 flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-semibold text-white">Upload Visit</h2>
+              <h2 className="text-2xl font-semibold text-white">{t('uploadVisit.title')}</h2>
               <p className="text-zinc-400 text-sm mt-1">
-                Add your appointment details and medical documents
+                {t('uploadVisit.subtitle')}
               </p>
             </div>
             <button
@@ -231,75 +325,97 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
               
               {/* LEFT COLUMN: APPOINTMENT DETAILS */}
               <div className="space-y-6">
-                <h3 className="text-lg font-medium text-white mb-4">Appointment Details</h3>
+                <h3 className="text-lg font-medium text-white mb-4">{t('uploadVisit.appointmentDetails')}</h3>
                 
-                {/* APPOINTMENT DATE */}
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Appointment Date *
-                  </label>
-                  <input
-                    type="date"
-                    value={visitData.appointmentDate}
-                    onChange={(e) => handleInputChange('appointmentDate', e.target.value)}
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    required
-                  />
-                </div>
-
                 {/* DOCTOR NAME */}
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-white mb-2">
-                    Doctor Name *
+                    {t('uploadVisit.doctorName')} *
                   </label>
-                  <input
-                    type="text"
-                    value={visitData.doctorName}
-                    onChange={(e) => handleInputChange('doctorName', e.target.value)}
-                    placeholder="Enter doctor's name"
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    required
-                  />
-                </div>
-                {/* DOCTOR ID */}
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Doctor ID (if any)
-                  </label>
-                  <input
-                    type="text"
-                    value={visitData.doctorId}
-                    onChange={(e) => handleInputChange('doctorId', e.target.value)}
-                    placeholder="Enter doctor's ID (optional)"
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={visitData.doctorName}
+                      onChange={(e) => handleDoctorNameChange(e.target.value)}
+                      onKeyDown={handleDoctorInputKeyDown}
+                      onFocus={() => visitData.doctorName && setShowDoctorSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowDoctorSuggestions(false), 200)}
+                      placeholder={t('uploadVisit.enterDoctorName')}
+                      className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      required
+                    />
+                    
+                    {/* DOCTOR SUGGESTIONS DROPDOWN */}
+                    {(showDoctorSuggestions || isLoadingDoctors) && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl z-10 backdrop-blur-sm bg-zinc-800/95">
+                        
+                        {/* LOADING STATE */}
+                        {isLoadingDoctors && (
+                          <div className="px-4 py-3 flex items-center justify-center gap-2 text-zinc-400">
+                            <div className="inline-block">
+                              <svg className="animate-spin h-4 w-4 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            </div>
+                            <span className="text-sm">{t('uploadVisit.fetchingDoctors')}</span>
+                          </div>
+                        )}
+
+                        {/* DOCTOR LIST */}
+                        {showDoctorSuggestions && getFilteredDoctors.length > 0 && (
+                          <div className="max-h-64 overflow-y-auto">
+                            {getFilteredDoctors.map(([doctorId, doctorName], index) => (
+                              <button
+                                key={doctorId}
+                                onClick={() => handleDoctorSelect(doctorId, doctorName)}
+                                className={`w-full text-left px-4 py-2 text-sm text-white transition-colors ${
+                                  index < getFilteredDoctors.length - 1 ? 'border-b border-zinc-700/50' : ''
+                                } ${
+                                  visitData.doctorId === doctorId 
+                                    ? 'bg-emerald-500/30' 
+                                    : selectedDoctorIndex === index 
+                                    ? 'bg-emerald-500/20 hover:bg-emerald-500/20'
+                                    : 'hover:bg-emerald-500/10'
+                                }`}
+                              >
+                                {doctorName}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* NO RESULTS STATE */}
+                        {showDoctorSuggestions && getFilteredDoctors.length === 0 && (
+                          <div className="px-4 py-6 text-center">
+                            <svg className="w-8 h-8 text-zinc-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 21l-4.35-4.35m0 0a7 7 0 10-9.9 0" />
+                            </svg>
+                            <p className="text-sm text-zinc-400">{t('uploadVisit.noDoctorsFound')}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* SELECTED DOCTOR BADGE */}
+                    {visitData.doctorId && (
+                      <div className="mt-2 inline-block bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm border border-emerald-500/50">
+                        {visitData.doctorName}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
 
                 {/* SYMPTOMS */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Symptoms (Reason for visit) *
+                    {t('uploadVisit.symptoms')} *
                   </label>
                   <textarea
                     value={visitData.symptoms}
                     onChange={(e) => handleInputChange('symptoms', e.target.value)}
-                    placeholder="Describe why you visited the doctor..."
-                    rows={4}
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
-                    required
-                  />
-                </div>
-
-                {/* PRESCRIPTION */}
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    What the doctor prescribed *
-                  </label>
-                  <textarea
-                    value={visitData.prescription}
-                    onChange={(e) => handleInputChange('prescription', e.target.value)}
-                    placeholder="Enter prescribed medications, treatments, or recommendations..."
+                    placeholder={t('uploadVisit.symptomsPlaceholder')}
                     rows={4}
                     className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white placeholder-zinc-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
                     required
@@ -312,9 +428,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 
                 {/* PRESCRIPTION FILE UPLOAD (MANDATORY) */}
                 <div>
-                  <h3 className="text-lg font-medium text-white mb-4">Medical Documents</h3>
+                  <h3 className="text-lg font-medium text-white mb-4">{t('uploadVisit.medicalDocuments')}</h3>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Upload Prescription * (Required)
+                    {t('uploadVisit.uploadPrescriptionRequired')}
                   </label>
                   <div className="border-2 border-dashed border-emerald-600 rounded-lg p-6 text-center hover:border-emerald-500 transition-colors bg-emerald-500/5">
                     <input
@@ -332,9 +448,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
                       <span className="text-emerald-400 font-medium">
-                        {visitData.prescriptionFile ? visitData.prescriptionFile.name : 'Click to upload prescription'}
+                        {visitData.prescriptionFile ? visitData.prescriptionFile.name : t('uploadVisit.uploadPrescription')}
                       </span>
-                      <span className="text-zinc-400 text-xs">JPG, PNG, PDF files accepted (Required)</span>
+                      <span className="text-zinc-400 text-xs">JPG, PNG, PDF {t('uploadVisit.uploadPrescriptionRequired').split('*')[1]}</span>
                     </label>
                   </div>
                 </div>
@@ -342,7 +458,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 {/* TEST REPORTS UPLOAD (OPTIONAL) */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Upload Test Reports (Optional)
+                    {t('uploadVisit.uploadTestReports')}
                   </label>
                   <div className="border-2 border-dashed border-zinc-600 rounded-lg p-6 text-center hover:border-zinc-500 transition-colors">
                     <input
@@ -361,9 +477,9 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
                       <span className="text-zinc-400">
-                        Click to upload test reports
+                        {t('uploadVisit.uploadTestReports')}
                       </span>
-                      <span className="text-zinc-500 text-xs">JPG, PNG, PDF files. Multiple files allowed (Optional)</span>
+                      <span className="text-zinc-500 text-xs">{t('uploadVisit.testReportsSubtitle')}</span>
                     </label>
                   </div>
                 </div>
@@ -371,7 +487,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
                 {/* UPLOADED TEST REPORTS LIST */}
                 {visitData.testReports.length > 0 && (
                   <div>
-                    <h4 className="text-white font-medium mb-3">Test Reports ({visitData.testReports.length})</h4>
+                    <h4 className="text-white font-medium mb-3">{t('uploadVisit.testReports')} ({visitData.testReports.length})</h4>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {visitData.testReports.map((file, index) => (
                         <div key={index} className="flex items-center justify-between bg-zinc-800 p-3 rounded-lg">
@@ -406,7 +522,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
             
             {/* REQUIRED FIELDS NOTICE */}
             <div className="text-sm text-zinc-400">
-              * Required fields. Prescription image is mandatory.
+              {t('uploadVisit.requiredFields')}
             </div>
 
             {/* UPLOAD BUTTON */}
@@ -415,7 +531,7 @@ const UploadVisitModal: React.FC<UploadVisitModalProps> = ({ isOpen, onClose }) 
               disabled={!isFormValid()}
               className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-zinc-700 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              Upload Visit
+              {t('uploadVisit.upload')}
             </button>
           </div>
 

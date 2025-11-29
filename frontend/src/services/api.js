@@ -1,12 +1,17 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+
+//For Deployment
+// const API_BASE_URL = 'https://niramoyai.up.railway.app/api';
+
+// For local development
+const API_BASE_URL = 'http://localhost:8080/api';
 
 
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 20000, // 20 seconds timeout
+  timeout: 120000, // 120 seconds timeout for AI processing
 });
 
 // Add request interceptor to include auth token and debug logging
@@ -62,6 +67,15 @@ export const doctorAPI = {
   getDoctorById: (id) => api.get(`/public/doctors/${id}`),
 
   getPatientInfo : (id) => api.post('/doctor/patient', {"id": id}),
+
+  //for getting patient data
+  accessPatientData : (id) => api.post('/doctor/patient/data', {"id": id}),
+  
+  // Get list of patients who have given access to doctor
+  getPatients: () => api.get('/doctor/patients'),
+  
+  // Create prescription for a patient
+  createPrescription: (prescriptionData) => api.post('/doctor/prescription/create', prescriptionData),
   
 };
 
@@ -82,8 +96,85 @@ export const testCenterAPI = {
 // AI Chatbot API endpoints
 export const chatbotAPI = {
   // Send message to AI chatbot
-  sendMessage: (message, chatId, mode = 'explain') => 
-    api.post('/user/chat', { message, chatId: chatId.toString(), mode }),
+  sendMessage: (message, chatId, mode = 'explain', contextData = null) => {
+    const payload = { 
+      message, 
+      chatId: chatId.toString(), 
+      mode 
+    };
+    
+    //CONTEXT: Include previous messages as separate attribute
+    if (contextData) {
+      if (contextData.previousMessages && contextData.previousMessages.length > 0) {
+        // Send previous messages as array of objects
+        payload.previousMessages = contextData.previousMessages.map((msg) => ({
+          role: (msg.role || 'user').toString(),
+          content: (msg.content || msg.text || msg.message || '').toString().trim()
+        })).filter(msg => msg.content); // Remove empty messages
+      }
+
+      //CONTEXT: Include visit context as separate attribute
+      if (contextData.visitContext) {
+        payload.visitContext = {
+          visitId: contextData.visitContext.visitId,
+          doctorName: contextData.visitContext.doctorName,
+          appointmentDate: contextData.visitContext.appointmentDate,
+          diagnosis: contextData.visitContext.diagnosis,
+          symptoms: contextData.visitContext.symptoms,
+          prescription: contextData.visitContext.prescription,
+          summary: contextData.visitContext.summary,
+          otherInfo: contextData.visitContext.otherInfo
+        };
+      }
+    }
+    
+    console.log('Sending payload to backend:', payload);
+    return api.post('/user/chat', payload);
+  },
+  
+  // Send message with attachment to AI chatbot
+  sendMessageWithAttachment: (message, chatId, attachment, mode = 'explain', contextData = null) => {
+    const formData = new FormData();
+    formData.append('message', message || '');
+    formData.append('chatId', chatId.toString());
+    formData.append('mode', mode);
+    if (attachment) {
+      formData.append('attachment', attachment);
+    }
+    
+    //CONTEXT: Include previous messages and visit context as JSON strings
+    if (contextData) {
+      if (contextData.previousMessages && contextData.previousMessages.length > 0) {
+        const cleanMessages = contextData.previousMessages.map((msg) => ({
+          role: (msg.role || 'user').toString(),
+          content: (msg.content || msg.text || msg.message || '').toString().trim()
+        })).filter(msg => msg.content);
+        
+        formData.append('previousMessages', JSON.stringify(cleanMessages));
+      }
+      
+      if (contextData.visitContext) {
+        const visitData = {
+          visitId: contextData.visitContext.visitId,
+          doctorName: contextData.visitContext.doctorName,
+          appointmentDate: contextData.visitContext.appointmentDate,
+          diagnosis: contextData.visitContext.diagnosis,
+          symptoms: contextData.visitContext.symptoms,
+          prescription: contextData.visitContext.prescription,
+          summary: contextData.visitContext.summary,
+          otherInfo: contextData.visitContext.otherInfo
+        };
+        formData.append('visitContext', JSON.stringify(visitData));
+      }
+    }
+    
+    console.log('Sending FormData with context to backend');
+    return api.post('/user/chat-attachment', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
   
   // Get conversation history
   getConversation: (conversationId) => 
@@ -96,6 +187,16 @@ export const chatbotAPI = {
   // Get user's chat sessions
   getChatSessions: () => 
     api.get('/user/chat-sessions'),
+
+  getVoiceMessage : (audioBlob) => {
+    const formData = new FormData();
+    formData.append('audio', audioBlob);
+    return api.post('/user/audio', formData);
+  },
+
+  // Get messages for a specific chat
+  getMessages: (chatId) => 
+    api.post('/user/message', { chatId: chatId.toString() }),
 };
 
 
@@ -158,11 +259,8 @@ export const appointmentAPI = {
 
 // Diagnosis Interface Job
 export const agentAPI = {
-
   searchAPI: (query) => 
     api.post('/agent/search', { query })
-  
-
 };
 
 
@@ -180,6 +278,12 @@ export const diagnosisAPI = {
 
 }
 
+// Symptoms-based doctor search API
+export const symptomsAPI = {
+  searchDoctorsBySymptoms: (query) =>
+    api.post('/public/query', { query }),
+};
+
 
 
 
@@ -194,8 +298,43 @@ export const userInfoAPI = {
 
   getHealthLog : ()=> api.get('/user/health-log'),
 
-  getRecentVisits : () => api.get('/user/recent-visits')
+  getRecentVisits : () => api.get('/user/recent-visits'),
+
+  getMedicines : () => api.get('/user/medicines'),
+
+  deleteMedicine : (id) => api.delete(`/user/medicines/${id}`),
+
+  //CONTEXT: Fetch detailed visit information by visit ID
+  getVisitDetails: (visitId) => api.get(`/user/visit/${visitId}`),
+  getMedicalSummary: () => api.get(`/user/medical-summary`)
 
 };
+
+// Text-to-Speech API
+export const ttsAPI = {
+  generateSpeech: (text) => {
+    console.log(text.length);
+    text = text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    return api.post('/user/tts', text, {
+      responseType: 'blob', // Important: tells axios to expect binary data
+      headers: {
+        'Content-Type': 'text/plain' // Send as plain text, not JSON
+      }
+    })
+  }
+};
+
+
+
+export const sharedProfileAPI = {
+  getSharedProfile: (encryptedId) => 
+    api.post('/public/shared', { encryptedId: encryptedId }),
+
+  getShareableLink: () =>
+    api.get('/user/profile/share')
+
+};
+
+
 
 export default api;
